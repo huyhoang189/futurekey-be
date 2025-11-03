@@ -1,0 +1,29 @@
+const HEADER = {
+  CLIENT_ID: "x-client-id",
+  AUTHORIZATION: "authorization",
+};
+
+const USER_STATUS = {
+  ACTIVE: "ACTIVE",
+  INACTIVE: "INACTIVE",
+  BANNER: "BANNER",
+};
+
+const FR = {
+  FR00001: "FR00001",
+  FR00002: "FR00002",
+  FR00003: "FR00003",
+  FR00004: "FR00004",
+  FR00005: "FR00005",
+  FR00006: "FR00006",
+  FR00007: "FR00007",
+  FR00008: "FR00008",
+  FR00009: "FR00009",
+  FR00010: "FR00010",
+};
+
+module.exports = {
+  HEADER,
+  USER_STATUS,
+  FR,
+};

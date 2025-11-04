@@ -16,9 +16,15 @@ const getAllUsers = async ({
   paging = { skip: 0, limit: 10 },
   orderBy = { created_at: "desc" },
   select = null,
+  includeGroup = true, // Tham số mới để quyết định có join group không
 }) => {
   try {
     const where = buildWhereClause(filters);
+
+    // Nếu có select custom, đảm bảo có group_id để join
+    const selectWithGroupId = select && includeGroup
+      ? { ...select, group_id: true }
+      : select;
 
     const [records, total] = await Promise.all([
       prisma.auth_base_user.findMany({
@@ -26,13 +32,49 @@ const getAllUsers = async ({
         skip: paging.skip,
         take: paging.limit,
         orderBy,
-        ...(select && { select }),
+        ...(selectWithGroupId && { select: selectWithGroupId }),
       }),
       prisma.auth_base_user.count({ where }),
     ]);
 
+    // Chỉ join group nếu includeGroup = true
+    if (!includeGroup) {
+      return {
+        data: records,
+        meta: {
+          total,
+          ...paging,
+        },
+      };
+    }
+
+    // Optimize: Lấy tất cả group_ids unique
+    const groupIds = [...new Set(records.map((r) => r.group_id).filter(Boolean))];
+
+    // Query tất cả groups một lần (giống leftJoin)
+    const groups = groupIds.length > 0
+      ? await prisma.auth_group.findMany({
+          where: { id: { in: groupIds } },
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            type: true,
+          },
+        })
+      : [];
+
+    // Map groups thành object để lookup nhanh
+    const groupMap = Object.fromEntries(groups.map((g) => [g.id, g]));
+
+    // Gắn group vào từng user (giống kết quả leftJoin)
+    const recordsWithGroup = records.map((user) => ({
+      ...user,
+      group: user.group_id ? groupMap[user.group_id] || null : null,
+    }));
+
     return {
-      data: records,
+      data: recordsWithGroup,
       meta: {
         total,
         ...paging,
@@ -57,7 +99,21 @@ const getUserById = async (id, select = null) => {
       throw new Error("User not found");
     }
 
-    return user;
+    // Lấy thông tin group nếu có
+    if (user.group_id) {
+      const group = await prisma.auth_group.findUnique({
+        where: { id: user.group_id },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          type: true,
+        },
+      });
+      return { ...user, group };
+    }
+
+    return { ...user, group: null };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
   }

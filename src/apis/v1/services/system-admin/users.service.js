@@ -357,7 +357,7 @@ const updateStatus = async (id, status) => {
 };
 
 /**
- * Xóa vĩnh viễn người dùng
+ * Xóa vĩnh viễn người dùng (cascade delete student và school user)
  */
 const deleteUser = async (id) => {
   try {
@@ -370,19 +370,32 @@ const deleteUser = async (id) => {
       throw new Error("User not found");
     }
 
-    // Xóa các refresh tokens liên quan (nếu có)
-    await prisma.auth_refresh_tokens.deleteMany({
-      where: { user_id: id },
-    });
+    // Sử dụng transaction để đảm bảo tất cả được xóa hoặc không xóa gì
+    await prisma.$transaction(async (tx) => {
+      // 1. Xóa student records (nếu có)
+      await tx.auth_impl_user_student.deleteMany({
+        where: { user_id: id },
+      });
 
-    // Xóa user
-    await prisma.auth_base_user.delete({
-      where: { id },
+      // 2. Xóa school user records (nếu có)
+      await tx.auth_impl_user_school.deleteMany({
+        where: { user_id: id },
+      });
+
+      // 3. Xóa các refresh tokens liên quan (nếu có)
+      await tx.auth_refresh_tokens.deleteMany({
+        where: { user_id: id },
+      });
+
+      // 4. Cuối cùng xóa user
+      await tx.auth_base_user.delete({
+        where: { id },
+      });
     });
 
     return {
       success: true,
-      message: "User deleted permanently",
+      message: "User and all related records deleted permanently",
     };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);

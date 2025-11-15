@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 
 const careerCriteriaController = require("../../controllers/careers-manage/career-criteria.controller");
+const {
+  uploadCriteriaFiles,
+} = require("../../../../middlewares/upload/file-upload.middleware");
 
 // Apply pagination middleware to GET all endpoint
 
@@ -134,7 +137,7 @@ router.get("/:id", careerCriteriaController.getCareerCriteriaById);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             required:
@@ -156,6 +159,20 @@ router.get("/:id", careerCriteriaController.getCareerCriteriaById);
  *               career_id:
  *                 type: string
  *                 example: career-123-abc-456
+ *               video_thumbnail:
+ *                 type: string
+ *                 format: binary
+ *                 description: Ảnh thumbnail của video (max 5MB, jpg/png/gif/webp)
+ *               video:
+ *                 type: string
+ *                 format: binary
+ *                 description: Video của tiêu chí (max 100MB, mp4/avi/mov/wmv/flv/mkv)
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Danh sách file đính kèm (max 10 files, 10MB mỗi file)
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -181,7 +198,11 @@ router.get("/:id", careerCriteriaController.getCareerCriteriaById);
  *       500:
  *         description: Lỗi server
  */
-router.post("/", careerCriteriaController.createCareerCriteria);
+router.post(
+  "/",
+  uploadCriteriaFiles,
+  careerCriteriaController.createCareerCriteria
+);
 
 /**
  * @swagger
@@ -201,7 +222,7 @@ router.post("/", careerCriteriaController.createCareerCriteria);
  *     requestBody:
  *       required: true
  *       content:
- *         application/json:
+ *         multipart/form-data:
  *           schema:
  *             type: object
  *             properties:
@@ -220,6 +241,20 @@ router.post("/", careerCriteriaController.createCareerCriteria);
  *               career_id:
  *                 type: string
  *                 example: career-123-abc-456
+ *               video_thumbnail:
+ *                 type: string
+ *                 format: binary
+ *                 description: Ảnh thumbnail mới (nếu cập nhật)
+ *               video:
+ *                 type: string
+ *                 format: binary
+ *                 description: Video mới (nếu cập nhật)
+ *               attachments:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
+ *                 description: Danh sách file đính kèm mới (nếu cập nhật, sẽ thay thế tất cả)
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -245,7 +280,11 @@ router.post("/", careerCriteriaController.createCareerCriteria);
  *       500:
  *         description: Lỗi server
  */
-router.put("/:id", careerCriteriaController.updateCareerCriteria);
+router.put(
+  "/:id",
+  uploadCriteriaFiles,
+  careerCriteriaController.updateCareerCriteria
+);
 
 /**
  * @swagger

@@ -1,7 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const { FR } = require("../../../../common");
+const { FR, OBJECT_TYPE, MINIO_BUCKETS } = require("../../../../common");
 const { buildWhereClause } = require("../../../../utils/func");
+const fileStorageService = require("../file-storage/file-storage.service");
 
 const CURRENT_FR = FR.FR00012;
 
@@ -67,14 +68,37 @@ const getAllCareerCriteria = async ({
     // Map careers thành object để lookup nhanh
     const careerMap = Object.fromEntries(careers.map((c) => [c.id, c]));
 
-    // Gắn career vào từng criteria
-    const recordsWithCareer = records.map((criteria) => ({
-      ...criteria,
-      career: criteria.career_id ? careerMap[criteria.career_id] || null : null,
-    }));
+    // Gắn career và files vào từng criteria
+    const recordsWithCareerAndFiles = await Promise.all(
+      records.map(async (criteria) => {
+        // Lấy file URLs
+        const videoThumbnail = await fileStorageService.getFirstMetadata(
+          OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+          criteria.id
+        );
+        const video = await fileStorageService.getFirstMetadata(
+          OBJECT_TYPE.CRITERIA_VIDEO,
+          criteria.id
+        );
+        const attachments = await fileStorageService.getFilesByObject(
+          OBJECT_TYPE.ATTACHMENTS,
+          criteria.id
+        );
+
+        return {
+          ...criteria,
+          career: criteria.career_id
+            ? careerMap[criteria.career_id] || null
+            : null,
+          video_thumbnail_url: videoThumbnail?.fileUrl || null,
+          video_url: video?.fileUrl || null,
+          attachments: attachments || [],
+        };
+      })
+    );
 
     return {
-      data: recordsWithCareer,
+      data: recordsWithCareerAndFiles,
       meta: {
         total,
         ...paging,
@@ -100,8 +124,9 @@ const getCareerCriteriaById = async (id, select = null) => {
     }
 
     // Lấy thông tin career nếu có
+    let career = null;
     if (criteria.career_id) {
-      const career = await prisma.career.findUnique({
+      career = await prisma.career.findUnique({
         where: { id: criteria.career_id },
         select: {
           id: true,
@@ -111,10 +136,29 @@ const getCareerCriteriaById = async (id, select = null) => {
           is_active: true,
         },
       });
-      return { ...criteria, career };
     }
 
-    return { ...criteria, career: null };
+    // Lấy file URLs
+    const videoThumbnail = await fileStorageService.getFirstMetadata(
+      OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+      criteria.id
+    );
+    const video = await fileStorageService.getFirstMetadata(
+      OBJECT_TYPE.CRITERIA_VIDEO,
+      criteria.id
+    );
+    const attachments = await fileStorageService.getFilesByObject(
+      OBJECT_TYPE.ATTACHMENTS,
+      criteria.id
+    );
+
+    return {
+      ...criteria,
+      career,
+      video_thumbnail_url: videoThumbnail?.fileUrl || null,
+      video_url: video?.fileUrl || null,
+      attachments: attachments || [],
+    };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
   }
@@ -123,7 +167,7 @@ const getCareerCriteriaById = async (id, select = null) => {
 /**
  * Tạo mới tiêu chí nghề nghiệp
  */
-const createCareerCriteria = async (data) => {
+const createCareerCriteria = async (data, files = null) => {
   try {
     const {
       name,
@@ -131,6 +175,7 @@ const createCareerCriteria = async (data) => {
       order_index,
       is_active = false,
       career_id,
+      created_by_admin,
     } = data;
 
     // Kiểm tra career tồn tại
@@ -156,6 +201,7 @@ const createCareerCriteria = async (data) => {
       }
     }
 
+    // Tạo criteria trước
     const criteria = await prisma.career_criteria.create({
       data: {
         name,
@@ -166,7 +212,68 @@ const createCareerCriteria = async (data) => {
       },
     });
 
-    return criteria;
+    // Upload files nếu có
+    let videoThumbnailUrl = null;
+    let videoUrl = null;
+    let attachmentUrls = [];
+
+    if (files) {
+      // Upload video thumbnail
+      if (files.video_thumbnail && files.video_thumbnail[0]) {
+        const thumbFile = files.video_thumbnail[0];
+        const result = await fileStorageService.uploadFile({
+          fileBuffer: thumbFile.buffer,
+          fileName: thumbFile.originalname,
+          mimeType: thumbFile.mimetype,
+          fileSize: thumbFile.size,
+          objectType: OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+          objectId: criteria.id,
+          bucketName: MINIO_BUCKETS.MEDIA_THUMBS,
+          uploadBy: created_by_admin,
+        });
+        videoThumbnailUrl = result.fileUrl;
+      }
+
+      // Upload video
+      if (files.video && files.video[0]) {
+        const videoFile = files.video[0];
+        const result = await fileStorageService.uploadFile({
+          fileBuffer: videoFile.buffer,
+          fileName: videoFile.originalname,
+          mimeType: videoFile.mimetype,
+          fileSize: videoFile.size,
+          objectType: OBJECT_TYPE.CRITERIA_VIDEO,
+          objectId: criteria.id,
+          bucketName: MINIO_BUCKETS.MEDIA_VIDEOS,
+          uploadBy: created_by_admin,
+        });
+        videoUrl = result.fileUrl;
+      }
+
+      // Upload attachments
+      if (files.attachments && files.attachments.length > 0) {
+        for (const attachmentFile of files.attachments) {
+          const result = await fileStorageService.uploadFile({
+            fileBuffer: attachmentFile.buffer,
+            fileName: attachmentFile.originalname,
+            mimeType: attachmentFile.mimetype,
+            fileSize: attachmentFile.size,
+            objectType: OBJECT_TYPE.ATTACHMENTS,
+            objectId: criteria.id,
+            bucketName: MINIO_BUCKETS.ATTACHMENTS,
+            uploadBy: created_by_admin,
+          });
+          attachmentUrls.push(result.fileUrl);
+        }
+      }
+    }
+
+    return {
+      ...criteria,
+      video_thumbnail_url: videoThumbnailUrl,
+      video_url: videoUrl,
+      attachments: attachmentUrls,
+    };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
   }
@@ -175,7 +282,7 @@ const createCareerCriteria = async (data) => {
 /**
  * Cập nhật tiêu chí nghề nghiệp
  */
-const updateCareerCriteria = async (id, data) => {
+const updateCareerCriteria = async (id, data, files = null) => {
   try {
     // Kiểm tra criteria tồn tại
     const existingCriteria = await prisma.career_criteria.findUnique({
@@ -186,7 +293,14 @@ const updateCareerCriteria = async (id, data) => {
       throw new Error("Career criteria not found");
     }
 
-    const { name, description, order_index, is_active, career_id } = data;
+    const {
+      name,
+      description,
+      order_index,
+      is_active,
+      career_id,
+      created_by_admin,
+    } = data;
 
     // Kiểm tra career tồn tại (nếu thay đổi career_id)
     if (career_id && career_id !== existingCriteria.career_id) {
@@ -229,7 +343,118 @@ const updateCareerCriteria = async (id, data) => {
       },
     });
 
-    return criteria;
+    // Upload/Update files nếu có
+    let videoThumbnailUrl = null;
+    let videoUrl = null;
+    let attachmentUrls = [];
+
+    if (files) {
+      // Update video thumbnail
+      if (files.video_thumbnail && files.video_thumbnail[0]) {
+        const thumbFile = files.video_thumbnail[0];
+        const result = await fileStorageService.updateFile(
+          OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+          criteria.id,
+          {
+            fileBuffer: thumbFile.buffer,
+            fileName: thumbFile.originalname,
+            mimeType: thumbFile.mimetype,
+            fileSize: thumbFile.size,
+            bucketName: MINIO_BUCKETS.MEDIA_THUMBS,
+            uploadBy: created_by_admin,
+          }
+        );
+        videoThumbnailUrl = result.fileUrl;
+      } else {
+        // Giữ nguyên thumbnail cũ
+        const oldThumb = await fileStorageService.getFirstMetadata(
+          OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+          criteria.id
+        );
+        videoThumbnailUrl = oldThumb?.fileUrl || null;
+      }
+
+      // Update video
+      if (files.video && files.video[0]) {
+        const videoFile = files.video[0];
+        const result = await fileStorageService.updateFile(
+          OBJECT_TYPE.CRITERIA_VIDEO,
+          criteria.id,
+          {
+            fileBuffer: videoFile.buffer,
+            fileName: videoFile.originalname,
+            mimeType: videoFile.mimetype,
+            fileSize: videoFile.size,
+            bucketName: MINIO_BUCKETS.MEDIA_VIDEOS,
+            uploadBy: created_by_admin,
+          }
+        );
+        videoUrl = result.fileUrl;
+      } else {
+        // Giữ nguyên video cũ
+        const oldVideo = await fileStorageService.getFirstMetadata(
+          OBJECT_TYPE.CRITERIA_VIDEO,
+          criteria.id
+        );
+        videoUrl = oldVideo?.fileUrl || null;
+      }
+
+      // Update attachments
+      if (files.attachments && files.attachments.length > 0) {
+        // Xóa attachments cũ
+        await fileStorageService.deleteFilesByObject(
+          OBJECT_TYPE.ATTACHMENTS,
+          criteria.id
+        );
+
+        // Upload attachments mới
+        for (const attachmentFile of files.attachments) {
+          const result = await fileStorageService.uploadFile({
+            fileBuffer: attachmentFile.buffer,
+            fileName: attachmentFile.originalname,
+            mimeType: attachmentFile.mimetype,
+            fileSize: attachmentFile.size,
+            objectType: OBJECT_TYPE.ATTACHMENTS,
+            objectId: criteria.id,
+            bucketName: MINIO_BUCKETS.ATTACHMENTS,
+            uploadBy: created_by_admin,
+          });
+          attachmentUrls.push(result.fileUrl);
+        }
+      } else {
+        // Giữ nguyên attachments cũ
+        const oldAttachments = await fileStorageService.getFilesByObject(
+          OBJECT_TYPE.ATTACHMENTS,
+          criteria.id
+        );
+        attachmentUrls = oldAttachments || [];
+      }
+    } else {
+      // Không có files mới, lấy files cũ
+      const videoThumbnail = await fileStorageService.getFirstMetadata(
+        OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+        criteria.id
+      );
+      const video = await fileStorageService.getFirstMetadata(
+        OBJECT_TYPE.CRITERIA_VIDEO,
+        criteria.id
+      );
+      const attachments = await fileStorageService.getFilesByObject(
+        OBJECT_TYPE.ATTACHMENTS,
+        criteria.id
+      );
+
+      videoThumbnailUrl = videoThumbnail?.fileUrl || null;
+      videoUrl = video?.fileUrl || null;
+      attachmentUrls = attachments || [];
+    }
+
+    return {
+      ...criteria,
+      video_thumbnail_url: videoThumbnailUrl,
+      video_url: videoUrl,
+      attachments: attachmentUrls,
+    };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
   }
@@ -252,6 +477,16 @@ const deleteCareerCriteria = async (id) => {
     await prisma.career_criteria.delete({
       where: { id },
     });
+
+    // Xóa tất cả files liên quan
+    await Promise.all([
+      fileStorageService.deleteFilesByObject(
+        OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
+        id
+      ),
+      fileStorageService.deleteFilesByObject(OBJECT_TYPE.CRITERIA_VIDEO, id),
+      fileStorageService.deleteFilesByObject(OBJECT_TYPE.ATTACHMENTS, id),
+    ]);
 
     return {
       success: true,

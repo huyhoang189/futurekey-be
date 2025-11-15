@@ -25,7 +25,7 @@ const getAllCareerCriteria = async (req, res) => {
     }
 
     if (career_id) {
-      filters.career_id = career_id;
+      filters.career_id = { equals: career_id };
     }
 
     const result = await careerCriteriaService.getAllCareerCriteria({
@@ -94,6 +94,8 @@ const getCareerCriteriaById = async (req, res) => {
 const createCareerCriteria = async (req, res) => {
   try {
     const { name, description, order_index, is_active, career_id } = req.body;
+    const files = req.files; // Files từ multer middleware
+    const { userSession } = req;
 
     // Validate required fields
     if (!name) {
@@ -110,13 +112,17 @@ const createCareerCriteria = async (req, res) => {
       });
     }
 
-    const criteria = await careerCriteriaService.createCareerCriteria({
-      name,
-      description,
-      order_index,
-      is_active,
-      career_id,
-    });
+    const criteria = await careerCriteriaService.createCareerCriteria(
+      {
+        name,
+        description,
+        order_index: order_index ? parseInt(order_index, 10) : undefined,
+        is_active: is_active === "true" || is_active === true,
+        career_id,
+        created_by_admin: userSession?.sub,
+      },
+      files
+    );
 
     return res.status(StatusCodes.CREATED).json({
       success: true,
@@ -151,6 +157,8 @@ const updateCareerCriteria = async (req, res) => {
   try {
     const { id } = req.params;
     const { name, description, order_index, is_active, career_id } = req.body;
+    const files = req.files; // Files từ multer middleware
+    const { userSession } = req;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -159,13 +167,22 @@ const updateCareerCriteria = async (req, res) => {
       });
     }
 
-    const criteria = await careerCriteriaService.updateCareerCriteria(id, {
-      name,
-      description,
-      order_index,
-      is_active,
-      career_id,
-    });
+    const criteria = await careerCriteriaService.updateCareerCriteria(
+      id,
+      {
+        name,
+        description,
+        order_index:
+          order_index !== undefined ? parseInt(order_index, 10) : undefined,
+        is_active:
+          is_active !== undefined
+            ? is_active === "true" || is_active === true
+            : undefined,
+        career_id,
+        created_by_admin: userSession?.sub,
+      },
+      files
+    );
 
     return res.status(StatusCodes.OK).json({
       success: true,

@@ -12,7 +12,6 @@ const createMetadata = async (data) => {
       file_size: data.fileSize,
       mine_type: data.mimeType,
       file_extension: data.fileExtension,
-      is_public: data.isPublic,
       metadata: data.metadata || {},
     },
   });
@@ -48,16 +47,6 @@ const getLatestFile = async (objectType, objectId) => {
   return files[0] || null;
 };
 
-const updateMetadata = async (id, updateData) => {
-  return await prisma.metadata.update({
-    where: { id },
-    data: {
-      ...updateData,
-      updatedAt: new Date(),
-    },
-  });
-};
-
 const deleteMetadata = async (id) => {
   return await prisma.metadata.delete({
     where: { id },
@@ -81,7 +70,6 @@ module.exports = {
   getMetadataById,
   getFilesByObject,
   getLatestFile,
-  updateMetadata,
   deleteMetadata,
   checkFileExists,
 };

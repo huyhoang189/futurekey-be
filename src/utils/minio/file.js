@@ -1,41 +1,64 @@
-const path = require("path");
-const { v4: uuidv4 } = require("uuid");
+const { minioClient } = require("./client");
 
-export const generateFilePath = ({
-  objectType,
-  objectId,
-  originalName,
-  additionalPath = "",
-}) => {
-  const fileExt = path.extname(originalName);
-  const fileId = uuidv4();
-
-  const pathTemplates = {
-    user_avatar: `avatars/user_${objectId}/avatar${fileExt}`,
-    career_thumbnail: `careers/${objectId}/thumbnail${fileExt}`,
-    criteria_thumbnail: `careers/${additionalPath}/criteria/${objectId}/thumbnail${fileExt}`,
-    criteria_video: `careers/${additionalPath}/criteria/${objectId}/videos/video_${fileId}${fileExt}`,
-    criteria_file: `careers/${additionalPath}/criteria/${objectId}/files/file_${fileId}${fileExt}`,
-  };
-
-  return (
-    pathTemplates[objectType] ||
-    `general/${objectType}/${objectId}/${fileId}${fileExt}`
-  );
+/**
+ * Upload file dạng buffer
+ */
+const uploadBuffer = async (bucket, objectKey, buffer, mimeType) => {
+  return minioClient.putObject(bucket, objectKey, buffer, {
+    "Content-Type": mimeType,
+  });
 };
 
-// Validate file type
-export const validateFileType = (file, allowedTypes) => {
-  return allowedTypes.some((type) => file.mimetype.startsWith(type));
+/**
+ * Upload file dạng stream (dùng cho video lớn)
+ */
+const uploadStream = async (bucket, objectKey, stream, size, mimeType) => {
+  return minioClient.putObject(bucket, objectKey, stream, size, {
+    "Content-Type": mimeType,
+  });
 };
 
-// Get file type category
-export const getFileCategory = (mimeType) => {
-  if (mimeType.startsWith("image/")) return "image";
-  if (mimeType.startsWith("video/")) return "video";
-  if (mimeType.startsWith("audio/")) return "audio";
-  if (mimeType.includes("pdf")) return "pdf";
-  if (mimeType.includes("word") || mimeType.includes("document"))
-    return "document";
-  return "other";
+/**
+ * Lấy metadata (file size, content-type, etag,…)
+ */
+const getStat = async (bucket, objectKey) => {
+  return minioClient.statObject(bucket, objectKey);
+};
+
+/**
+ * Lấy file dạng stream (PDF, ảnh, file)
+ */
+const getFileStream = async (bucket, objectKey) => {
+  return minioClient.getObject(bucket, objectKey);
+};
+
+/**
+ * Lấy một phần file (dùng cho VIDEO streaming)
+ */
+const getFileRange = async (bucket, objectKey, start, length) => {
+  return minioClient.getPartialObject(bucket, objectKey, start, length);
+};
+
+/**
+ * Tạo URL truy cập tạm thời (presigned URL)
+ */
+const getPresignedUrl = async (bucket, objectKey, expiry = 600) => {
+  return minioClient.presignedGetObject(bucket, objectKey, expiry);
+};
+
+/**
+ * Xóa object trên MinIO
+ */
+const removeFile = async (bucket, objectKey) => {
+  return minioClient.removeObject(bucket, objectKey);
+};
+
+module.exports = {
+  uploadBuffer,
+  uploadStream,
+  getStat,
+  getFileStream,
+  getFileRange,
+  getPresignedUrl,
+  removeFile,
 };

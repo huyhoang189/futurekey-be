@@ -1445,7 +1445,7 @@ ms@^2.1.1, ms@^2.1.3:
 
 multer@^2.0.2:
   version "2.0.2"
-  resolved "https://registry.npmjs.org/multer/-/multer-2.0.2.tgz"
+  resolved "https://registry.yarnpkg.com/multer/-/multer-2.0.2.tgz#08a8aa8255865388c387aaf041426b0c87bf58dd"
   integrity sha512-u7f2xaZ/UG8oLXHvtF/oWTRvT44p9ecwBBqTwgJVq0+4BW1g8OW01TyMEGWBHbyMOYVHXslaut7qEQ1meATXgw==
   dependencies:
     append-field "^1.0.0"

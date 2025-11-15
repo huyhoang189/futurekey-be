@@ -4,6 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "dependencies": {
+<<<<<<< HEAD
     "@prisma/client": "^6.15.0",
     "axios": "^1.12.2",
     "bcrypt": "^6.0.0",
@@ -27,6 +28,40 @@
     "uuid": "^13.0.0",
     "winston": "^3.17.0",
     "winston-daily-rotate-file": "^5.0.0"
+=======
+    "@ant-design/charts": "^2.1.2",
+    "@ant-design/icons": "^5.3.4",
+    "@ant-design/plots": "^2.2.8",
+    "@fontsource/roboto": "^5.1.0",
+    "antd": "^5.27.3",
+    "apexcharts": "^3.54.0",
+    "axios": "^1.6.8",
+    "bootstrap": "^5.3.6",
+    "chart.js": "^4.4.2",
+    "dayjs": "^1.11.13",
+    "file-saver": "^2.0.5",
+    "framer-motion": "^11.3.28",
+    "lodash": "^4.17.21",
+    "lodash-es": "^4.17.20",
+    "prop-types": "^15.8.1",
+    "react": ">=16.8.4",
+    "react-apexcharts": "^1.4.1",
+    "react-bootstrap": "^2.10.10",
+    "react-countup": "^6.5.3",
+    "react-doc-viewer": "^0.1.14",
+    "react-dom": ">=16.8.4",
+    "react-dropzone": "^14.2.3",
+    "react-highlight-words": "^0.21.0",
+    "react-icons": "^5.5.0",
+    "react-quill": "^2.0.0",
+    "react-router-dom": "^6.22.3",
+    "react-toastify": "^10.0.5",
+    "recharts": "^3.3.0",
+    "styled-components": "^6.1.8",
+    "uuid": "^11.1.0",
+    "yup": "^1.4.0",
+    "zustand": "^5.0.8"
+>>>>>>> 37fe4a0 (update)
   },
   "scripts": {
     "dev": "nodemon server.js"

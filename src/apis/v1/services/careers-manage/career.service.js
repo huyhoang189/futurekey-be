@@ -3,6 +3,7 @@ const prisma = new PrismaClient();
 const { FR, OBJECT_TYPE, MINIO_BUCKETS } = require("../../../../common");
 const { buildWhereClause } = require("../../../../utils/func");
 const fileStorageService = require("../file-storage/file-storage.service");
+const careerCriteriaService = require("./career-criteria.service");
 
 const CURRENT_FR = FR.FR00011;
 
@@ -105,12 +106,23 @@ const getCareerById = async (id, select = null) => {
 const createCareer = async (data, imageFile = null) => {
   try {
     const {
+      code,
       name,
       description,
       created_by_admin,
       tags,
       is_active = false,
     } = data;
+
+    // Kiểm tra mã nghề đã tồn tại
+    if (code) {
+      const existingCode = await prisma.career.findFirst({
+        where: { code },
+      });
+      if (existingCode) {
+        throw new Error("Career code already exists");
+      }
+    }
 
     // Kiểm tra tên nghề đã tồn tại
     if (name) {
@@ -125,6 +137,7 @@ const createCareer = async (data, imageFile = null) => {
     // Tạo career trước
     const career = await prisma.career.create({
       data: {
+        code,
         name,
         description,
         created_by_admin,
@@ -177,7 +190,20 @@ const updateCareer = async (id, data, imageFile = null) => {
       throw new Error("Career not found");
     }
 
-    const { name, description, created_by_admin, tags, is_active } = data;
+    const { code, name, description, created_by_admin, tags, is_active } = data;
+
+    // Kiểm tra mã nghề trùng (nếu thay đổi mã)
+    if (code && code !== existingCareer.code) {
+      const codeExists = await prisma.career.findFirst({
+        where: {
+          code,
+          id: { not: id },
+        },
+      });
+      if (codeExists) {
+        throw new Error("Career code already exists");
+      }
+    }
 
     // Kiểm tra tên nghề trùng (nếu thay đổi tên)
     if (name && name !== existingCareer.name) {
@@ -196,6 +222,7 @@ const updateCareer = async (id, data, imageFile = null) => {
     const career = await prisma.career.update({
       where: { id },
       data: {
+        code,
         name,
         description,
         created_by_admin,
@@ -258,32 +285,50 @@ const deleteCareer = async (id) => {
       throw new Error("Career not found");
     }
 
-    // Sử dụng transaction để đảm bảo cascade delete
-    await prisma.$transaction(async (tx) => {
-      // 1. Xóa tất cả career_criteria liên quan
-      await tx.career_criteria.deleteMany({
-        where: { career_id: id },
-      });
-
-      // 2. Xóa career
-      await tx.career.delete({
-        where: { id },
-      });
+    // 1. Lấy tất cả criteria thuộc career này
+    const criteriaList = await prisma.career_criteria.findMany({
+      where: { career_id: id },
+      select: { id: true },
     });
 
-    // 3. Xóa tất cả files liên quan (ảnh nền)
+    // 2. Xóa từng criteria và files liên quan bằng service
+    const deleteResults = await Promise.allSettled(
+      criteriaList.map((criteria) =>
+        careerCriteriaService.deleteCareerCriteria(criteria.id)
+      )
+    );
+
+    // Log các lỗi nếu có
+    const failedDeletes = deleteResults.filter((r) => r.status === "rejected");
+    if (failedDeletes.length > 0) {
+      console.warn(
+        `Warning: ${failedDeletes.length} criteria failed to delete:`,
+        failedDeletes.map((r) => r.reason?.message)
+      );
+    }
+
+    // 3. Xóa career từ database
+    await prisma.career.delete({
+      where: { id },
+    });
+
+    // 4. Xóa files của career (ảnh nền)
     try {
       await fileStorageService.deleteFilesByObject(
         OBJECT_TYPE.CAREER_THUMBS,
         id
       );
     } catch (fileError) {
-      console.error("Error deleting files:", fileError.message);
+      console.error("Error deleting career files:", fileError.message);
     }
 
     return {
       success: true,
       message: "Career and all related data deleted permanently",
+      deletedCriteriaCount: criteriaList.length,
+      successfulDeletes: deleteResults.filter((r) => r.status === "fulfilled")
+        .length,
+      failedDeletes: failedDeletes.length,
     };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);

@@ -137,6 +137,10 @@ router.get("/:id", careerController.getCareerById);
  *             required:
  *               - name
  *             properties:
+ *               code:
+ *                 type: string
+ *                 example: IT001
+ *                 description: Mã nghề nghiệp (unique)
  *               name:
  *                 type: string
  *                 example: Software Engineer
@@ -204,6 +208,10 @@ router.post(
  *           schema:
  *             type: object
  *             properties:
+ *               code:
+ *                 type: string
+ *                 example: IT001
+ *                 description: Mã nghề nghiệp (unique)
  *               name:
  *                 type: string
  *                 example: Senior Software Engineer
@@ -337,6 +345,10 @@ router.put("/:id/active", careerController.activeCareer);
  *         id:
  *           type: string
  *           example: career-123-abc-456
+ *         code:
+ *           type: string
+ *           example: IT001
+ *           description: Mã nghề nghiệp
  *         name:
  *           type: string
  *           example: Software Engineer
@@ -352,6 +364,10 @@ router.put("/:id/active", careerController.activeCareer);
  *         is_active:
  *           type: boolean
  *           example: true
+ *         background_image_url:
+ *           type: string
+ *           example: https://storage.example.com/career-image.jpg
+ *           description: URL ảnh nền nghề nghiệp
  *         created_at:
  *           type: string
  *           format: date-time

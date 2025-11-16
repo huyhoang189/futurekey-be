@@ -76,7 +76,7 @@ const getAllCareerCriteria = async ({
           OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
           criteria.id
         );
-        const video = await fileStorageService.getFirstMetadata(
+        const videoMetadata = await fileStorageService.getFirstMetadata(
           OBJECT_TYPE.CRITERIA_VIDEO,
           criteria.id
         );
@@ -85,13 +85,21 @@ const getAllCareerCriteria = async ({
           criteria.id
         );
 
+        // Tạo cấu trúc video object
+        const videoInfo = videoMetadata
+          ? {
+              video_thumb_url: videoThumbnail?.fileUrl || null,
+              video_url: videoMetadata.fileUrl,
+              ...(videoMetadata.metadata || {}), // Spread metadata của video (duration, durationFormatted, etc.)
+            }
+          : null;
+
         return {
           ...criteria,
           career: criteria.career_id
             ? careerMap[criteria.career_id] || null
             : null,
-          video_thumbnail_url: videoThumbnail?.fileUrl || null,
-          video_url: video?.fileUrl || null,
+          video: videoInfo,
           attachments: attachments || [],
         };
       })
@@ -143,7 +151,7 @@ const getCareerCriteriaById = async (id, select = null) => {
       OBJECT_TYPE.CRITERIA_VIDEO_THUMBS,
       criteria.id
     );
-    const video = await fileStorageService.getFirstMetadata(
+    const videoMetadata = await fileStorageService.getFirstMetadata(
       OBJECT_TYPE.CRITERIA_VIDEO,
       criteria.id
     );
@@ -152,11 +160,19 @@ const getCareerCriteriaById = async (id, select = null) => {
       criteria.id
     );
 
+    // Tạo cấu trúc video object
+    const videoInfo = videoMetadata
+      ? {
+          video_thumb_url: videoThumbnail?.fileUrl || null,
+          video_url: videoMetadata.fileUrl,
+          ...(videoMetadata || {}), // Spread metadata của video (duration, durationFormatted, etc.)
+        }
+      : null;
+
     return {
       ...criteria,
       career,
-      video_thumbnail_url: videoThumbnail?.fileUrl || null,
-      video_url: video?.fileUrl || null,
+      video: videoInfo,
       attachments: attachments || [],
     };
   } catch (error) {

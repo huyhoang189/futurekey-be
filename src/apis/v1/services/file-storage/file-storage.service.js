@@ -10,8 +10,67 @@ const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const { FR, MINIO_BUCKETS } = require("../../../../common");
 const { minio: minioConfig } = require("../../../../configs");
+const { getVideoDurationFromBuffer } = require("get-video-duration");
+const fs = require("fs");
+const os = require("os");
 
 const CURRENT_FR = FR.FR00013;
+
+// Video MIME types
+const VIDEO_MIME_TYPES = [
+  "video/mp4",
+  "video/mpeg",
+  "video/quicktime",
+  "video/x-msvideo",
+  "video/x-ms-wmv",
+  "video/webm",
+  "video/ogg",
+  "video/3gpp",
+  "video/3gpp2",
+  "video/x-flv",
+  "video/x-matroska",
+];
+
+/**
+ * Lấy thời lượng video từ buffer
+ * @param {Buffer} fileBuffer - File buffer
+ * @param {String} mimeType - MIME type của file
+ * @returns {Number|null} - Thời lượng video (giây) hoặc null
+ */
+const getVideoDuration = async (fileBuffer, mimeType) => {
+  // Kiểm tra xem có phải file video không
+  if (!VIDEO_MIME_TYPES.includes(mimeType)) {
+    return null;
+  }
+
+  let tempFilePath = null;
+
+  try {
+    // Tạo file tạm để đọc duration
+    const tempDir = os.tmpdir();
+    tempFilePath = path.join(tempDir, `temp_video_${uuidv4()}.tmp`);
+
+    // Ghi buffer ra file tạm
+    fs.writeFileSync(tempFilePath, fileBuffer);
+
+    // Lấy duration từ file
+    const duration = await getVideoDurationFromBuffer(fileBuffer);
+
+    return Math.round(duration * 100) / 100; // Làm tròn đến 2 chữ số thập phân
+  } catch (error) {
+    console.warn(`Warning: Could not get video duration: ${error.message}`);
+    return null;
+  } finally {
+    // Xóa file tạm
+    if (tempFilePath && fs.existsSync(tempFilePath)) {
+      try {
+        fs.unlinkSync(tempFilePath);
+      } catch (err) {
+        console.warn(`Warning: Could not delete temp file: ${err.message}`);
+      }
+    }
+  }
+};
 
 /**
  * Upload file lên MinIO và lưu metadata
@@ -62,6 +121,21 @@ const uploadFile = async ({
       7 * 24 * 60 * 60
     );
 
+    // Tạo metadata object
+    const metadataInfo = {
+      originalFileName: fileName,
+      uploadedAt: new Date().toISOString(),
+    };
+
+    // Nếu là video, lấy thời lượng
+    if (VIDEO_MIME_TYPES.includes(mimeType)) {
+      const duration = await getVideoDuration(fileBuffer, mimeType);
+      if (duration !== null) {
+        metadataInfo.duration = duration; // Thời lượng tính bằng giây
+        metadataInfo.durationFormatted = formatDuration(duration); // Format: HH:MM:SS
+      }
+    }
+
     // Save metadata to database
     const fileMetadata = await metadataService.createMetadata({
       objectType,
@@ -72,10 +146,7 @@ const uploadFile = async ({
       fileSize,
       mimeType,
       fileExtension,
-      metadata: {
-        originalFileName: fileName,
-        uploadedAt: new Date().toISOString(),
-      },
+      metadata: metadataInfo,
     });
 
     return {
@@ -87,6 +158,23 @@ const uploadFile = async ({
   } catch (error) {
     throw new Error(`${CURRENT_FR} - Upload file error: ${error.message}`);
   }
+};
+
+/**
+ * Format duration từ giây sang HH:MM:SS
+ * @param {Number} seconds - Thời lượng tính bằng giây
+ * @returns {String} - Format HH:MM:SS
+ */
+const formatDuration = (seconds) => {
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+
+  return [
+    hours.toString().padStart(2, "0"),
+    minutes.toString().padStart(2, "0"),
+    secs.toString().padStart(2, "0"),
+  ].join(":");
 };
 
 /**

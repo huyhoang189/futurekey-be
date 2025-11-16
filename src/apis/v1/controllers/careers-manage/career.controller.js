@@ -15,6 +15,7 @@ const getAllCareers = async (req, res) => {
 
     if (search) {
       filters.OR = [
+        { code: { contains: search } },
         { name: { contains: search } },
         { description: { contains: search } },
         { tags: { contains: search } },
@@ -90,7 +91,7 @@ const getCareerById = async (req, res) => {
  */
 const createCareer = async (req, res) => {
   try {
-    const { name, description, tags, is_active } = req.body;
+    const { code, name, description, tags, is_active } = req.body;
     const imageFile = req.file; // File từ multer middleware
 
     const { userSession } = req;
@@ -114,6 +115,7 @@ const createCareer = async (req, res) => {
 
     const career = await careerService.createCareer(
       {
+        code,
         name,
         description,
         created_by_admin: holderUser.id,
@@ -149,7 +151,7 @@ const createCareer = async (req, res) => {
 const updateCareer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, description, tags, is_active } = req.body;
+    const { code, name, description, tags, is_active } = req.body;
     const imageFile = req.file; // File từ multer middleware
 
     const { userSession } = req;
@@ -173,6 +175,7 @@ const updateCareer = async (req, res) => {
     const career = await careerService.updateCareer(
       id,
       {
+        code,
         name,
         description,
         created_by_admin: holderUser.id,

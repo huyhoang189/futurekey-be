@@ -231,8 +231,8 @@ const createSchoolUser = async (schoolUserData) => {
         email,
         phone_number,
         password_hash: password
-          ? await bcrypt.hashPassword(password)
-          : await bcrypt.hashPassword("teacher123"),
+          ? await bcrypt.hashPassword(password, 10)
+          : await bcrypt.hashPassword("teacher123", 10),
         address,
         group_id: schoolUserGroupId,
         status: "ACTIVE",

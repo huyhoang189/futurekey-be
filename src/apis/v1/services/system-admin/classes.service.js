@@ -29,33 +29,60 @@ const getAllClasses = async ({ filters = {}, paging = {}, orderBy = {} }) => {
     },
   });
 
-  // Manual join với schools để lấy thông tin trường
+  // Manual join với schools và homeroom teachers
   if (data.length > 0) {
-    // Lấy unique school_ids
+    // Lấy unique school_ids và homeroom_teacher_ids
     const schoolIds = [...new Set(data.map(cls => cls.school_id).filter(Boolean))];
+    const teacherIds = [...new Set(data.map(cls => cls.homeroom_teacher_id).filter(Boolean))];
     
-    if (schoolIds.length > 0) {
-      // Query schools một lần
-      const schools = await prisma.schools.findMany({
-        where: {
-          id: { in: schoolIds },
-        },
+    // Parallel queries
+    const [schools, schoolUsers] = await Promise.all([
+      schoolIds.length > 0 ? prisma.schools.findMany({
+        where: { id: { in: schoolIds } },
         select: {
           id: true,
           name: true,
         },
-      });
+      }) : [],
+      teacherIds.length > 0 ? prisma.auth_impl_user_school.findMany({
+        where: { user_id: { in: teacherIds } },
+        select: {
+          id: true,
+          user_id: true,
+          school_id: true,
+          description: true,
+        },
+      }) : [],
+    ]);
 
-      // Tạo map để lookup nhanh
-      const schoolsMap = Object.fromEntries(
-        schools.map(school => [school.id, school])
-      );
+    // Lấy thông tin users cho teachers
+    const userIds = schoolUsers.map(su => su.user_id).filter(Boolean);
+    const users = userIds.length > 0 ? await prisma.auth_base_user.findMany({
+      where: { id: { in: userIds } },
+      select: {
+        id: true,
+        user_name: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+      },
+    }) : [];
 
-      // Gắn thông tin school vào từng class
-      data.forEach(cls => {
-        cls.school = cls.school_id ? schoolsMap[cls.school_id] || null : null;
-      });
-    }
+    // Tạo maps để lookup nhanh
+    const schoolsMap = Object.fromEntries(schools.map(school => [school.id, school]));
+    const usersMap = Object.fromEntries(users.map(user => [user.id, user]));
+    const schoolUsersMap = Object.fromEntries(
+      schoolUsers.map(su => [
+        su.user_id,
+        { ...su, user: usersMap[su.user_id] || null }
+      ])
+    );
+
+    // Gắn thông tin school và homeroom_teacher vào từng class
+    data.forEach(cls => {
+      cls.school = cls.school_id ? schoolsMap[cls.school_id] || null : null;
+      cls.homeroom_teacher = cls.homeroom_teacher_id ? schoolUsersMap[cls.homeroom_teacher_id] || null : null;
+    });
   }
 
   return {
@@ -89,17 +116,43 @@ const getClassById = async (id) => {
     throw new Error("Class not found");
   }
 
-  // Manual join với school
-  if (classData.school_id) {
-    const school = await prisma.schools.findUnique({
+  // Manual join với school và homeroom teacher
+  const [school, schoolUser] = await Promise.all([
+    classData.school_id ? prisma.schools.findUnique({
       where: { id: classData.school_id },
       select: {
         id: true,
         name: true,
       },
+    }) : null,
+    classData.homeroom_teacher_id ? prisma.auth_impl_user_school.findFirst({
+      where: { user_id: classData.homeroom_teacher_id },
+      select: {
+        id: true,
+        user_id: true,
+        school_id: true,
+        description: true,
+      },
+    }) : null,
+  ]);
+
+  // Lấy thông tin user của teacher
+  if (schoolUser && schoolUser.user_id) {
+    const user = await prisma.auth_base_user.findUnique({
+      where: { id: schoolUser.user_id },
+      select: {
+        id: true,
+        user_name: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+      },
     });
-    classData.school = school;
+    schoolUser.user = user;
   }
+
+  classData.school = school;
+  classData.homeroom_teacher = schoolUser;
 
   return classData;
 };
@@ -164,17 +217,43 @@ const createClass = async (classData) => {
     },
   });
 
-  // Manual join với school
-  if (classResult.school_id) {
-    const school = await prisma.schools.findUnique({
+  // Manual join với school và homeroom teacher
+  const [school, schoolUser] = await Promise.all([
+    classResult.school_id ? prisma.schools.findUnique({
       where: { id: classResult.school_id },
       select: {
         id: true,
         name: true,
       },
+    }) : null,
+    classResult.homeroom_teacher_id ? prisma.auth_impl_user_school.findFirst({
+      where: { user_id: classResult.homeroom_teacher_id },
+      select: {
+        id: true,
+        user_id: true,
+        school_id: true,
+        description: true,
+      },
+    }) : null,
+  ]);
+
+  // Lấy thông tin user của teacher
+  if (schoolUser && schoolUser.user_id) {
+    const user = await prisma.auth_base_user.findUnique({
+      where: { id: schoolUser.user_id },
+      select: {
+        id: true,
+        user_name: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+      },
     });
-    classResult.school = school;
+    schoolUser.user = user;
   }
+
+  classResult.school = school;
+  classResult.homeroom_teacher = schoolUser;
 
   return classResult;
 };
@@ -250,17 +329,43 @@ const updateClass = async (id, classData) => {
     },
   });
 
-  // Manual join với school
-  if (classResult.school_id) {
-    const school = await prisma.schools.findUnique({
+  // Manual join với school và homeroom teacher
+  const [school, schoolUser] = await Promise.all([
+    classResult.school_id ? prisma.schools.findUnique({
       where: { id: classResult.school_id },
       select: {
         id: true,
         name: true,
       },
+    }) : null,
+    classResult.homeroom_teacher_id ? prisma.auth_impl_user_school.findFirst({
+      where: { user_id: classResult.homeroom_teacher_id },
+      select: {
+        id: true,
+        user_id: true,
+        school_id: true,
+        description: true,
+      },
+    }) : null,
+  ]);
+
+  // Lấy thông tin user của teacher
+  if (schoolUser && schoolUser.user_id) {
+    const user = await prisma.auth_base_user.findUnique({
+      where: { id: schoolUser.user_id },
+      select: {
+        id: true,
+        user_name: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+      },
     });
-    classResult.school = school;
+    schoolUser.user = user;
   }
+
+  classResult.school = school;
+  classResult.homeroom_teacher = schoolUser;
 
   return classResult;
 };

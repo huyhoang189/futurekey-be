@@ -307,7 +307,7 @@ router.post("/", studentsController.createStudent);
  * @swagger
  * /api/v1/system-admin/students/{id}:
  *   put:
- *     summary: Cập nhật thông tin student
+ *     summary: Cập nhật thông tin student và user
  *     tags: [System Admin - Students]
  *     security:
  *       - bearerAuth: []
@@ -325,26 +325,69 @@ router.post("/", studentsController.createStudent);
  *           schema:
  *             type: object
  *             properties:
- *               school_id:
- *                 type: string
- *                 example: school-789-xyz
- *               class_id:
- *                 type: string
- *                 example: class-101-qwe
- *               sex:
- *                 type: string
- *                 enum: [OTHER, MALE, FEMALE]
- *                 example: MALE
- *               birthday:
- *                 type: string
- *                 format: date
- *                 example: 2005-01-15
- *               description:
- *                 type: string
- *                 example: Học sinh giỏi toán
- *               major_interest:
- *                 type: string
- *                 example: Toán học, Vật lý, Lập trình
+ *               student:
+ *                 type: object
+ *                 description: Thông tin student (auth_impl_user_student)
+ *                 properties:
+ *                   school_id:
+ *                     type: string
+ *                     example: school-789-xyz
+ *                   class_id:
+ *                     type: string
+ *                     example: class-101-qwe
+ *                   sex:
+ *                     type: string
+ *                     enum: [OTHER, MALE, FEMALE]
+ *                     example: MALE
+ *                   birthday:
+ *                     type: string
+ *                     format: date
+ *                     example: 2005-01-15
+ *                   description:
+ *                     type: string
+ *                     example: Học sinh giỏi toán
+ *                   major_interest:
+ *                     type: string
+ *                     example: Toán học, Vật lý, Lập trình
+ *               base_user:
+ *                 type: object
+ *                 description: Thông tin user cơ bản (auth_base_user)
+ *                 properties:
+ *                   user_name:
+ *                     type: string
+ *                     example: student001_updated
+ *                   full_name:
+ *                     type: string
+ *                     example: Nguyễn Văn An
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     example: student001@school.edu.vn
+ *                   phone_number:
+ *                     type: string
+ *                     example: 0987654321
+ *                   address:
+ *                     type: string
+ *                     example: Hà Nội
+ *                   status:
+ *                     type: string
+ *                     enum: [ACTIVE, INACTIVE]
+ *                     example: ACTIVE
+ *           example:
+ *             student:
+ *               school_id: school-002
+ *               class_id: class-10A1
+ *               sex: MALE
+ *               birthday: 2005-08-15
+ *               description: Học sinh giỏi toán
+ *               major_interest: Toán học, Lập trình
+ *             base_user:
+ *               user_name: student_nguyen
+ *               full_name: Nguyễn Văn An
+ *               email: nguyenvanan@school.edu.vn
+ *               phone_number: 0912345678
+ *               address: Hà Nội
+ *               status: ACTIVE
  *     responses:
  *       200:
  *         description: Cập nhật thành công

@@ -10,12 +10,10 @@ const getAllStudents = async (req, res) => {
     const { page, limit, skip } = req.pagination;
     const { search, school_id, class_id, sex, grade_level } = req.query;
 
-    // Build filters
+    // Build filters - chỉ search trong bảng auth_impl_user_student
     const filters = {};
 
     if (search) {
-      // Search in user info - need to use raw query or different approach
-      // For now, we'll implement basic search
       filters.OR = [
         { description: { contains: search } },
         { major_interest: { contains: search } },
@@ -34,12 +32,11 @@ const getAllStudents = async (req, res) => {
       filters.sex = sex;
     }
 
-    // Note: grade_level filter would need class join, will implement in service if needed
-
     const result = await studentsService.getAllStudents({
       filters,
       paging: { skip, limit },
       orderBy: { created_at: "desc" },
+      search, // Pass search để service xử lý manual search trong user/school/class
     });
 
     return res.status(StatusCodes.OK).json({
@@ -184,14 +181,7 @@ const createStudent = async (req, res) => {
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      school_id,
-      class_id,
-      sex,
-      birthday,
-      description,
-      major_interest,
-    } = req.body;
+    const updateData = req.body;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -200,17 +190,17 @@ const updateStudent = async (req, res) => {
       });
     }
 
-    // Validate sex enum
-    if (sex && !['OTHER', 'MALE', 'FEMALE'].includes(sex)) {
+    // Validate sex enum if provided
+    if (updateData.student?.sex && !['OTHER', 'MALE', 'FEMALE'].includes(updateData.student.sex)) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Invalid sex value. Must be OTHER, MALE, or FEMALE",
       });
     }
 
-    // Validate birthday
-    if (birthday) {
-      const birthDate = new Date(birthday);
+    // Validate birthday if provided
+    if (updateData.student?.birthday) {
+      const birthDate = new Date(updateData.student.birthday);
       const now = new Date();
       const age = now.getFullYear() - birthDate.getFullYear();
       
@@ -222,14 +212,7 @@ const updateStudent = async (req, res) => {
       }
     }
 
-    const student = await studentsService.updateStudent(id, {
-      school_id,
-      class_id,
-      sex,
-      birthday,
-      description,
-      major_interest,
-    });
+    const student = await studentsService.updateStudent(id, updateData);
 
     return res.status(StatusCodes.OK).json({
       success: true,

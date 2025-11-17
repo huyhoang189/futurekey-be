@@ -1,0 +1,114 @@
+=== DỮ LIỆU SCHOOLS ===
+
+{
+  "name": "Trường THPT Nguyễn Huệ",
+  "address": "123 Đường Lê Lợi, Quận 1, TP.HCM",
+  "contact_email": "thptnguynhue@edu.vn",
+  "phone_number": "0281234567"
+}
+
+{
+  "name": "Trường THCS Trần Hưng Đạo",
+  "address": "456 Đường Nguyễn Trãi, Quận 5, TP.HCM",
+  "contact_email": "thcstranhungdao@edu.vn",
+  "phone_number": "0287654321"
+}
+
+{
+  "name": "Trường Tiểu học Kim Đồng",
+  "address": "789 Đường Lý Thường Kiệt, Quận 10, TP.HCM",
+  "contact_email": "thkimdong@edu.vn",
+  "phone_number": "0289876543"
+}
+
+{
+  "name": "Trường THPT Lê Quý Đôn",
+  "address": "321 Đường Hai Bà Trưng, Quận 3, TP.HCM",
+  "contact_email": "thptlequydon@edu.vn",
+  "phone_number": "0283456789"
+}
+
+{
+  "name": "Trường THCS Lê Lợi",
+  "address": "654 Đường Võ Văn Tần, Quận Tân Bình, TP.HCM",
+  "contact_email": "thcsleloi@edu.vn",
+  "phone_number": "0286543210"
+}
+
+=== DỮ LIỆU CLASSES ===
+Copy từng JSON object và POST vào: /api/v1/system-admin/classes
+
+// Cho Trường THCS Trần Hưng Đạo
+{
+  "name": "Lớp 6A",
+  "grade_level": 6,
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "9f9a01b1-c355-11f0-afc5-2626c197d041"
+}
+
+{
+  "name": "Lớp 7A",
+  "grade_level": 7,
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "a6884cc8-c355-11f0-afc5-2626c197d041"
+}
+
+// Cho Trường Tiểu học Kim Đồng
+{
+  "name": "Lớp 1A",
+  "grade_level": 1,
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "b1c7eb59-c355-11f0-afc5-2626c197d041"
+}
+
+{
+  "name": "Lớp 3A",
+  "grade_level": 3,
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "b1c7eb59-c355-11f0-afc5-2626c197d041"
+}
+
+{
+  "name": "Lớp 5A",
+  "grade_level": 5,
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "b7824a35-c355-11f0-afc5-2626c197d041"
+}
+
+// Cho Trường THPT Lê Quý Đôn
+{
+  "name": "Lớp 10 Toán",
+  "grade_level": 10,
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "bf15af7e-c355-11f0-afc5-2626c197d041"
+}
+
+{
+  "name": "Lớp 10 Lý",
+  "grade_level": 10,
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "c6d6da8b-c355-11f0-afc5-2626c197d041"
+}
+
+// Cho Trường THCS Lê Lợi
+{
+  "name": "Lớp 6C",
+  "grade_level": 6,
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "cd45446b-c355-11f0-afc5-2626c197d041"
+}
+
+{
+  "name": "Lớp 8B",
+  "grade_level": 8,
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "d30ee59f-c355-11f0-afc5-2626c197d041"
+}
+
+// Cho Trường THPT Phạm Văn Đồng
+{
+  "name": "Lớp 10A",
+  "grade_level": 10,
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "homeroom_teacher_id": "df9df050-c355-11f0-afc5-2626c197d041"
+}

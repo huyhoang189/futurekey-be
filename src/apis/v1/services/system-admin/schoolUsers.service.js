@@ -8,14 +8,14 @@ const bcrypt = require("../../../../utils/bcrypt");
 const getDefaultSchoolUserGroupId = async () => {
   try {
     const schoolUserGroup = await prisma.auth_group.findFirst({
-      where: { 
+      where: {
         OR: [
           { type: "SCHOOL_TEACHER" },
           { name: { contains: "Giáo viên" } },
         ]
       },
     });
-    
+
     return schoolUserGroup?.id || null;
   } catch (error) {
     return null;
@@ -98,38 +98,54 @@ const getAllSchoolUsers = async ({ filters = {}, paging = {}, orderBy = {}, sear
   // Manual join với users, schools
   if (data.length > 0) {
     // Get unique IDs
-    const userIds = [...new Set(data.map(schoolUser => schoolUser.user_id).filter(Boolean))];
-    const schoolIds = [...new Set(data.map(schoolUser => schoolUser.school_id).filter(Boolean))];
-    
+    const userIds = [
+      ...new Set(data.map((schoolUser) => schoolUser.user_id).filter(Boolean)),
+    ];
+    const schoolIds = [
+      ...new Set(
+        data.map((schoolUser) => schoolUser.school_id).filter(Boolean)
+      ),
+    ];
+
     // Parallel queries
     const [users, schools] = await Promise.all([
-      userIds.length > 0 ? prisma.auth_base_user.findMany({
-        where: { id: { in: userIds } },
-        select: {
-          id: true,
-          user_name: true,
-          full_name: true,
-          email: true,
-          phone_number: true,
-          address: true,
-          status: true,
-          group_id: true,
-        },
-      }) : [],
-      schoolIds.length > 0 ? prisma.schools.findMany({
-        where: { id: { in: schoolIds } },
-        select: { id: true, name: true, address: true },
-      }) : [],
+      userIds.length > 0
+        ? prisma.auth_base_user.findMany({
+            where: { id: { in: userIds } },
+            select: {
+              id: true,
+              user_name: true,
+              full_name: true,
+              email: true,
+              phone_number: true,
+              address: true,
+              status: true,
+              group_id: true,
+            },
+          })
+        : [],
+      schoolIds.length > 0
+        ? prisma.schools.findMany({
+            where: { id: { in: schoolIds } },
+            select: { id: true, name: true, address: true },
+          })
+        : [],
     ]);
 
     // Create maps for fast lookup
-    const usersMap = Object.fromEntries(users.map(user => [user.id, user]));
-    const schoolsMap = Object.fromEntries(schools.map(school => [school.id, school]));
+    const usersMap = Object.fromEntries(users.map((user) => [user.id, user]));
+    const schoolsMap = Object.fromEntries(
+      schools.map((school) => [school.id, school])
+    );
 
     // Attach related data
-    data.forEach(schoolUser => {
-      schoolUser.user = schoolUser.user_id ? usersMap[schoolUser.user_id] || null : null;
-      schoolUser.school = schoolUser.school_id ? schoolsMap[schoolUser.school_id] || null : null;
+    data.forEach((schoolUser) => {
+      schoolUser.user = schoolUser.user_id
+        ? usersMap[schoolUser.user_id] || null
+        : null;
+      schoolUser.school = schoolUser.school_id
+        ? schoolsMap[schoolUser.school_id] || null
+        : null;
     });
   }
 
@@ -165,23 +181,27 @@ const getSchoolUserById = async (id) => {
 
   // Manual join với user, school
   const [user, school] = await Promise.all([
-    schoolUser.user_id ? prisma.auth_base_user.findUnique({
-      where: { id: schoolUser.user_id },
-      select: {
-        id: true,
-        user_name: true,
-        full_name: true,
-        email: true,
-        phone_number: true,
-        address: true,
-        status: true,
-        group_id: true,
-      },
-    }) : null,
-    schoolUser.school_id ? prisma.schools.findUnique({
-      where: { id: schoolUser.school_id },
-      select: { id: true, name: true, address: true },
-    }) : null,
+    schoolUser.user_id
+      ? prisma.auth_base_user.findUnique({
+          where: { id: schoolUser.user_id },
+          select: {
+            id: true,
+            user_name: true,
+            full_name: true,
+            email: true,
+            phone_number: true,
+            address: true,
+            status: true,
+            group_id: true,
+          },
+        })
+      : null,
+    schoolUser.school_id
+      ? prisma.schools.findUnique({
+          where: { id: schoolUser.school_id },
+          select: { id: true, name: true, address: true },
+        })
+      : null,
   ]);
 
   schoolUser.user = user;
@@ -251,7 +271,7 @@ const createSchoolUser = async (schoolUserData) => {
         password_hash: password ? await bcrypt.hashPassword(password, 10) : await bcrypt.hashPassword('123456', 10),
         address,
         group_id: schoolUserGroupId,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       select: {
         id: true,
@@ -284,10 +304,12 @@ const createSchoolUser = async (schoolUserData) => {
     });
 
     // Get school data for response
-    const school = school_id ? await tx.schools.findUnique({
-      where: { id: school_id },
-      select: { id: true, name: true, address: true },
-    }) : null;
+    const school = school_id
+      ? await tx.schools.findUnique({
+          where: { id: school_id },
+          select: { id: true, name: true, address: true },
+        })
+      : null;
 
     return {
       schoolUser: {
@@ -465,13 +487,7 @@ const updateSchoolUser = async (id, updateData) => {
  * Cập nhật user info của school user
  */
 const updateSchoolUserUser = async (id, userData) => {
-  const {
-    user_name,
-    full_name,
-    email,
-    phone_number,
-    address,
-  } = userData;
+  const { user_name, full_name, email, phone_number, address } = userData;
 
   // Get school user info
   const schoolUser = await prisma.auth_impl_user_school.findUnique({
@@ -577,8 +593,8 @@ const deleteSchoolUser = async (id, options = {}) => {
     }
 
     return {
-      message: deleteUser 
-        ? "Delete school user and user account successfully" 
+      message: deleteUser
+        ? "Delete school user and user account successfully"
         : "Delete school user successfully",
     };
   });

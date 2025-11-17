@@ -27,11 +27,55 @@ model auth_base_user {
   last_seen_at   DateTime?              @db.Timestamp(0)
 
   @@index([email], map: "idx_email")
-  @@index([phone_number], map: "idx_phone_number")
   @@index([full_name], map: "idx_full_name")
   @@index([group_id], map: "idx_group_id")
   @@index([last_seen_at], map: "idx_last_seen")
+  @@index([phone_number], map: "idx_phone_number")
   @@index([status], map: "idx_status")
+}
+
+model auth_group {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name        String?   @db.VarChar(255)
+  description String?   @db.VarChar(255)
+  type        String?   @db.VarChar(255)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([name], map: "idx_name")
+  @@index([type], map: "idx_type")
+}
+
+model auth_impl_user_school {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id     String?   @db.VarChar(36)
+  school_id   String?   @db.VarChar(36)
+  description String?   @db.Text
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([school_id], map: "idx_school_id")
+  @@index([user_id], map: "idx_user_id")
+  @@index([user_id, school_id], map: "idx_user_school")
+}
+
+model auth_impl_user_student {
+  id             String                      @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  user_id        String?                     @db.VarChar(36)
+  school_id      String?                     @db.VarChar(36)
+  class_id       String?                     @db.VarChar(36)
+  sex            auth_impl_user_student_sex?
+  birthday       DateTime?                   @db.Date
+  description    String?                     @db.Text
+  major_interest String?                     @db.Text
+  created_at     DateTime?                   @default(now()) @db.Timestamp(0)
+  updated_at     DateTime?                   @default(now()) @db.Timestamp(0)
+
+  @@index([birthday], map: "idx_birthday")
+  @@index([class_id], map: "idx_class_id")
+  @@index([school_id], map: "idx_school_id")
+  @@index([sex], map: "idx_sex")
+  @@index([user_id], map: "idx_user_id")
 }
 
 model auth_refresh_tokens {
@@ -53,64 +97,6 @@ model auth_refresh_tokens {
   @@index([user_id, expires_at], map: "idx_user_expires")
 }
 
-model system_setting {
-  id            String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name_setting  String?   @unique(map: "system_setting_pk") @db.VarChar(255)
-  value_setting String?   @db.VarChar(255)
-  created_at    DateTime? @default(now()) @db.Timestamp(0)
-  updated_at    DateTime? @default(now()) @db.Timestamp(0)
-}
-
-model auth_impl_user_student {
-  id              String     @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  user_id         String?    @db.VarChar(36)
-  school_id       String?    @db.VarChar(36)
-  class_id        String?    @db.VarChar(36)
-  sex             sex_enum?
-  birthday        DateTime?  @db.Date
-  description     String?    @db.Text
-  major_interest  String?    @db.Text
-  created_at      DateTime?  @default(now()) @db.Timestamp(0)
-  updated_at      DateTime?  @default(now()) @db.Timestamp(0)
-
-  @@index([user_id], map: "idx_user_id")
-  @@index([school_id], map: "idx_school_id")
-  @@index([class_id], map: "idx_class_id")
-  @@index([sex], map: "idx_sex")
-  @@index([birthday], map: "idx_birthday")
-}
-
-enum auth_base_user_status {
-  ACTIVE
-  INACTIVE
-  BANNER
-}
-
-model auth_impl_user_school {
-  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  user_id     String?   @db.VarChar(36)
-  school_id   String?   @db.VarChar(36)
-  description String?   @db.Text
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  updated_at  DateTime? @default(now()) @db.Timestamp(0)
-
-  @@index([user_id], map: "idx_user_id")
-  @@index([school_id], map: "idx_school_id")
-  @@index([user_id, school_id], map: "idx_user_school")
-}
-
-model auth_group {
-  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name        String?   @db.VarChar(255)
-  description String?   @db.VarChar(255)
-  type        String?   @db.VarChar(255)
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  updated_at  DateTime? @default(now()) @db.Timestamp(0)
-
-  @@index([name], map: "idx_name")
-  @@index([type], map: "idx_type")
-}
-
 model auth_role {
   id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
   group_id    String?   @db.VarChar(36)
@@ -120,63 +106,49 @@ model auth_role {
   updated_at  DateTime? @default(now()) @db.Timestamp(0)
 
   @@index([group_id], map: "idx_group_id")
-  @@index([name], map: "idx_name")
   @@index([group_id, name], map: "idx_group_name")
-}
-
-model student_logs {
-  id         String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  student_id String?   @db.VarChar(36)
-  type       String?   @db.VarChar(255)
-  content    String?   @db.Text
-  created_at DateTime? @default(now()) @db.Timestamp(0)
-  updated_at DateTime? @default(now()) @db.Timestamp(0)
-
-  @@index([student_id], map: "idx_student_id")
-  @@index([type], map: "idx_type")
-  @@index([created_at], map: "idx_created_at")
-  @@index([student_id, type], map: "idx_student_type")
-}
-
-model schools {
-  id           String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name         String?   @db.VarChar(255)
-  address      String?   @db.VarChar(255)
-  contact_email String?  @db.VarChar(255)
-  phone_number String?   @db.VarChar(20)
-  created_at   DateTime? @default(now()) @db.Timestamp(0)
-  updated_at   DateTime? @default(now()) @db.Timestamp(0)
-
   @@index([name], map: "idx_name")
-  @@index([contact_email], map: "idx_contact_email")
-  @@index([phone_number], map: "idx_phone_number")
 }
 
 model classes {
-  id                    String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name                  String?   @db.VarChar(255)
-  grade_level           Int?
-  school_id             String?   @db.VarChar(36)
-  homeroom_teacher_id   String?   @db.VarChar(36)
-  created_at            DateTime? @default(now()) @db.Timestamp(0)
-  updated_at            DateTime? @default(now()) @db.Timestamp(0)
+  id                  String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name                String?   @db.VarChar(255)
+  grade_level         Int?
+  school_id           String?   @db.VarChar(36)
+  homeroom_teacher_id String?   @db.VarChar(36)
+  created_at          DateTime? @default(now()) @db.Timestamp(0)
+  updated_at          DateTime? @default(now()) @db.Timestamp(0)
 
-  @@index([name], map: "idx_name")
   @@index([grade_level], map: "idx_grade_level")
-  @@index([school_id], map: "idx_school_id")
   @@index([homeroom_teacher_id], map: "idx_homeroom_teacher_id")
+  @@index([name], map: "idx_name")
   @@index([school_id, grade_level], map: "idx_school_grade")
+  @@index([school_id], map: "idx_school_id")
 }
 
 model commune {
-  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name        String?   @db.VarChar(255)
-  province_id String?   @db.VarChar(36)
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+  id         String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name       String?   @db.VarChar(255)
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
 
   @@index([name], map: "idx_name")
-  @@index([province_id], map: "idx_province_id")
+}
+
+model metadata {
+  id             String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  bucket_name    String?   @db.VarChar(255)
+  object_type    String?   @db.VarChar(255)
+  object_id      String?   @db.VarChar(36)
+  file_name      String?   @db.VarChar(255)
+  file_path      String?   @db.VarChar(255)
+  file_size      Int?
+  mine_type      String?   @db.VarChar(255)
+  file_extension String?   @db.VarChar(255)
+  metadata       Json?
+  upload_by      String?   @db.VarChar(36)
+  created_at     DateTime? @default(now()) @db.Timestamp(0)
+  updated_at     DateTime? @default(now()) @db.Timestamp(0)
 }
 
 model province {
@@ -188,8 +160,119 @@ model province {
   @@index([name], map: "idx_name")
 }
 
-enum sex_enum {
-  OTHER @map("0")
-  MALE  @map("1") 
+model schools {
+  id            String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name          String?   @db.VarChar(255)
+  address       String?   @db.VarChar(255)
+  contact_email String?   @db.VarChar(255)
+  phone_number  String?   @db.VarChar(20)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([contact_email], map: "idx_contact_email")
+  @@index([name], map: "idx_name")
+  @@index([phone_number], map: "idx_phone_number")
+}
+
+model student_logs {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id String?   @db.VarChar(36)
+  type       String?   @db.VarChar(255)
+  content    String?   @db.Text
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([created_at], map: "idx_created_at")
+  @@index([student_id], map: "idx_student_id")
+  @@index([student_id, type], map: "idx_student_type")
+  @@index([type], map: "idx_type")
+}
+
+model system_setting {
+  id            String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name_setting  String?   @unique(map: "system_setting_pk") @db.VarChar(255)
+  value_setting String?   @db.VarChar(255)
+  created_at    DateTime? @default(now()) @db.Timestamp(0)
+  updated_at    DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model career {
+  id               String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  code             String?   @db.VarChar(10)
+  name             String?   @db.VarChar(255)
+  description      String?   @db.Text
+  created_by_admin String?   @db.VarChar(36)
+  tags             String?   @db.VarChar(255)
+  is_active        Boolean?  @default(false)
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  updated_at       DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model career_criteria {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name        String?   @db.VarChar(255)
+  description String?   @db.Text
+  order_index Int?
+  is_active   Boolean?  @default(false)
+  career_id   String?   @db.VarChar(36)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model career_order_items {
+  id         String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  order_id   String    @db.VarChar(36)
+  career_id  String    @db.VarChar(36)
+  price      Int?
+  created_at DateTime? @default(now()) @db.Timestamp(0)
+  updated_at DateTime? @default(now()) @db.Timestamp(0)
+}
+
+model career_orders {
+  id          String                @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  school_id   String                @db.VarChar(36)
+  create_by   String                @db.VarChar(36)
+  status      career_orders_status? @default(PENDING)
+  note        String?               @db.Text
+  reviewed_by String?               @db.VarChar(36)
+  reviewed_at DateTime?             @db.DateTime(0)
+  created_at  DateTime?             @default(now()) @db.Timestamp(0)
+  updated_at  DateTime?             @default(now()) @db.Timestamp(0)
+}
+
+model school_career_licenses {
+  id            String                         @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  school_id     String                         @db.VarChar(36)
+  career_id     String                         @db.VarChar(36)
+  order_id      String                         @db.VarChar(36)
+  order_item_id String                         @db.VarChar(36)
+  start_date    DateTime?                      @db.DateTime(0)
+  expiry_date   DateTime?                      @db.DateTime(0)
+  status        school_career_licenses_status? @default(PENDING_ACTIVATION)
+  created_at    DateTime?                      @default(now()) @db.Timestamp(0)
+  updated_at    DateTime?                      @default(now()) @db.Timestamp(0)
+}
+
+enum auth_impl_user_student_sex {
+  MALE   @map("1")
   FEMALE @map("2")
+}
+
+enum auth_base_user_status {
+  ACTIVE
+  INACTIVE
+  BANNER
+}
+
+enum career_orders_status {
+  PENDING
+  REJECTED
+  APPROVED
+}
+
+enum school_career_licenses_status {
+  ACTIVE
+  EXPIRED
+  REVOKED
+  PENDING_ACTIVATION
 }

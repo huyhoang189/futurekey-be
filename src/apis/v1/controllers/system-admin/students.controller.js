@@ -1,5 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const studentsService = require("../../services/system-admin/students.service");
+const path = require("path");
+const fs = require("fs");
 
 /**
  * Lấy danh sách students
@@ -175,6 +177,99 @@ const createStudent = async (req, res) => {
 };
 
 /**
+ * Download template import students
+ * GET /api/v1/system-admin/students/download-template
+ */
+const downloadTemplate = async (req, res) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../../../../template/template_import_student.xlsx"
+    );
+
+    // Check if file exists
+    if (!fs.existsSync(templatePath)) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Template file not found",
+      });
+    }
+
+    // Set headers for file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=template_import_student.xlsx"
+    );
+
+    // Send file
+    return res.sendFile(templatePath);
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Import danh sách students từ file Excel
+ * POST /api/v1/system-admin/students/import
+ */
+const importStudents = async (req, res) => {
+  console.log("=== IMPORT STUDENTS CONTROLLER CALLED ===");
+  console.log("File:", req.file ? "File exists" : "No file");
+  try {
+    if (!req.file) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "File is required",
+      });
+    }
+
+    // Validate file type
+    const allowedMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Only Excel files (.xlsx, .xls) are allowed",
+      });
+    }
+
+    const result = await studentsService.importStudents(req.file.buffer);
+
+    // Nếu có lỗi và có file lỗi, trả về file Excel với các row bị lỗi
+    if (result.errorFileBuffer) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `import_students_errors_${timestamp}.xlsx`;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.send(result.errorFileBuffer);
+    }
+
+    // Nếu không có lỗi, trả về kết quả JSON
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Import completed",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
  * Cập nhật thông tin student
  * PUT /api/v1/system-admin/students/:id
  */
@@ -302,6 +397,8 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -309,4 +406,6 @@ module.exports = {
   updateStudent,
   updateStudentUser,
   deleteStudent,
+  downloadTemplate,
+  importStudents,
 };

@@ -11,6 +11,7 @@ const communesRoutes = require("./communes.routes");
 const provincesRoutes = require("./provinces.routes");
 const studentsRoutes = require("./students.routes");
 const schoolUsersRoutes = require("./schoolUsers.routes");
+const statisticsRoutes = require("./statistics.routes");
 const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 router.use("/refresh-tokens", checkAuth, refreshTokenRoutes);
@@ -23,5 +24,6 @@ router.use("/communes", checkAuth, communesRoutes);
 router.use("/provinces", checkAuth, provincesRoutes);
 router.use("/students", checkAuth, studentsRoutes);
 router.use("/school-users", checkAuth, schoolUsersRoutes);
+router.use("/statistics", checkAuth, statisticsRoutes);
 
 module.exports = router;

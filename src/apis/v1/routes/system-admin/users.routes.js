@@ -1,6 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const usersController = require("../../controllers/system-admin/users.controller");
+const multer = require("multer");
+
+// Cấu hình multer để xử lý file upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
 
 /**
  * @swagger
@@ -148,6 +157,113 @@ router.get("/", usersController.getAllUsers);
  *         description: Lỗi server
  */
 router.post("/", usersController.createUser);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/users/download-template:
+ *   get:
+ *     summary: Download file template import users
+ *     tags: [System Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Download file thành công
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Không tìm thấy file template
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/download-template", usersController.downloadTemplate);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/users/import:
+ *   post:
+ *     summary: Import danh sách users từ file Excel
+ *     tags: [System Admin - Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - file
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File Excel (.xlsx, .xls)
+ *     responses:
+ *       200:
+ *         description: Import thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: "Import completed"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 10
+ *                       description: Tổng số dòng trong file
+ *                     success_count:
+ *                       type: integer
+ *                       example: 8
+ *                       description: Số user import thành công
+ *                     error_count:
+ *                       type: integer
+ *                       example: 2
+ *                       description: Số user import thất bại
+ *                     results:
+ *                       type: object
+ *                       properties:
+ *                         success:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               row:
+ *                                 type: integer
+ *                                 example: 3
+ *                               user:
+ *                                 type: object
+ *                         errors:
+ *                           type: array
+ *                           items:
+ *                             type: object
+ *                             properties:
+ *                               row:
+ *                                 type: integer
+ *                                 example: 4
+ *                               user_name:
+ *                                 type: string
+ *                                 example: "example"
+ *                               error:
+ *                                 type: string
+ *                                 example: "Tên đăng nhập đã tồn tại"
+ *       400:
+ *         description: Lỗi validation (không có file, sai định dạng)
+ *       500:
+ *         description: Lỗi server
+ */
+router.post("/import", upload.single("file"), usersController.importUsers);
 
 /**
  * @swagger

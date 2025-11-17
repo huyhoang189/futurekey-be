@@ -1,6 +1,15 @@
 const express = require("express");
 const router = express.Router();
 const studentsController = require("../../controllers/system-admin/students.controller");
+const multer = require("multer");
+
+// Cấu hình multer để xử lý file upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
 
 /**
  * @swagger
@@ -28,6 +37,10 @@ const studentsController = require("../../controllers/system-admin/students.cont
  *         class_id:
  *           type: string
  *           example: class-101-qwe
+ *         student_code:
+ *           type: string
+ *           example: Lop10A_HS_123456789
+ *           description: Mã học sinh được tự động generate từ tên lớp
  *         sex:
  *           type: string
  *           enum: [OTHER, MALE, FEMALE]
@@ -172,6 +185,86 @@ const studentsController = require("../../controllers/system-admin/students.cont
  *         description: Lỗi server
  */
 router.get("/", studentsController.getAllStudents);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/students/download-template:
+ *   get:
+ *     summary: Download template Excel để import students
+ *     tags: [System Admin - Students]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: File template Excel
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Không tìm thấy file template
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/download-template", studentsController.downloadTemplate);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/students/import:
+ *   post:
+ *     summary: Import danh sách students từ file Excel
+ *     tags: [System Admin - Students]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File Excel chứa danh sách students (.xlsx, .xls)
+ *     responses:
+ *       200:
+ *         description: Import thành công (hoặc trả về file lỗi nếu có)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Import completed
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 100
+ *                     success_count:
+ *                       type: integer
+ *                       example: 95
+ *                     error_count:
+ *                       type: integer
+ *                       example: 5
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               description: File Excel chứa các row bị lỗi (nếu có)
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+router.post("/import", upload.single("file"), studentsController.importStudents);
 
 /**
  * @swagger

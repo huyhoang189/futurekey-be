@@ -64,6 +64,7 @@ model auth_impl_user_student {
   user_id        String?                     @db.VarChar(36)
   school_id      String?                     @db.VarChar(36)
   class_id       String?                     @db.VarChar(36)
+  student_code   String?                     @db.VarChar(100)
   sex            auth_impl_user_student_sex?
   birthday       DateTime?                   @db.Date
   description    String?                     @db.Text
@@ -75,6 +76,7 @@ model auth_impl_user_student {
   @@index([class_id], map: "idx_class_id")
   @@index([school_id], map: "idx_school_id")
   @@index([sex], map: "idx_sex")
+  @@index([student_code], map: "idx_student_code")
   @@index([user_id], map: "idx_user_id")
 }
 

@@ -1,5 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const studentsService = require("../../services/system-admin/students.service");
+const path = require("path");
+const fs = require("fs");
 
 /**
  * Lấy danh sách students
@@ -10,12 +12,10 @@ const getAllStudents = async (req, res) => {
     const { page, limit, skip } = req.pagination;
     const { search, school_id, class_id, sex, grade_level } = req.query;
 
-    // Build filters
+    // Build filters - chỉ search trong bảng auth_impl_user_student
     const filters = {};
 
     if (search) {
-      // Search in user info - need to use raw query or different approach
-      // For now, we'll implement basic search
       filters.OR = [
         { description: { contains: search } },
         { major_interest: { contains: search } },
@@ -34,12 +34,11 @@ const getAllStudents = async (req, res) => {
       filters.sex = sex;
     }
 
-    // Note: grade_level filter would need class join, will implement in service if needed
-
     const result = await studentsService.getAllStudents({
       filters,
       paging: { skip, limit },
       orderBy: { created_at: "desc" },
+      search, // Pass search để service xử lý manual search trong user/school/class
     });
 
     return res.status(StatusCodes.OK).json({
@@ -178,20 +177,106 @@ const createStudent = async (req, res) => {
 };
 
 /**
+ * Download template import students
+ * GET /api/v1/system-admin/students/download-template
+ */
+const downloadTemplate = async (req, res) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../../../../template/template_import_student.xlsx"
+    );
+
+    // Check if file exists
+    if (!fs.existsSync(templatePath)) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Template file not found",
+      });
+    }
+
+    // Set headers for file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=template_import_student.xlsx"
+    );
+
+    // Send file
+    return res.sendFile(templatePath);
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Import danh sách students từ file Excel
+ * POST /api/v1/system-admin/students/import
+ */
+const importStudents = async (req, res) => {
+  console.log("=== IMPORT STUDENTS CONTROLLER CALLED ===");
+  console.log("File:", req.file ? "File exists" : "No file");
+  try {
+    if (!req.file) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "File is required",
+      });
+    }
+
+    // Validate file type
+    const allowedMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Only Excel files (.xlsx, .xls) are allowed",
+      });
+    }
+
+    const result = await studentsService.importStudents(req.file.buffer);
+
+    // Nếu có lỗi và có file lỗi, trả về file Excel với các row bị lỗi
+    if (result.errorFileBuffer) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `import_students_errors_${timestamp}.xlsx`;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.send(result.errorFileBuffer);
+    }
+
+    // Nếu không có lỗi, trả về kết quả JSON
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Import completed",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
  * Cập nhật thông tin student
  * PUT /api/v1/system-admin/students/:id
  */
 const updateStudent = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      school_id,
-      class_id,
-      sex,
-      birthday,
-      description,
-      major_interest,
-    } = req.body;
+    const updateData = req.body;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -200,17 +285,17 @@ const updateStudent = async (req, res) => {
       });
     }
 
-    // Validate sex enum
-    if (sex && !['OTHER', 'MALE', 'FEMALE'].includes(sex)) {
+    // Validate sex enum if provided
+    if (updateData.student?.sex && !['OTHER', 'MALE', 'FEMALE'].includes(updateData.student.sex)) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
         message: "Invalid sex value. Must be OTHER, MALE, or FEMALE",
       });
     }
 
-    // Validate birthday
-    if (birthday) {
-      const birthDate = new Date(birthday);
+    // Validate birthday if provided
+    if (updateData.student?.birthday) {
+      const birthDate = new Date(updateData.student.birthday);
       const now = new Date();
       const age = now.getFullYear() - birthDate.getFullYear();
       
@@ -222,14 +307,7 @@ const updateStudent = async (req, res) => {
       }
     }
 
-    const student = await studentsService.updateStudent(id, {
-      school_id,
-      class_id,
-      sex,
-      birthday,
-      description,
-      major_interest,
-    });
+    const student = await studentsService.updateStudent(id, updateData);
 
     return res.status(StatusCodes.OK).json({
       success: true,
@@ -319,6 +397,8 @@ const deleteStudent = async (req, res) => {
   }
 };
 
+
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -326,4 +406,6 @@ module.exports = {
   updateStudent,
   updateStudentUser,
   deleteStudent,
+  downloadTemplate,
+  importStudents,
 };

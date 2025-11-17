@@ -1,0 +1,263 @@
+=== DỮ LIỆU STUDENTS ===
+Copy từng JSON object và POST vào: /api/v1/system-admin/students
+
+// Học sinh Trường THPT Nguyễn Huệ (Lớp 10A1: db81eccd-c351-11f0-afc5-2626c197d041)
+{
+  "user_name": "hs_nguyenhue_001",
+  "full_name": "Nguyễn Văn Anh",
+  "email": "nguyenvananh@student.edu.vn",
+  "phone_number": "0923456001",
+  "password": "123456",
+  "address": "Quận 1, TP.HCM",
+  "school_id": "db81eccd-c351-11f0-afc5-2626c197d041",
+  "class_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-05-15",
+  "description": "Học sinh khá",
+  "major_interest": "Toán học, Tin học"
+}
+
+{
+  "user_name": "hs_nguyenhue_002",
+  "full_name": "Trần Thị Bảo",
+  "email": "tranthibao@student.edu.vn",
+  "phone_number": "0923456002",
+  "password": "123456",
+  "address": "Quận 3, TP.HCM",
+  "school_id": "db81eccd-c351-11f0-afc5-2626c197d041",
+  "class_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2008-08-20",
+  "description": "Học sinh giỏi",
+  "major_interest": "Văn học, Lịch sử"
+}
+
+{
+  "user_name": "hs_nguyenhue_003",
+  "full_name": "Lê Minh Châu",
+  "email": "leminhchau@student.edu.vn",
+  "phone_number": "0923456003",
+  "password": "123456",
+  "address": "Quận 5, TP.HCM",
+  "school_id": "db81eccd-c351-11f0-afc5-2626c197d041",
+  "class_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-03-10",
+  "description": "Học sinh trung bình",
+  "major_interest": "Thể dục thể thao"
+}
+
+// Học sinh Trường THCS Trần Hưng Đạo
+{
+  "user_name": "hs_tranhungdao_001",
+  "full_name": "Phạm Văn Dũng",
+  "email": "phamvandung@student.edu.vn",
+  "phone_number": "0923456004",
+  "password": "123456",
+  "address": "Quận 5, TP.HCM",
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2010-06-12",
+  "description": "Học sinh năng động",
+  "major_interest": "Bóng đá, Âm nhạc"
+}
+
+{
+  "user_name": "hs_tranhungdao_002",
+  "full_name": "Hoàng Thị Em",
+  "email": "hoangthiem@student.edu.vn",
+  "phone_number": "0923456005",
+  "password": "123456",
+  "address": "Quận 6, TP.HCM",
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2010-09-25",
+  "description": "Học sinh hiền lành",
+  "major_interest": "Hội họa, Âm nhạc"
+}
+
+{
+  "user_name": "hs_tranhungdao_003",
+  "full_name": "Vũ Minh Giang",
+  "email": "vuminhgiang@student.edu.vn",
+  "phone_number": "0923456006",
+  "password": "123456",
+  "address": "Quận 8, TP.HCM",
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2010-11-18",
+  "description": "Học sinh chăm chỉ",
+  "major_interest": "Khoa học, Công nghệ"
+}
+
+// Học sinh Trường Tiểu học Kim Đồng
+{
+  "user_name": "hs_kimdong_001",
+  "full_name": "Đỗ Thị Hoa",
+  "email": "dothihoa@student.edu.vn",
+  "phone_number": "0923456007",
+  "password": "123456",
+  "address": "Quận 10, TP.HCM",
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2014-02-14",
+  "description": "Học sinh ngoan",
+  "major_interest": "Vẽ tranh, Đọc sách"
+}
+
+{
+  "user_name": "hs_kimdong_002",
+  "full_name": "Bùi Văn Hùng",
+  "email": "buivanhung@student.edu.vn",
+  "phone_number": "0923456008",
+  "password": "123456",
+  "address": "Quận 10, TP.HCM",
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2014-07-22",
+  "description": "Học sinh vui vẻ",
+  "major_interest": "Chơi game, Lego"
+}
+
+{
+  "user_name": "hs_kimdong_003",
+  "full_name": "Ngô Thị Lan",
+  "email": "ngothilan@student.edu.vn",
+  "phone_number": "0923456009",
+  "password": "123456",
+  "address": "Quận 11, TP.HCM",
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2014-12-05",
+  "description": "Học sinh giỏi toàn diện",
+  "major_interest": "Múa, Hát"
+}
+
+// Học sinh Trường THPT Lê Quý Đôn (Chuyên Toán)
+{
+  "user_name": "hs_lequydon_001",
+  "full_name": "Đinh Văn Minh",
+  "email": "dinhvanminh@student.edu.vn",
+  "phone_number": "0923456010",
+  "password": "123456",
+  "address": "Quận 3, TP.HCM",
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-01-08",
+  "description": "Học sinh chuyên Toán",
+  "major_interest": "Toán học Olympic, Lập trình"
+}
+
+{
+  "user_name": "hs_lequydon_002",
+  "full_name": "Lý Thị Nga",
+  "email": "lythinnga@student.edu.vn",
+  "phone_number": "0923456011",
+  "password": "123456",
+  "address": "Quận 1, TP.HCM",
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2008-04-16",
+  "description": "Học sinh chuyên Lý",
+  "major_interest": "Vật lý thiên văn, Robot"
+}
+
+{
+  "user_name": "hs_lequydon_003",
+  "full_name": "Trương Minh Phúc",
+  "email": "truongminhphuc@student.edu.vn",
+  "phone_number": "0923456012",
+  "password": "123456",
+  "address": "Quận 5, TP.HCM",
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-10-30",
+  "description": "Học sinh chuyên Toán",
+  "major_interest": "Toán rời rạc, Thuật toán"
+}
+
+// Học sinh Trường THCS Lê Lợi
+{
+  "user_name": "hs_leloi_001",
+  "full_name": "Mai Thị Quỳnh",
+  "email": "maithiquynh@student.edu.vn",
+  "phone_number": "0923456013",
+  "password": "123456",
+  "address": "Quận Tân Bình, TP.HCM",
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2011-03-20",
+  "description": "Học sinh khá giỏi",
+  "major_interest": "Ngoại ngữ, Du lịch"
+}
+
+{
+  "user_name": "hs_leloi_002",
+  "full_name": "Phan Văn Sơn",
+  "email": "phanvanson@student.edu.vn",
+  "phone_number": "0923456014",
+  "password": "123456",
+  "address": "Quận Tân Bình, TP.HCM",
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2011-07-11",
+  "description": "Học sinh năng động",
+  "major_interest": "Bóng rổ, Điện ảnh"
+}
+
+{
+  "user_name": "hs_leloi_003",
+  "full_name": "Đặng Thị Tâm",
+  "email": "dangthitam@student.edu.vn",
+  "phone_number": "0923456015",
+  "password": "123456",
+  "address": "Quận Phú Nhuận, TP.HCM",
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2011-11-28",
+  "description": "Học sinh chăm ngoan",
+  "major_interest": "Văn học, Viết lách"
+}
+
+// Học sinh Trường THPT Phạm Văn Đồng
+{
+  "user_name": "hs_phamvandong_001",
+  "full_name": "Nguyễn Minh Tuấn",
+  "email": "nguyenminhtuan@student.edu.vn",
+  "phone_number": "0923456016",
+  "password": "123456",
+  "address": "Cầu Giấy, Hà Nội",
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-06-05",
+  "description": "Học sinh xuất sắc",
+  "major_interest": "Hóa học, Sinh học"
+}
+
+{
+  "user_name": "hs_phamvandong_002",
+  "full_name": "Lê Thị Uyên",
+  "email": "lethiuyen@student.edu.vn",
+  "phone_number": "0923456017",
+  "password": "123456",
+  "address": "Đống Đa, Hà Nội",
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "sex": "FEMALE",
+  "birthday": "2008-09-12",
+  "description": "Học sinh giỏi văn",
+  "major_interest": "Thơ ca, Nghệ thuật"
+}
+
+{
+  "user_name": "hs_phamvandong_003",
+  "full_name": "Trần Đức Việt",
+  "email": "tranducviet@student.edu.vn",
+  "phone_number": "0923456018",
+  "password": "123456",
+  "address": "Ba Đình, Hà Nội",
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "sex": "MALE",
+  "birthday": "2008-12-18",
+  "description": "Học sinh thông minh",
+  "major_interest": "Công nghệ thông tin, AI"
+}

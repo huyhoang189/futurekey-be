@@ -2,6 +2,15 @@ const express = require("express");
 const router = express.Router();
 const schoolUsersController = require("../../controllers/system-admin/schoolUsers.controller");
 const pagination = require("../../../../middlewares/validation/pagination");
+const multer = require("multer");
+
+// Cấu hình multer để xử lý file upload
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 5 * 1024 * 1024, // 5MB
+  },
+});
 
 /**
  * @swagger
@@ -58,6 +67,86 @@ const pagination = require("../../../../middlewares/validation/pagination");
  *                   $ref: '#/components/schemas/PaginationMeta'
  */
 router.get("/", pagination, schoolUsersController.getAllSchoolUsers);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/school-users/download-template:
+ *   get:
+ *     summary: Download template Excel để import teachers
+ *     tags: [School Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: File template Excel
+ *         content:
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: Không tìm thấy file template
+ *       500:
+ *         description: Lỗi server
+ */
+router.get("/download-template", schoolUsersController.downloadTemplate);
+
+/**
+ * @swagger
+ * /api/v1/system-admin/school-users/import:
+ *   post:
+ *     summary: Import danh sách teachers từ file Excel
+ *     tags: [School Users]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               file:
+ *                 type: string
+ *                 format: binary
+ *                 description: File Excel chứa danh sách teachers (.xlsx, .xls)
+ *     responses:
+ *       200:
+ *         description: Import thành công (hoặc trả về file lỗi nếu có)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Import completed
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     total:
+ *                       type: integer
+ *                       example: 100
+ *                     success_count:
+ *                       type: integer
+ *                       example: 95
+ *                     error_count:
+ *                       type: integer
+ *                       example: 5
+ *           application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *               description: File Excel chứa các row bị lỗi (nếu có)
+ *       400:
+ *         description: Dữ liệu không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+router.post("/import", upload.single("file"), schoolUsersController.importSchoolUsers);
 
 /**
  * @swagger
@@ -172,7 +261,7 @@ router.post("/", schoolUsersController.createSchoolUser);
  * @swagger
  * /api/v1/system-admin/school-users/{id}:
  *   put:
- *     summary: Cập nhật thông tin school user
+ *     summary: Cập nhật thông tin school user và user
  *     tags: [School Users]
  *     security:
  *       - bearerAuth: []
@@ -190,14 +279,59 @@ router.post("/", schoolUsersController.createSchoolUser);
  *           schema:
  *             type: object
  *             properties:
- *               school_id:
- *                 type: string
- *                 description: ID trường học
- *                 example: "school-002"
- *               description:
- *                 type: string
- *                 description: Mô tả vai trò
- *                 example: "Giáo viên môn Lý"
+ *               school_user:
+ *                 type: object
+ *                 description: Thông tin school user (auth_impl_user_school)
+ *                 properties:
+ *                   school_id:
+ *                     type: string
+ *                     description: ID trường học
+ *                     example: "school-002"
+ *                   description:
+ *                     type: string
+ *                     description: Mô tả vai trò
+ *                     example: "Giáo viên môn Lý"
+ *               base_user:
+ *                 type: object
+ *                 description: Thông tin user cơ bản (auth_base_user)
+ *                 properties:
+ *                   user_name:
+ *                     type: string
+ *                     description: Tên đăng nhập
+ *                     example: "teacher002"
+ *                   full_name:
+ *                     type: string
+ *                     description: Họ và tên
+ *                     example: "Trần Thị B"
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     description: Email
+ *                     example: "teacher002@school.edu.vn"
+ *                   phone_number:
+ *                     type: string
+ *                     description: Số điện thoại
+ *                     example: "0987654321"
+ *                   address:
+ *                     type: string
+ *                     description: Địa chỉ
+ *                     example: "TP.HCM"
+ *                   status:
+ *                     type: string
+ *                     enum: [ACTIVE, INACTIVE]
+ *                     description: Trạng thái tài khoản
+ *                     example: "ACTIVE"
+ *           example:
+ *             school_user:
+ *               school_id: "school-002"
+ *               description: "Giáo viên chủ nhiệm lớp 10A1"
+ *             base_user:
+ *               user_name: "teacher_nguyen"
+ *               full_name: "Nguyễn Thị C"
+ *               email: "nguyenthic@school.edu.vn"
+ *               phone_number: "0912345678"
+ *               address: "Hà Nội"
+ *               status: "ACTIVE"
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -214,6 +348,10 @@ router.post("/", schoolUsersController.createSchoolUser);
  *                   example: "Update school user successfully"
  *                 data:
  *                   $ref: '#/components/schemas/SchoolUserResponse'
+ *       400:
+ *         description: Lỗi validation (username/email đã tồn tại, school không tồn tại)
+ *       404:
+ *         description: Không tìm thấy school user
  */
 router.put("/:id", schoolUsersController.updateSchoolUser);
 
@@ -348,6 +486,21 @@ router.delete("/:id", schoolUsersController.deleteSchoolUser);
  *           $ref: '#/components/schemas/User'
  *         school:
  *           $ref: '#/components/schemas/School'
+ *     PaginationMeta:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *           example: 1
+ *         limit:
+ *           type: integer
+ *           example: 10
+ *         total:
+ *           type: integer
+ *           example: 100
+ *         totalPages:
+ *           type: integer
+ *           example: 10
  */
 
 module.exports = router;

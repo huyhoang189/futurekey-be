@@ -1,5 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const usersService = require("../../services/system-admin/users.service");
+const path = require("path");
+const fs = require("fs");
 
 /**
  * Lấy danh sách users
@@ -275,6 +277,97 @@ const inactiveUser = async (req, res) => {
   }
 };
 
+/**
+ * Download template import users
+ * GET /api/v1/system-admin/users/download-template
+ */
+const downloadTemplate = async (req, res) => {
+  try {
+    const templatePath = path.join(
+      __dirname,
+      "../../../../template/template_import_user_base.xlsx"
+    );
+
+    // Check if file exists
+    if (!fs.existsSync(templatePath)) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Template file not found",
+      });
+    }
+
+    // Set headers for file download
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=template_import_user_base.xlsx"
+    );
+
+    // Send file
+    return res.sendFile(templatePath);
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * Import danh sách users từ file Excel
+ * POST /api/v1/system-admin/users/import
+ */
+const importUsers = async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "File is required",
+      });
+    }
+
+    // Validate file type
+    const allowedMimeTypes = [
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      "application/vnd.ms-excel",
+    ];
+
+    if (!allowedMimeTypes.includes(req.file.mimetype)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Only Excel files (.xlsx, .xls) are allowed",
+      });
+    }
+
+    const result = await usersService.importUsers(req.file.buffer);
+
+    // Nếu có lỗi và có file lỗi, trả về file Excel với các row bị lỗi
+    if (result.errorFileBuffer) {
+      const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+      const filename = `import_errors_${timestamp}.xlsx`;
+
+      res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+      res.setHeader("Content-Disposition", `attachment; filename="${filename}"`);
+      return res.send(result.errorFileBuffer);
+    }
+
+    // Nếu không có lỗi, trả về kết quả JSON
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Import completed",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   getAllUsers,
   createUser,
@@ -283,4 +376,6 @@ module.exports = {
   banUser,
   activeUser,
   inactiveUser,
+  downloadTemplate,
+  importUsers,
 };

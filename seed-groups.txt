@@ -1,0 +1,38 @@
+=== DỮ LIỆU GROUPS ===
+Copy từng JSON object và POST vào: /api/v1/system-admin/groups
+
+{
+  "name": "Super Admin",
+  "type": "SUPER_ADMIN",
+  "description": "Quyền quản trị hệ thống"
+}
+
+{
+  "name": "Admin",
+  "type": "ADMIN",
+  "description": "Quản trị viên"
+}
+
+{
+  "name": "School Admin",
+  "type": "SCHOOL_ADMIN",
+  "description": "Quản trị viên trường học"
+}
+
+{
+  "name": "Teacher",
+  "type": "SCHOOL_TEACHER",
+  "description": "Giáo viên"
+}
+
+{
+  "name": "Student",
+  "type": "SCHOOL_STUDENT",
+  "description": "Học sinh"
+}
+
+{
+  "name": "Guest",
+  "type": "GUEST",
+  "description": "Tài khoản dùng thử khóa học"
+}

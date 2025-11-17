@@ -10,13 +10,9 @@ const getDefaultSchoolUserGroupId = async () => {
     const schoolUserGroup = await prisma.auth_group.findFirst({
       where: {
         OR: [
-          { type: "TEACHER" },
-          { type: "SCHOOL_STAFF" },
-          { name: { contains: "Teacher" } },
+          { type: "SCHOOL_TEACHER" },
           { name: { contains: "Giáo viên" } },
-          { name: { contains: "Staff" } },
-          { name: { contains: "Nhân viên" } },
-        ],
+        ]
       },
     });
 
@@ -29,12 +25,54 @@ const getDefaultSchoolUserGroupId = async () => {
 /**
  * Lấy danh sách school users với phân trang và tìm kiếm
  */
-const getAllSchoolUsers = async ({
-  filters = {},
-  paging = {},
-  orderBy = {},
-}) => {
+const getAllSchoolUsers = async ({ filters = {}, paging = {}, orderBy = {}, search = '' }) => {
   const { skip = 0, limit = 10 } = paging;
+
+  // Nếu có search, cần tìm user_id và school_id trước
+  let searchUserIds = [];
+  let searchSchoolIds = [];
+
+  if (search) {
+    // Tìm users matching search
+    const matchingUsers = await prisma.auth_base_user.findMany({
+      where: {
+        OR: [
+          { full_name: { contains: search } },
+          { email: { contains: search } },
+          { phone_number: { contains: search } },
+        ],
+      },
+      select: { id: true },
+    });
+    searchUserIds = matchingUsers.map(u => u.id);
+
+    // Tìm schools matching search
+    const matchingSchools = await prisma.schools.findMany({
+      where: {
+        OR: [
+          { name: { contains: search } },
+          // { address: { contains: search } },
+        ],
+      },
+      select: { id: true },
+    });
+    searchSchoolIds = matchingSchools.map(s => s.id);
+
+    // Thêm điều kiện search vào filters
+    if (!filters.OR) {
+      filters.OR = [];
+    }
+    
+    if (searchUserIds.length > 0) {
+      filters.OR.push({ user_id: { in: searchUserIds } });
+    }
+    if (searchSchoolIds.length > 0) {
+      filters.OR.push({ school_id: { in: searchSchoolIds } });
+    }
+
+    // Nếu không tìm thấy user hoặc school nào, và filter.OR chỉ có description
+    // thì giữ nguyên filter description đã có từ controller
+  }
 
   // Đếm tổng số records
   const total = await prisma.auth_impl_user_school.count({
@@ -230,9 +268,7 @@ const createSchoolUser = async (schoolUserData) => {
         full_name,
         email,
         phone_number,
-        password_hash: password
-          ? await bcrypt.hashPassword(password, 10)
-          : await bcrypt.hashPassword("teacher123", 10),
+        password_hash: password ? await bcrypt.hashPassword(password, 10) : await bcrypt.hashPassword('123456', 10),
         address,
         group_id: schoolUserGroupId,
         status: "ACTIVE",
@@ -289,8 +325,8 @@ const createSchoolUser = async (schoolUserData) => {
 /**
  * Cập nhật school user info
  */
-const updateSchoolUser = async (id, schoolUserData) => {
-  const { school_id, description } = schoolUserData;
+const updateSchoolUser = async (id, updateData) => {
+  const { school_user, base_user } = updateData;
 
   // Check school user exists
   const existingSchoolUser = await prisma.auth_impl_user_school.findUnique({
@@ -301,37 +337,99 @@ const updateSchoolUser = async (id, schoolUserData) => {
     throw new Error("School user not found");
   }
 
-  // Validate school exists
-  if (school_id) {
-    const school = await prisma.schools.findUnique({
-      where: { id: school_id },
-    });
-    if (!school) {
-      throw new Error("School not found");
+  return await prisma.$transaction(async (tx) => {
+    let updatedSchoolUser = null;
+    let updatedBaseUser = null;
+
+    // Update school_user properties if provided
+    if (school_user) {
+      const { school_id, description } = school_user;
+
+      // Check if there's any field to update
+      const hasUpdate = school_id !== undefined || description !== undefined;
+
+      if (hasUpdate) {
+        // Validate school exists if school_id is being updated
+        if (school_id !== undefined) {
+          const school = await tx.schools.findUnique({
+            where: { id: school_id },
+          });
+          if (!school) {
+            throw new Error("School not found");
+          }
+        }
+
+        updatedSchoolUser = await tx.auth_impl_user_school.update({
+          where: { id },
+          data: {
+            ...(school_id !== undefined && { school_id }),
+            ...(description !== undefined && { description }),
+          },
+          select: {
+            id: true,
+            user_id: true,
+            school_id: true,
+            description: true,
+            created_at: true,
+            updated_at: true,
+          },
+        });
+      }
     }
-  }
 
-  const schoolUser = await prisma.auth_impl_user_school.update({
-    where: { id },
-    data: {
-      school_id,
-      description,
-    },
-    select: {
-      id: true,
-      user_id: true,
-      school_id: true,
-      description: true,
-      created_at: true,
-      updated_at: true,
-    },
-  });
+    // Update base_user properties if provided
+    if (base_user && existingSchoolUser.user_id) {
+      const {
+        user_name,
+        full_name,
+        email,
+        phone_number,
+        address,
+        status,
+      } = base_user;
 
-  // Get related data
-  const [user, school] = await Promise.all([
-    schoolUser.user_id
-      ? prisma.auth_base_user.findUnique({
-          where: { id: schoolUser.user_id },
+      // Check if there's any field to update
+      const hasUpdate = user_name !== undefined || full_name !== undefined || 
+                       email !== undefined || phone_number !== undefined || 
+                       address !== undefined || status !== undefined;
+
+      if (hasUpdate) {
+        // Check username duplicate if being updated
+        if (user_name !== undefined) {
+          const existingUser = await tx.auth_base_user.findFirst({
+            where: {
+              user_name,
+              NOT: { id: existingSchoolUser.user_id },
+            },
+          });
+          if (existingUser) {
+            throw new Error("Username already exists");
+          }
+        }
+
+        // Check email duplicate if being updated
+        if (email !== undefined) {
+          const existingEmail = await tx.auth_base_user.findFirst({
+            where: {
+              email,
+              NOT: { id: existingSchoolUser.user_id },
+            },
+          });
+          if (existingEmail) {
+            throw new Error("Email already exists");
+          }
+        }
+
+        updatedBaseUser = await tx.auth_base_user.update({
+          where: { id: existingSchoolUser.user_id },
+          data: {
+            ...(user_name !== undefined && { user_name }),
+            ...(full_name !== undefined && { full_name }),
+            ...(email !== undefined && { email }),
+            ...(phone_number !== undefined && { phone_number }),
+            ...(address !== undefined && { address }),
+            ...(status !== undefined && { status }),
+          },
           select: {
             id: true,
             user_name: true,
@@ -341,20 +439,48 @@ const updateSchoolUser = async (id, schoolUserData) => {
             address: true,
             status: true,
           },
-        })
-      : null,
-    schoolUser.school_id
-      ? prisma.schools.findUnique({
-          where: { id: schoolUser.school_id },
-          select: { id: true, name: true, address: true },
-        })
-      : null,
-  ]);
+        });
+      }
+    }
 
-  schoolUser.user = user;
-  schoolUser.school = school;
+    // Get final state
+    const finalSchoolUser = updatedSchoolUser || await tx.auth_impl_user_school.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        user_id: true,
+        school_id: true,
+        description: true,
+        created_at: true,
+        updated_at: true,
+      },
+    });
 
-  return schoolUser;
+    const [user, school] = await Promise.all([
+      finalSchoolUser.user_id ? tx.auth_base_user.findUnique({
+        where: { id: finalSchoolUser.user_id },
+        select: {
+          id: true,
+          user_name: true,
+          full_name: true,
+          email: true,
+          phone_number: true,
+          address: true,
+          status: true,
+        },
+      }) : null,
+      finalSchoolUser.school_id ? tx.schools.findUnique({
+        where: { id: finalSchoolUser.school_id },
+        select: { id: true, name: true, address: true },
+      }) : null,
+    ]);
+
+    return {
+      ...finalSchoolUser,
+      user,
+      school,
+    };
+  });
 };
 
 /**

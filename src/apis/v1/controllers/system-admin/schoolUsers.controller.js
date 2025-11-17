@@ -10,7 +10,7 @@ const getAllSchoolUsers = async (req, res) => {
     const { page, limit, skip } = req.pagination;
     const { search, school_id } = req.query;
 
-    // Build filters
+    // Build filters - chỉ search trong bảng auth_impl_user_school
     const filters = {};
 
     if (search) {
@@ -27,6 +27,7 @@ const getAllSchoolUsers = async (req, res) => {
       filters,
       paging: { skip, limit },
       orderBy: { created_at: "desc" },
+      search, // Pass search để service xử lý manual search trong user/school
     });
 
     return res.status(StatusCodes.OK).json({
@@ -148,10 +149,7 @@ const createSchoolUser = async (req, res) => {
 const updateSchoolUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const {
-      school_id,
-      description,
-    } = req.body;
+    const updateData = req.body;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -160,15 +158,12 @@ const updateSchoolUser = async (req, res) => {
       });
     }
 
-    const schoolUser = await schoolUsersService.updateSchoolUser(id, {
-      school_id,
-      description,
-    });
+    const result = await schoolUsersService.updateSchoolUser(id, updateData);
 
     return res.status(StatusCodes.OK).json({
       success: true,
       message: "Update school user successfully",
-      data: schoolUser,
+      data: result,
     });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({

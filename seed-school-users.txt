@@ -1,0 +1,140 @@
+=== DỮ LIỆU SCHOOL USERS ===
+Copy từng JSON object và POST vào: /api/v1/system-admin/school-users
+
+// Giáo viên Trường THPT Nguyễn Huệ
+{
+  "user_name": "gv_nguyenhue_001",
+  "full_name": "Nguyễn Văn An",
+  "email": "nguyenvanan@thptnguynhue.edu.vn",
+  "phone_number": "0912345001",
+  "password": "123456",
+  "address": "Quận 1, TP.HCM",
+  "school_id": "db81eccd-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Toán"
+}
+
+{
+  "user_name": "gv_nguyenhue_002",
+  "full_name": "Trần Thị Bình",
+  "email": "tranthibinh@thptnguynhue.edu.vn",
+  "phone_number": "0912345002",
+  "password": "123456",
+  "address": "Quận 3, TP.HCM",
+  "school_id": "db81eccd-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Văn"
+}
+
+// Giáo viên Trường THCS Trần Hưng Đạo
+{
+  "user_name": "gv_tranhungdao_001",
+  "full_name": "Lê Văn Cường",
+  "email": "levancuong@thcstranhungdao.edu.vn",
+  "phone_number": "0912345003",
+  "password": "123456",
+  "address": "Quận 5, TP.HCM",
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Lý"
+}
+
+{
+  "user_name": "gv_tranhungdao_002",
+  "full_name": "Phạm Thị Dung",
+  "email": "phamthidung@thcstranhungdao.edu.vn",
+  "phone_number": "0912345004",
+  "password": "123456",
+  "address": "Quận 5, TP.HCM",
+  "school_id": "e1b65e13-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Hóa"
+}
+
+// Giáo viên Trường Tiểu học Kim Đồng
+{
+  "user_name": "gv_kimdong_001",
+  "full_name": "Hoàng Văn Em",
+  "email": "hoangvanem@thkimdong.edu.vn",
+  "phone_number": "0912345005",
+  "password": "123456",
+  "address": "Quận 10, TP.HCM",
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên chủ nhiệm lớp 3A"
+}
+
+{
+  "user_name": "gv_kimdong_002",
+  "full_name": "Vũ Thị Giang",
+  "email": "vuthigiang@thkimdong.edu.vn",
+  "phone_number": "0912345006",
+  "password": "123456",
+  "address": "Quận 10, TP.HCM",
+  "school_id": "e7153286-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên chủ nhiệm lớp 5A"
+}
+
+// Giáo viên Trường THPT Lê Quý Đôn
+{
+  "user_name": "gv_lequydon_001",
+  "full_name": "Đỗ Văn Hùng",
+  "email": "dovanhung@thptlequydon.edu.vn",
+  "phone_number": "0912345007",
+  "password": "123456",
+  "address": "Quận 3, TP.HCM",
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên chuyên Toán"
+}
+
+{
+  "user_name": "gv_lequydon_002",
+  "full_name": "Bùi Thị Lan",
+  "email": "buithilan@thptlequydon.edu.vn",
+  "phone_number": "0912345008",
+  "password": "123456",
+  "address": "Quận 3, TP.HCM",
+  "school_id": "ec47c38b-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên chuyên Lý"
+}
+
+// Giáo viên Trường THCS Lê Lợi
+{
+  "user_name": "gv_leloi_001",
+  "full_name": "Ngô Văn Minh",
+  "email": "ngovanminh@thcsleloi.edu.vn",
+  "phone_number": "0912345009",
+  "password": "123456",
+  "address": "Quận Tân Bình, TP.HCM",
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Sinh"
+}
+
+{
+  "user_name": "gv_leloi_002",
+  "full_name": "Đinh Thị Nga",
+  "email": "dinhthinnga@thcsleloi.edu.vn",
+  "phone_number": "0912345010",
+  "password": "123456",
+  "address": "Quận Tân Bình, TP.HCM",
+  "school_id": "f17e973a-c351-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Anh"
+}
+
+// Quản trị viên Trường THPT Phạm Văn Đồng
+{
+  "user_name": "admin_phamvandong",
+  "full_name": "Trần Văn Phúc",
+  "email": "tranvanphuc@phamvandong.edu.vn",
+  "phone_number": "0912345011",
+  "password": "123456",
+  "address": "Cầu Giấy, Hà Nội",
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "description": "Quản trị viên trường"
+}
+
+{
+  "user_name": "gv_phamvandong_001",
+  "full_name": "Lý Thị Quỳnh",
+  "email": "lythiquynh@phamvandong.edu.vn",
+  "phone_number": "0912345012",
+  "password": "123456",
+  "address": "Đống Đa, Hà Nội",
+  "school_id": "67e96098-c29c-11f0-afc5-2626c197d041",
+  "description": "Giáo viên môn Địa"
+}

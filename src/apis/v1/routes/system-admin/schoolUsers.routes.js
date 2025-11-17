@@ -172,7 +172,7 @@ router.post("/", schoolUsersController.createSchoolUser);
  * @swagger
  * /api/v1/system-admin/school-users/{id}:
  *   put:
- *     summary: Cập nhật thông tin school user
+ *     summary: Cập nhật thông tin school user và user
  *     tags: [School Users]
  *     security:
  *       - bearerAuth: []
@@ -190,14 +190,59 @@ router.post("/", schoolUsersController.createSchoolUser);
  *           schema:
  *             type: object
  *             properties:
- *               school_id:
- *                 type: string
- *                 description: ID trường học
- *                 example: "school-002"
- *               description:
- *                 type: string
- *                 description: Mô tả vai trò
- *                 example: "Giáo viên môn Lý"
+ *               school_user:
+ *                 type: object
+ *                 description: Thông tin school user (auth_impl_user_school)
+ *                 properties:
+ *                   school_id:
+ *                     type: string
+ *                     description: ID trường học
+ *                     example: "school-002"
+ *                   description:
+ *                     type: string
+ *                     description: Mô tả vai trò
+ *                     example: "Giáo viên môn Lý"
+ *               base_user:
+ *                 type: object
+ *                 description: Thông tin user cơ bản (auth_base_user)
+ *                 properties:
+ *                   user_name:
+ *                     type: string
+ *                     description: Tên đăng nhập
+ *                     example: "teacher002"
+ *                   full_name:
+ *                     type: string
+ *                     description: Họ và tên
+ *                     example: "Trần Thị B"
+ *                   email:
+ *                     type: string
+ *                     format: email
+ *                     description: Email
+ *                     example: "teacher002@school.edu.vn"
+ *                   phone_number:
+ *                     type: string
+ *                     description: Số điện thoại
+ *                     example: "0987654321"
+ *                   address:
+ *                     type: string
+ *                     description: Địa chỉ
+ *                     example: "TP.HCM"
+ *                   status:
+ *                     type: string
+ *                     enum: [ACTIVE, INACTIVE]
+ *                     description: Trạng thái tài khoản
+ *                     example: "ACTIVE"
+ *           example:
+ *             school_user:
+ *               school_id: "school-002"
+ *               description: "Giáo viên chủ nhiệm lớp 10A1"
+ *             base_user:
+ *               user_name: "teacher_nguyen"
+ *               full_name: "Nguyễn Thị C"
+ *               email: "nguyenthic@school.edu.vn"
+ *               phone_number: "0912345678"
+ *               address: "Hà Nội"
+ *               status: "ACTIVE"
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -214,6 +259,10 @@ router.post("/", schoolUsersController.createSchoolUser);
  *                   example: "Update school user successfully"
  *                 data:
  *                   $ref: '#/components/schemas/SchoolUserResponse'
+ *       400:
+ *         description: Lỗi validation (username/email đã tồn tại, school không tồn tại)
+ *       404:
+ *         description: Không tìm thấy school user
  */
 router.put("/:id", schoolUsersController.updateSchoolUser);
 
@@ -348,6 +397,21 @@ router.delete("/:id", schoolUsersController.deleteSchoolUser);
  *           $ref: '#/components/schemas/User'
  *         school:
  *           $ref: '#/components/schemas/School'
+ *     PaginationMeta:
+ *       type: object
+ *       properties:
+ *         page:
+ *           type: integer
+ *           example: 1
+ *         limit:
+ *           type: integer
+ *           example: 10
+ *         total:
+ *           type: integer
+ *           example: 100
+ *         totalPages:
+ *           type: integer
+ *           example: 10
  */
 
 module.exports = router;

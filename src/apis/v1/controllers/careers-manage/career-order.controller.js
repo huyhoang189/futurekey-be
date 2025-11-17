@@ -1,7 +1,7 @@
 const { StatusCodes } = require("http-status-codes");
 const careerOrderService = require("../../services/careers-manage/career-order.service");
 const userService = require("../../services/system-admin/users.service");
-
+const careerSchoolLicenseService = require("../../services/careers-manage/career-school-license.service");
 /**
  * Lấy danh sách đơn hàng nghề nghiệp
  * GET /api/v1/careers-manage/career-orders?page=1&limit=10
@@ -155,7 +155,7 @@ const createCareerOrder = async (req, res) => {
 const reviewCareerOrder = async (req, res) => {
   try {
     const { id } = req.params;
-    const { status, note } = req.body;
+    const { status, month_rental } = req.body;
 
     // Lấy thông tin user từ session
     const { userSession } = req;
@@ -184,11 +184,27 @@ const reviewCareerOrder = async (req, res) => {
       });
     }
 
+    // Nếu APPROVED thì month_rental là bắt buộc
+    if (status === "APPROVED" && (!month_rental || month_rental <= 0)) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message:
+          "month_rental is required and must be greater than 0 when approving order",
+      });
+    }
+
     const order = await careerOrderService.reviewCareerOrder(id, {
       status,
       reviewed_by: holderUser.id,
-      note,
     });
+
+    // Nếu APPROVED và có month_rental, tạo licenses
+    if (status === "APPROVED" && month_rental && month_rental > 0) {
+      await careerSchoolLicenseService.createLicense({
+        order_id: order.id,
+        month_rental: parseInt(month_rental, 10),
+      });
+    }
 
     return res.status(StatusCodes.OK).json({
       success: true,

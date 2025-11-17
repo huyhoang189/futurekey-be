@@ -113,7 +113,6 @@ const getCareerOrderById = async (id, select = null) => {
             select: {
               id: true,
               name: true,
-              code: true,
             },
           })
         : null,

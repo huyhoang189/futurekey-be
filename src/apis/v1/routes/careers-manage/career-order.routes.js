@@ -187,15 +187,35 @@ router.post("/", careerOrderController.createCareerOrder);
  *                 enum: [APPROVED, REJECTED]
  *                 example: APPROVED
  *                 description: Trạng thái duyệt
+ *               month_rental:
+ *                 type: integer
+ *                 example: 12
+ *                 description: Số tháng thuê (bắt buộc khi APPROVED, sẽ tự động tạo licenses)
  *               note:
  *                 type: string
  *                 example: Đã kiểm tra và phê duyệt
  *                 description: Ghi chú khi duyệt
  *     responses:
  *       200:
- *         description: Duyệt thành công
+ *         description: Duyệt thành công và tự động tạo licenses (nếu APPROVED)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Career order approved successfully
+ *                 data:
+ *                   type: object
+ *                   description: Thông tin đơn hàng đã duyệt
  *       400:
- *         description: Không thể duyệt đơn hàng không phải PENDING
+ *         description: |
+ *           - Không thể duyệt đơn hàng không phải PENDING
+ *           - Thiếu month_rental khi APPROVED
  *       404:
  *         description: Không tìm thấy đơn hàng
  *       500:

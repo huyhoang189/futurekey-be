@@ -230,6 +230,7 @@ model career_order_items {
 
 model career_orders {
   id          String                @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  order_code  Int                   @unique(map: "career_orders_pk") @default(autoincrement())
   school_id   String                @db.VarChar(36)
   create_by   String                @db.VarChar(36)
   status      career_orders_status? @default(PENDING)

@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("../../../../utils/bcrypt");
+const xlsx = require("xlsx");
 
 /**
  * Lấy default school user group ID (cho giáo viên/nhân viên trường)
@@ -615,6 +616,239 @@ const checkUserSchoolAssociation = async (userId) => {
   return schoolUser;
 };
 
+/**
+ * Import danh sách school users (teachers) từ file Excel
+ */
+const importSchoolUsers = async (fileBuffer) => {
+  try {
+    // Đọc file Excel
+    const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Chuyển sheet thành JSON, bắt đầu từ row 3 (không có header)
+    const jsonData = xlsx.utils.sheet_to_json(worksheet, {
+      range: 2, // Bắt đầu từ row 3 (index 2)
+      header: [
+        "STT",
+        "Tên đăng nhập",
+        "Họ và tên",
+        "Email",
+        "Số điện thoại",
+        "Địa chỉ",
+        "Mật khẩu",
+        "Tên trường",
+        "Mô tả",
+      ],
+      defval: "",
+    });
+
+    if (!jsonData || jsonData.length === 0) {
+      throw new Error("File không có dữ liệu");
+    }
+
+    // Lấy danh sách schools và teacher group
+    const [schools, teacherGroup] = await Promise.all([
+      prisma.schools.findMany({
+        select: { id: true, name: true },
+      }),
+      getDefaultSchoolUserGroupId(),
+    ]);
+
+    const schoolMap = Object.fromEntries(schools.map(s => [s.name.trim().toUpperCase(), s.id]));
+
+    const results = {
+      success: [],
+      errors: [],
+    };
+
+    // Tạo workbook mới cho file lỗi
+    const errorWorkbook = xlsx.utils.book_new();
+    const errorData = [];
+    const errorRows = [];
+
+    // Xử lý từng row
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      const rowNumber = i + 3;
+      let errorMessage = "";
+
+      try {
+        // Map các cột
+        const user_name = row["Tên đăng nhập"]?.toString().trim();
+        const full_name = row["Họ và tên"]?.toString().trim();
+        const email = row["Email"]?.toString().trim();
+        const phone_number = row["Số điện thoại"]?.toString().trim();
+        const address = row["Địa chỉ"]?.toString().trim();
+        const password = row["Mật khẩu"]?.toString().trim();
+        const schoolName = row["Tên trường"]?.toString().trim().toUpperCase();
+        const description = row["Mô tả"]?.toString().trim();
+
+        // Validate required fields
+        if (!user_name || !full_name) {
+          errorMessage = "Thiếu tên đăng nhập hoặc họ tên";
+          throw new Error(errorMessage);
+        }
+
+        // Map school
+        const school_id = schoolName ? schoolMap[schoolName] : null;
+        if (schoolName && !school_id) {
+          errorMessage = `Trường "${schoolName}" không tồn tại`;
+          throw new Error(errorMessage);
+        }
+
+        // Check username đã tồn tại
+        const existingUser = await prisma.auth_base_user.findUnique({
+          where: { user_name },
+        });
+
+        if (existingUser) {
+          errorMessage = "Tên đăng nhập đã tồn tại";
+          throw new Error(errorMessage);
+        }
+
+        // Check email đã tồn tại
+        if (email) {
+          const existingEmail = await prisma.auth_base_user.findFirst({
+            where: { email },
+          });
+
+          if (existingEmail) {
+            errorMessage = `Email ${email} đã tồn tại`;
+            throw new Error(errorMessage);
+          }
+        }
+
+        // Tạo user và school user trong transaction
+        const result = await prisma.$transaction(async (tx) => {
+          // 1. Tạo user
+          const user = await tx.auth_base_user.create({
+            data: {
+              user_name,
+              full_name,
+              email: email || null,
+              phone_number: phone_number || null,
+              address: address || null,
+              password_hash: await bcrypt.hashPassword(password || "123456", 10),
+              group_id: teacherGroup,
+              status: "ACTIVE",
+            },
+          });
+
+          // 2. Tạo school user
+          const schoolUser = await tx.auth_impl_user_school.create({
+            data: {
+              user_id: user.id,
+              school_id,
+              description: description || null,
+            },
+            select: {
+              id: true,
+              user_id: true,
+              school_id: true,
+              description: true,
+            },
+          });
+
+          return { user, schoolUser };
+        });
+
+        results.success.push({
+          row: rowNumber,
+          schoolUser: result.schoolUser,
+          user: result.user,
+        });
+      } catch (error) {
+        results.errors.push({
+          row: rowNumber,
+          user_name: row["Tên đăng nhập"] || "",
+          error: errorMessage || error.message,
+        });
+
+        // Thêm row vào file lỗi
+        errorData.push({
+          "STT": rowNumber - 2,
+          "Tên đăng nhập": row["Tên đăng nhập"] || "",
+          "Họ và tên": row["Họ và tên"] || "",
+          "Email": row["Email"] || "",
+          "Số điện thoại": row["Số điện thoại"] || "",
+          "Địa chỉ": row["Địa chỉ"] || "",
+          "Mật khẩu": row["Mật khẩu"] || "",
+          "Tên trường": row["Tên trường"] || "",
+          "Mô tả": row["Mô tả"] || "",
+          "Lỗi": errorMessage || error.message,
+        });
+        errorRows.push(errorData.length);
+      }
+    }
+
+    // Nếu có lỗi, tạo file Excel với các row bị lỗi
+    let errorFileBuffer = null;
+    if (errorData.length > 0) {
+      const errorWorksheet = xlsx.utils.json_to_sheet(errorData);
+
+      // Thêm style cho header
+      const headerRange = xlsx.utils.decode_range(errorWorksheet['!ref']);
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = xlsx.utils.encode_cell({ r: 0, c: col });
+        if (!errorWorksheet[cellAddress]) continue;
+        
+        errorWorksheet[cellAddress].s = {
+          fill: { fgColor: { rgb: "CCCCCC" } },
+          font: { bold: true },
+        };
+      }
+
+      // Bôi đỏ các row bị lỗi
+      errorRows.forEach((rowIndex) => {
+        const rowNumber = rowIndex;
+        for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+          const cellAddress = xlsx.utils.encode_cell({ r: rowNumber, c: col });
+          if (!errorWorksheet[cellAddress]) {
+            errorWorksheet[cellAddress] = { t: 's', v: '' };
+          }
+          
+          errorWorksheet[cellAddress].s = {
+            fill: { fgColor: { rgb: "FF0000" } },
+            font: { color: { rgb: "FFFFFF" } },
+          };
+        }
+      });
+
+      // Set column widths
+      errorWorksheet['!cols'] = [
+        { wch: 5 },  // STT
+        { wch: 15 }, // Tên đăng nhập
+        { wch: 20 }, // Họ và tên
+        { wch: 25 }, // Email
+        { wch: 15 }, // Số điện thoại
+        { wch: 30 }, // Địa chỉ
+        { wch: 15 }, // Mật khẩu
+        { wch: 25 }, // Tên trường
+        { wch: 20 }, // Mô tả
+        { wch: 40 }, // Lỗi
+      ];
+
+      xlsx.utils.book_append_sheet(errorWorkbook, errorWorksheet, "Lỗi");
+      errorFileBuffer = xlsx.write(errorWorkbook, { 
+        type: "buffer", 
+        bookType: "xlsx",
+        cellStyles: true,
+      });
+    }
+
+    return {
+      total: jsonData.length,
+      success_count: results.success.length,
+      error_count: results.errors.length,
+      results,
+      errorFileBuffer,
+    };
+  } catch (error) {
+    throw new Error(`Import failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   getAllSchoolUsers,
   getSchoolUserById,
@@ -623,4 +857,5 @@ module.exports = {
   updateSchoolUserUser,
   deleteSchoolUser,
   checkUserSchoolAssociation,
+  importSchoolUsers,
 };

@@ -1,6 +1,42 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const bcrypt = require("../../../../utils/bcrypt");
+const xlsx = require("xlsx");
+
+/**
+ * Generate mã học sinh từ tên lớp
+ * Format: Lop10A_HS_123456789
+ */
+const generateStudentCode = async (className) => {
+  if (!className) {
+    // Nếu không có lớp, dùng format mặc định
+    const timestamp = Date.now();
+    return `HS_${timestamp}`;
+  }
+
+  // Chuẩn hóa tên lớp: "Lớp 10A" -> "Lop10A"
+  const normalizedClassName = className
+    .replace(/Lớp\s*/gi, 'Lop')
+    .replace(/\s+/g, '')
+    .replace(/[^a-zA-Z0-9]/g, '');
+
+  // Generate số ngẫu nhiên 9 chữ số
+  const randomNumber = Math.floor(100000000 + Math.random() * 900000000);
+  
+  const code = `${normalizedClassName}_HS_${randomNumber}`;
+
+  // Check duplicate
+  const existing = await prisma.auth_impl_user_student.findFirst({
+    where: { student_code: code },
+  });
+
+  if (existing) {
+    // Nếu trùng, generate lại
+    return generateStudentCode(className);
+  }
+
+  return code;
+};
 
 /**
  * Lấy default student group ID
@@ -99,6 +135,7 @@ const getAllStudents = async ({ filters = {}, paging = {}, orderBy = {}, search 
       user_id: true,
       school_id: true,
       class_id: true,
+      student_code: true,
       sex: true,
       birthday: true,
       description: true,
@@ -172,6 +209,7 @@ const getStudentById = async (id) => {
       user_id: true,
       school_id: true,
       class_id: true,
+      student_code: true,
       sex: true,
       birthday: true,
       description: true,
@@ -281,6 +319,19 @@ const createStudent = async (studentData) => {
     // Get default student group
     const studentGroupId = await getDefaultStudentGroupId();
 
+    // Get class name for student code
+    let className = null;
+    if (class_id) {
+      const classData = await tx.classes.findUnique({
+        where: { id: class_id },
+        select: { name: true },
+      });
+      className = classData?.name;
+    }
+
+    // Generate student code
+    const student_code = await generateStudentCode(className);
+
     // 1. Create user account first
     const user = await tx.auth_base_user.create({
       data: {
@@ -311,6 +362,7 @@ const createStudent = async (studentData) => {
         user_id: user.id,
         school_id,
         class_id,
+        student_code,
         sex,
         birthday: birthday ? new Date(birthday) : null,
         description,
@@ -321,6 +373,7 @@ const createStudent = async (studentData) => {
         user_id: true,
         school_id: true,
         class_id: true,
+        student_code: true,
         sex: true,
         birthday: true,
         description: true,
@@ -486,6 +539,7 @@ const updateStudent = async (id, updateData) => {
         user_id: true,
         school_id: true,
         class_id: true,
+        student_code: true,
         sex: true,
         birthday: true,
         description: true,
@@ -650,6 +704,328 @@ const deleteStudent = async (id, options = {}) => {
   });
 };
 
+/**
+ * Import danh sách students từ file Excel
+ */
+const importStudents = async (fileBuffer) => {
+  try {
+    // Đọc file Excel
+    const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const worksheet = workbook.Sheets[sheetName];
+
+    // Chuyển sheet thành JSON, bắt đầu từ row 3 (không có header)
+    const jsonData = xlsx.utils.sheet_to_json(worksheet, {
+      range: 2, // Bắt đầu từ row 3 (index 2)
+      header: [
+        "STT",
+        "Tên đăng nhập",
+        "Họ và tên",
+        "Email",
+        "Số điện thoại",
+        "Địa chỉ",
+        "Nhóm người dùng",
+        "Mật khẩu",
+        "Tên trường",
+        "Tên lớp",
+        "Giới tính",
+        "Ngày sinh",
+        "Mô tả",
+        "Ngành yêu thích",
+      ],
+      defval: "",
+      raw: false, // Chuyển date thành string thay vì số
+      dateNF: 'dd/mm/yyyy', // Format ngày tháng
+    });
+
+    if (!jsonData || jsonData.length === 0) {
+      throw new Error("File không có dữ liệu");
+    }
+
+    // Lấy danh sách schools và classes để map tên -> ID
+    const [schools, classes, studentGroup] = await Promise.all([
+      prisma.schools.findMany({
+        select: { id: true, name: true },
+      }),
+      prisma.classes.findMany({
+        select: { id: true, name: true },
+      }),
+      getDefaultStudentGroupId(),
+    ]);
+
+    const schoolMap = Object.fromEntries(schools.map(s => [s.name.trim().toUpperCase(), s.id]));
+    const classMap = Object.fromEntries(classes.map(c => [c.name.trim().toUpperCase(), c.id]));
+
+    const results = {
+      success: [],
+      errors: [],
+    };
+
+    // Tạo workbook mới cho file lỗi
+    const errorWorkbook = xlsx.utils.book_new();
+    const errorData = [];
+    const errorRows = [];
+
+    // Xử lý từng row
+    for (let i = 0; i < jsonData.length; i++) {
+      const row = jsonData[i];
+      const rowNumber = i + 3;
+      let errorMessage = "";
+
+      try {
+        // Map các cột
+        const user_name = row["Tên đăng nhập"]?.toString().trim();
+        const full_name = row["Họ và tên"]?.toString().trim();
+        const email = row["Email"]?.toString().trim();
+        let phone_number = row["Số điện thoại"]?.toString().trim();
+        const address = row["Địa chỉ"]?.toString().trim();
+        const password = row["Mật khẩu"]?.toString().trim();
+        const schoolName = row["Tên trường"]?.toString().trim().toUpperCase();
+        const className = row["Tên lớp"]?.toString().trim().toUpperCase();
+        const sexRaw = row["Giới tính"]?.toString().trim().toUpperCase();
+        const birthdayRaw = row["Ngày sinh"]?.toString().trim();
+        const description = row["Mô tả"]?.toString().trim();
+        const major_interest = row["Ngành yêu thích"]?.toString().trim();
+
+        // Validate required fields
+        if (!user_name || !full_name) {
+          errorMessage = "Thiếu tên đăng nhập hoặc họ tên";
+          throw new Error(errorMessage);
+        }
+
+        // Tự động cắt bớt nếu quá dài (thay vì báo lỗi)
+        if (phone_number && phone_number.length > 15) {
+          phone_number = phone_number.substring(0, 15);
+        }
+        if (email && email.length > 255) {
+          email = email.substring(0, 255);
+        }
+
+        // Map school
+        const school_id = schoolName ? schoolMap[schoolName] : null;
+        if (schoolName && !school_id) {
+          errorMessage = `Trường "${schoolName}" không tồn tại`;
+          throw new Error(errorMessage);
+        }
+
+        // Map class
+        const class_id = className ? classMap[className] : null;
+        if (className && !class_id) {
+          errorMessage = `Lớp "${className}" không tồn tại`;
+          throw new Error(errorMessage);
+        }
+
+        // Map sex
+        const sexMap = { "NAM": "MALE", "NỮ": "FEMALE", "MALE": "MALE", "FEMALE": "FEMALE" };
+        const sex = sexRaw ? sexMap[sexRaw] || null : null;
+
+        // Parse birthday
+        let birthday = null;
+        if (birthdayRaw) {
+          console.log(`Row ${rowNumber}: birthdayRaw = "${birthdayRaw}", type = ${typeof birthdayRaw}`);
+          
+          // Nếu là số (Excel serial date), convert sang Date
+          if (typeof birthdayRaw === 'number') {
+            // Excel date serial number (số ngày từ 1/1/1900)
+            const excelEpoch = new Date(1899, 11, 30); // 30/12/1899
+            birthday = new Date(excelEpoch.getTime() + birthdayRaw * 24 * 60 * 60 * 1000);
+          } else if (typeof birthdayRaw === 'string') {
+            const trimmed = birthdayRaw.trim();
+            
+            // Try DD/MM/YYYY format
+            const ddmmyyyyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            if (ddmmyyyyMatch) {
+              const [, day, month, year] = ddmmyyyyMatch;
+              birthday = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
+            } 
+            // Try YYYY-MM-DD format
+            else if (trimmed.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
+              birthday = new Date(trimmed);
+            }
+            // Try native Date parsing as fallback
+            else {
+              birthday = new Date(trimmed);
+            }
+          }
+
+          if (!birthday || isNaN(birthday.getTime())) {
+            errorMessage = `Định dạng ngày sinh không hợp lệ: "${birthdayRaw}" (Chấp nhận: DD/MM/YYYY hoặc YYYY-MM-DD)`;
+            throw new Error(errorMessage);
+          }
+        }
+
+        // Check username đã tồn tại
+        const existingUser = await prisma.auth_base_user.findUnique({
+          where: { user_name },
+        });
+
+        if (existingUser) {
+          errorMessage = "Tên đăng nhập đã tồn tại";
+          throw new Error(errorMessage);
+        }
+
+        // Check email đã tồn tại
+        if (email) {
+          const existingEmail = await prisma.auth_base_user.findFirst({
+            where: { email },
+          });
+
+          if (existingEmail) {
+            errorMessage = `Email ${email} đã tồn tại`;
+            throw new Error(errorMessage);
+          }
+        }
+
+        // Tạo user và student trong transaction
+        const result = await prisma.$transaction(async (tx) => {
+          // Generate student code từ tên lớp
+          const classNameForCode = className ? classes.find(c => c.id === class_id)?.name : null;
+          const student_code = await generateStudentCode(classNameForCode);
+
+          // 1. Tạo user
+          const user = await tx.auth_base_user.create({
+            data: {
+              user_name,
+              full_name,
+              email: email || null,
+              phone_number: phone_number || null,
+              address: address || null,
+              password_hash: await bcrypt.hashPassword(password || "123456", 10),
+              group_id: studentGroup,
+              status: "ACTIVE",
+            },
+          });
+
+          // 2. Tạo student
+          const student = await tx.auth_impl_user_student.create({
+            data: {
+              user_id: user.id,
+              school_id,
+              class_id,
+              student_code,
+              sex,
+              birthday,
+              description: description || null,
+              major_interest: major_interest || null,
+            },
+            select: {
+              id: true,
+              user_id: true,
+              school_id: true,
+              class_id: true,
+              student_code: true,
+            },
+          });
+
+          return { user, student };
+        });
+
+        results.success.push({
+          row: rowNumber,
+          student: result.student,
+          user: result.user,
+        });
+      } catch (error) {
+        results.errors.push({
+          row: rowNumber,
+          user_name: row["Tên đăng nhập"] || "",
+          error: errorMessage || error.message,
+        });
+
+        // Thêm row vào file lỗi
+        errorData.push({
+          "STT": rowNumber - 2,
+          "Tên đăng nhập": row["Tên đăng nhập"] || "",
+          "Họ và tên": row["Họ và tên"] || "",
+          "Email": row["Email"] || "",
+          "Số điện thoại": row["Số điện thoại"] || "",
+          "Địa chỉ": row["Địa chỉ"] || "",
+          "Nhóm người dùng": row["Nhóm người dùng"] || "",
+          "Mật khẩu": row["Mật khẩu"] || "",
+          "Tên trường": row["Tên trường"] || "",
+          "Tên lớp": row["Tên lớp"] || "",
+          "Giới tính": row["Giới tính"] || "",
+          "Ngày sinh": row["Ngày sinh"] || "",
+          "Mô tả": row["Mô tả"] || "",
+          "Ngành yêu thích": row["Ngành yêu thích"] || "",
+          "Lỗi": errorMessage || error.message,
+        });
+        errorRows.push(errorData.length);
+      }
+    }
+
+    // Nếu có lỗi, tạo file Excel với các row bị lỗi
+    let errorFileBuffer = null;
+    if (errorData.length > 0) {
+      const errorWorksheet = xlsx.utils.json_to_sheet(errorData);
+
+      // Thêm style cho header
+      const headerRange = xlsx.utils.decode_range(errorWorksheet['!ref']);
+      for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+        const cellAddress = xlsx.utils.encode_cell({ r: 0, c: col });
+        if (!errorWorksheet[cellAddress]) continue;
+        
+        errorWorksheet[cellAddress].s = {
+          fill: { fgColor: { rgb: "CCCCCC" } },
+          font: { bold: true },
+        };
+      }
+
+      // Bôi đỏ các row bị lỗi
+      errorRows.forEach((rowIndex) => {
+        const rowNumber = rowIndex;
+        for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
+          const cellAddress = xlsx.utils.encode_cell({ r: rowNumber, c: col });
+          if (!errorWorksheet[cellAddress]) {
+            errorWorksheet[cellAddress] = { t: 's', v: '' };
+          }
+          
+          errorWorksheet[cellAddress].s = {
+            fill: { fgColor: { rgb: "FF0000" } },
+            font: { color: { rgb: "FFFFFF" } },
+          };
+        }
+      });
+
+      // Set column widths
+      errorWorksheet['!cols'] = [
+        { wch: 5 },  // STT
+        { wch: 15 }, // Tên đăng nhập
+        { wch: 20 }, // Họ và tên
+        { wch: 25 }, // Email
+        { wch: 15 }, // Số điện thoại
+        { wch: 30 }, // Địa chỉ
+        { wch: 20 }, // Nhóm người dùng
+        { wch: 15 }, // Mật khẩu
+        { wch: 25 }, // Tên trường
+        { wch: 15 }, // Tên lớp
+        { wch: 10 }, // Giới tính
+        { wch: 15 }, // Ngày sinh
+        { wch: 20 }, // Mô tả
+        { wch: 25 }, // Ngành yêu thích
+        { wch: 40 }, // Lỗi
+      ];
+
+      xlsx.utils.book_append_sheet(errorWorkbook, errorWorksheet, "Lỗi");
+      errorFileBuffer = xlsx.write(errorWorkbook, { 
+        type: "buffer", 
+        bookType: "xlsx",
+        cellStyles: true,
+      });
+    }
+
+    return {
+      total: jsonData.length,
+      success_count: results.success.length,
+      error_count: results.errors.length,
+      results,
+      errorFileBuffer,
+    };
+  } catch (error) {
+    throw new Error(`Import failed: ${error.message}`);
+  }
+};
+
 module.exports = {
   getAllStudents,
   getStudentById,
@@ -657,4 +1033,5 @@ module.exports = {
   updateStudent,
   updateStudentUser,
   deleteStudent,
+  importStudents,
 };

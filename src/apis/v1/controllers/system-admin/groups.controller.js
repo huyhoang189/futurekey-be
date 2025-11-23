@@ -21,7 +21,7 @@ const getAllGroups = async (req, res) => {
     }
 
     if (type) {
-      filters.type = type;
+      filters.type = { equals: type };
     }
 
     const result = await groupsService.getAllGroups({

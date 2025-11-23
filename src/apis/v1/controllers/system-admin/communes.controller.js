@@ -14,9 +14,7 @@ const getAllCommunes = async (req, res) => {
     const filters = {};
 
     if (search) {
-      filters.OR = [
-        { name: { contains: search } },
-      ];
+      filters.OR = [{ name: { contains: search } }];
     }
 
     if (name) {
@@ -24,7 +22,7 @@ const getAllCommunes = async (req, res) => {
     }
 
     if (province_id) {
-      filters.province_id = province_id;
+      filters.province_id = { equals: province_id };
     }
 
     const result = await communesService.getAllCommunes({

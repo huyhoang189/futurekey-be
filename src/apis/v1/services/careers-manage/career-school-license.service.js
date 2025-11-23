@@ -70,6 +70,7 @@ const getLicensesByOrderId = async ({
           id: true,
           code: true,
           name: true,
+          is_active: true,
         },
       }),
     ]);

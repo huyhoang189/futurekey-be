@@ -25,11 +25,11 @@ const getAllUsers = async (req, res) => {
     }
 
     if (status) {
-      filters.status = status;
+      filters.status = { equals: status };
     }
 
     if (group_id) {
-      filters.group_id = group_id;
+      filters.group_id = { equals: group_id };
     }
 
     const result = await usersService.getAllUsers({

@@ -30,8 +30,10 @@ const getAllCommunes = async ({ filters = {}, paging = {}, orderBy = {} }) => {
   // Manual join với provinces để lấy thông tin tỉnh
   if (data.length > 0) {
     // Lấy unique province_ids
-    const provinceIds = [...new Set(data.map(commune => commune.province_id).filter(Boolean))];
-    
+    const provinceIds = [
+      ...new Set(data.map((commune) => commune.province_id).filter(Boolean)),
+    ];
+
     if (provinceIds.length > 0) {
       // Query provinces một lần
       const provinces = await prisma.province.findMany({
@@ -46,12 +48,14 @@ const getAllCommunes = async ({ filters = {}, paging = {}, orderBy = {} }) => {
 
       // Tạo map để lookup nhanh
       const provincesMap = Object.fromEntries(
-        provinces.map(province => [province.id, province])
+        provinces.map((province) => [province.id, province])
       );
 
       // Gắn thông tin province vào từng commune
-      data.forEach(commune => {
-        commune.province = commune.province_id ? provincesMap[commune.province_id] || null : null;
+      data.forEach((commune) => {
+        commune.province = commune.province_id
+          ? provincesMap[commune.province_id] || null
+          : null;
       });
     }
   }

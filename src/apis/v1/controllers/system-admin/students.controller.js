@@ -136,6 +136,7 @@ const createStudent = async (req, res) => {
 
     // Validate birthday
     if (birthday) {
+    
       const birthDate = new Date(birthday);
       const now = new Date();
       const age = now.getFullYear() - birthDate.getFullYear();

@@ -218,12 +218,21 @@ const downloadTemplate = async (req, res) => {
 
 /**
  * Import danh sách students từ file Excel
- * POST /api/v1/system-admin/students/import
+ * POST /api/v1/system-admin/students/import?class_id=xxx
  */
 const importStudents = async (req, res) => {
   console.log("=== IMPORT STUDENTS CONTROLLER CALLED ===");
   console.log("File:", req.file ? "File exists" : "No file");
   try {
+    const { class_id } = req.query;
+
+    if (!class_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "class_id is required",
+      });
+    }
+
     if (!req.file) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
@@ -244,7 +253,7 @@ const importStudents = async (req, res) => {
       });
     }
 
-    const result = await studentsService.importStudents(req.file.buffer);
+    const result = await studentsService.importStudents(req.file.buffer, class_id);
 
     // Nếu có lỗi và có file lỗi, trả về file Excel với các row bị lỗi
     if (result.errorFileBuffer) {

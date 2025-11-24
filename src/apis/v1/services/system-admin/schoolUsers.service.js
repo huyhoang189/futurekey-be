@@ -619,16 +619,26 @@ const checkUserSchoolAssociation = async (userId) => {
 /**
  * Import danh sách school users (teachers) từ file Excel
  */
-const importSchoolUsers = async (fileBuffer) => {
+const importSchoolUsers = async (fileBuffer, school_id) => {
   try {
+    // Validate school exists
+    const school = await prisma.schools.findUnique({
+      where: { id: school_id },
+      select: { id: true, name: true },
+    });
+
+    if (!school) {
+      throw new Error("School not found");
+    }
+
     // Đọc file Excel
     const workbook = xlsx.read(fileBuffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    // Chuyển sheet thành JSON, bắt đầu từ row 3 (không có header)
+    // Chuyển sheet thành JSON, bắt đầu từ row 2 (không có header)
     const jsonData = xlsx.utils.sheet_to_json(worksheet, {
-      range: 2, // Bắt đầu từ row 3 (index 2)
+      range: 1, // Bắt đầu từ row 2 (index 1)
       header: [
         "STT",
         "Tên đăng nhập",
@@ -637,7 +647,6 @@ const importSchoolUsers = async (fileBuffer) => {
         "Số điện thoại",
         "Địa chỉ",
         "Mật khẩu",
-        "Tên trường",
         "Mô tả",
       ],
       defval: "",
@@ -647,15 +656,8 @@ const importSchoolUsers = async (fileBuffer) => {
       throw new Error("File không có dữ liệu");
     }
 
-    // Lấy danh sách schools và teacher group
-    const [schools, teacherGroup] = await Promise.all([
-      prisma.schools.findMany({
-        select: { id: true, name: true },
-      }),
-      getDefaultSchoolUserGroupId(),
-    ]);
-
-    const schoolMap = Object.fromEntries(schools.map(s => [s.name.trim().toUpperCase(), s.id]));
+    // Lấy teacher group
+    const teacherGroup = await getDefaultSchoolUserGroupId();
 
     const results = {
       success: [],
@@ -681,19 +683,11 @@ const importSchoolUsers = async (fileBuffer) => {
         const phone_number = row["Số điện thoại"]?.toString().trim();
         const address = row["Địa chỉ"]?.toString().trim();
         const password = row["Mật khẩu"]?.toString().trim();
-        const schoolName = row["Tên trường"]?.toString().trim().toUpperCase();
         const description = row["Mô tả"]?.toString().trim();
 
         // Validate required fields
         if (!user_name || !full_name) {
           errorMessage = "Thiếu tên đăng nhập hoặc họ tên";
-          throw new Error(errorMessage);
-        }
-
-        // Map school
-        const school_id = schoolName ? schoolMap[schoolName] : null;
-        if (schoolName && !school_id) {
-          errorMessage = `Trường "${schoolName}" không tồn tại`;
           throw new Error(errorMessage);
         }
 
@@ -767,14 +761,13 @@ const importSchoolUsers = async (fileBuffer) => {
 
         // Thêm row vào file lỗi
         errorData.push({
-          "STT": rowNumber - 2,
+          "STT": rowNumber - 1,
           "Tên đăng nhập": row["Tên đăng nhập"] || "",
           "Họ và tên": row["Họ và tên"] || "",
           "Email": row["Email"] || "",
           "Số điện thoại": row["Số điện thoại"] || "",
           "Địa chỉ": row["Địa chỉ"] || "",
           "Mật khẩu": row["Mật khẩu"] || "",
-          "Tên trường": row["Tên trường"] || "",
           "Mô tả": row["Mô tả"] || "",
           "Lỗi": errorMessage || error.message,
         });
@@ -824,7 +817,6 @@ const importSchoolUsers = async (fileBuffer) => {
         { wch: 15 }, // Số điện thoại
         { wch: 30 }, // Địa chỉ
         { wch: 15 }, // Mật khẩu
-        { wch: 25 }, // Tên trường
         { wch: 20 }, // Mô tả
         { wch: 40 }, // Lỗi
       ];

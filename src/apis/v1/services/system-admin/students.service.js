@@ -707,16 +707,26 @@ const deleteStudent = async (id, options = {}) => {
 /**
  * Import danh sách students từ file Excel
  */
-const importStudents = async (fileBuffer) => {
+const importStudents = async (fileBuffer, class_id) => {
   try {
+    // Validate class exists
+    const classData = await prisma.classes.findUnique({
+      where: { id: class_id },
+      select: { id: true, name: true, school_id: true },
+    });
+
+    if (!classData) {
+      throw new Error("Class not found");
+    }
+
     // Đọc file Excel
     const workbook = xlsx.read(fileBuffer, { type: "buffer" });
     const sheetName = workbook.SheetNames[0];
     const worksheet = workbook.Sheets[sheetName];
 
-    // Chuyển sheet thành JSON, bắt đầu từ row 3 (không có header)
+    // Chuyển sheet thành JSON, bắt đầu từ row 2 (không có header)
     const jsonData = xlsx.utils.sheet_to_json(worksheet, {
-      range: 2, // Bắt đầu từ row 3 (index 2)
+      range: 1, // Bắt đầu từ row 2 (index 1)
       header: [
         "STT",
         "Tên đăng nhập",
@@ -726,8 +736,6 @@ const importStudents = async (fileBuffer) => {
         "Địa chỉ",
         "Nhóm người dùng",
         "Mật khẩu",
-        "Tên trường",
-        "Tên lớp",
         "Giới tính",
         "Ngày sinh",
         "Mô tả",
@@ -742,19 +750,8 @@ const importStudents = async (fileBuffer) => {
       throw new Error("File không có dữ liệu");
     }
 
-    // Lấy danh sách schools và classes để map tên -> ID
-    const [schools, classes, studentGroup] = await Promise.all([
-      prisma.schools.findMany({
-        select: { id: true, name: true },
-      }),
-      prisma.classes.findMany({
-        select: { id: true, name: true },
-      }),
-      getDefaultStudentGroupId(),
-    ]);
-
-    const schoolMap = Object.fromEntries(schools.map(s => [s.name.trim().toUpperCase(), s.id]));
-    const classMap = Object.fromEntries(classes.map(c => [c.name.trim().toUpperCase(), c.id]));
+    // Lấy student group
+    const studentGroup = await getDefaultStudentGroupId();
 
     const results = {
       success: [],
@@ -773,15 +770,13 @@ const importStudents = async (fileBuffer) => {
       let errorMessage = "";
 
       try {
-        // Map các cột
+        // Map các cột theo file Excel mới
         const user_name = row["Tên đăng nhập"]?.toString().trim();
         const full_name = row["Họ và tên"]?.toString().trim();
-        const email = row["Email"]?.toString().trim();
+        let email = row["Email"]?.toString().trim();
         let phone_number = row["Số điện thoại"]?.toString().trim();
         const address = row["Địa chỉ"]?.toString().trim();
         const password = row["Mật khẩu"]?.toString().trim();
-        const schoolName = row["Tên trường"]?.toString().trim().toUpperCase();
-        const className = row["Tên lớp"]?.toString().trim().toUpperCase();
         const sexRaw = row["Giới tính"]?.toString().trim().toUpperCase();
         const birthdayRaw = row["Ngày sinh"]?.toString().trim();
         const description = row["Mô tả"]?.toString().trim();
@@ -801,19 +796,8 @@ const importStudents = async (fileBuffer) => {
           email = email.substring(0, 255);
         }
 
-        // Map school
-        const school_id = schoolName ? schoolMap[schoolName] : null;
-        if (schoolName && !school_id) {
-          errorMessage = `Trường "${schoolName}" không tồn tại`;
-          throw new Error(errorMessage);
-        }
-
-        // Map class
-        const class_id = className ? classMap[className] : null;
-        if (className && !class_id) {
-          errorMessage = `Lớp "${className}" không tồn tại`;
-          throw new Error(errorMessage);
-        }
+        // Dùng school_id từ lớp
+        const school_id = classData.school_id;
 
         // Map sex
         const sexMap = { "NAM": "MALE", "NỮ": "FEMALE", "MALE": "MALE", "FEMALE": "FEMALE" };
@@ -878,9 +862,8 @@ const importStudents = async (fileBuffer) => {
 
         // Tạo user và student trong transaction
         const result = await prisma.$transaction(async (tx) => {
-          // Generate student code từ tên lớp
-          const classNameForCode = className ? classes.find(c => c.id === class_id)?.name : null;
-          const student_code = await generateStudentCode(classNameForCode);
+          // Generate student code từ tên lớp (dùng classData từ param)
+          const student_code = await generateStudentCode(classData.name);
 
           // 1. Tạo user
           const user = await tx.auth_base_user.create({
@@ -901,7 +884,7 @@ const importStudents = async (fileBuffer) => {
             data: {
               user_id: user.id,
               school_id,
-              class_id,
+              class_id: class_id, // Dùng class_id từ param
               student_code,
               sex,
               birthday,
@@ -934,7 +917,7 @@ const importStudents = async (fileBuffer) => {
 
         // Thêm row vào file lỗi
         errorData.push({
-          "STT": rowNumber - 2,
+          "STT": rowNumber - 1,
           "Tên đăng nhập": row["Tên đăng nhập"] || "",
           "Họ và tên": row["Họ và tên"] || "",
           "Email": row["Email"] || "",
@@ -942,8 +925,6 @@ const importStudents = async (fileBuffer) => {
           "Địa chỉ": row["Địa chỉ"] || "",
           "Nhóm người dùng": row["Nhóm người dùng"] || "",
           "Mật khẩu": row["Mật khẩu"] || "",
-          "Tên trường": row["Tên trường"] || "",
-          "Tên lớp": row["Tên lớp"] || "",
           "Giới tính": row["Giới tính"] || "",
           "Ngày sinh": row["Ngày sinh"] || "",
           "Mô tả": row["Mô tả"] || "",
@@ -997,8 +978,6 @@ const importStudents = async (fileBuffer) => {
         { wch: 30 }, // Địa chỉ
         { wch: 20 }, // Nhóm người dùng
         { wch: 15 }, // Mật khẩu
-        { wch: 25 }, // Tên trường
-        { wch: 15 }, // Tên lớp
         { wch: 10 }, // Giới tính
         { wch: 15 }, // Ngày sinh
         { wch: 20 }, // Mô tả

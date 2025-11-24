@@ -213,10 +213,17 @@ router.get("/download-template", studentsController.downloadTemplate);
  * @swagger
  * /api/v1/system-admin/students/import:
  *   post:
- *     summary: Import danh sách students từ file Excel
+ *     summary: Import danh sách students từ file Excel vào một lớp cụ thể
  *     tags: [System Admin - Students]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: class_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của lớp học cần import students vào
  *     requestBody:
  *       required: true
  *       content:

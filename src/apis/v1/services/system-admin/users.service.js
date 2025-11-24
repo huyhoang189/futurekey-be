@@ -23,9 +23,8 @@ const getAllUsers = async ({
     const where = buildWhereClause(filters);
 
     // Nếu có select custom, đảm bảo có group_id để join
-    const selectWithGroupId = select && includeGroup
-      ? { ...select, group_id: true }
-      : select;
+    const selectWithGroupId =
+      select && includeGroup ? { ...select, group_id: true } : select;
 
     const [records, total] = await Promise.all([
       prisma.auth_base_user.findMany({
@@ -50,20 +49,23 @@ const getAllUsers = async ({
     }
 
     // Optimize: Lấy tất cả group_ids unique
-    const groupIds = [...new Set(records.map((r) => r.group_id).filter(Boolean))];
+    const groupIds = [
+      ...new Set(records.map((r) => r.group_id).filter(Boolean)),
+    ];
 
     // Query tất cả groups một lần (giống leftJoin)
-    const groups = groupIds.length > 0
-      ? await prisma.auth_group.findMany({
-          where: { id: { in: groupIds } },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            type: true,
-          },
-        })
-      : [];
+    const groups =
+      groupIds.length > 0
+        ? await prisma.auth_group.findMany({
+            where: { id: { in: groupIds } },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              type: true,
+            },
+          })
+        : [];
 
     // Map groups thành object để lookup nhanh
     const groupMap = Object.fromEntries(groups.map((g) => [g.id, g]));
@@ -134,7 +136,21 @@ const getUserByUsername = async (username, select = null) => {
       throw new Error("User not found");
     }
 
-    return user;
+    // Lấy thông tin group nếu có
+    if (user.group_id) {
+      const group = await prisma.auth_group.findUnique({
+        where: { id: user.group_id },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          type: true,
+        },
+      });
+      return { ...user, group };
+    }
+
+    return { ...user, group: null };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
   }
@@ -416,7 +432,17 @@ const importUsers = async (fileBuffer) => {
     // Chuyển sheet thành JSON, bắt đầu từ row 3 (không có header)
     const jsonData = xlsx.utils.sheet_to_json(worksheet, {
       range: 2, // Bắt đầu từ row 3 (index 2)
-      header: ["STT", "Tên đăng nhập", "Họ và tên", "Email", "Số điện thoại", "Địa chỉ", "Mô tả", "Nhóm người dùng", "Mật khẩu"], // Định nghĩa header thủ công
+      header: [
+        "STT",
+        "Tên đăng nhập",
+        "Họ và tên",
+        "Email",
+        "Số điện thoại",
+        "Địa chỉ",
+        "Mô tả",
+        "Nhóm người dùng",
+        "Mật khẩu",
+      ], // Định nghĩa header thủ công
       defval: "", // Giá trị mặc định cho cell trống
     });
 
@@ -429,7 +455,7 @@ const importUsers = async (fileBuffer) => {
       select: { id: true, name: true, type: true },
     });
     const groupMap = {};
-    groups.forEach(g => {
+    groups.forEach((g) => {
       groupMap[g.type.toUpperCase()] = g.id;
     });
 
@@ -456,7 +482,10 @@ const importUsers = async (fileBuffer) => {
         const email = row["Email"]?.toString().trim();
         const phone_number = row["Số điện thoại"]?.toString().trim();
         const address = row["Địa chỉ"]?.toString().trim();
-        const groupType = row["Nhóm người dùng"]?.toString().trim().toUpperCase();
+        const groupType = row["Nhóm người dùng"]
+          ?.toString()
+          .trim()
+          .toUpperCase();
         const password = row["Mật khẩu"]?.toString().trim();
 
         // Validate required fields
@@ -476,7 +505,7 @@ const importUsers = async (fileBuffer) => {
         const existingUser = await prisma.auth_base_user.findUnique({
           where: { user_name },
         });
-        console.log('existingUser:', existingUser);
+        console.log("existingUser:", existingUser);
 
         if (existingUser) {
           errorMessage = "Tên đăng nhập đã tồn tại" + existingUser;
@@ -532,16 +561,16 @@ const importUsers = async (fileBuffer) => {
 
         // Thêm row vào file lỗi với cột "Lỗi"
         errorData.push({
-          "STT": rowNumber - 2,
+          STT: rowNumber - 2,
           "Tên đăng nhập": row["Tên đăng nhập"] || "",
           "Họ và tên": row["Họ và tên"] || "",
-          "Email": row["Email"] || "",
+          Email: row["Email"] || "",
           "Số điện thoại": row["Số điện thoại"] || "",
           "Địa chỉ": row["Địa chỉ"] || "",
           "Mô tả": row["Mô tả"] || "",
           "Nhóm người dùng": row["Nhóm người dùng"] || "",
           "Mật khẩu": row["Mật khẩu"] || "",
-          "Lỗi": errorMessage || error.message,
+          Lỗi: errorMessage || error.message,
         });
         errorRows.push(errorData.length); // Lưu index của row lỗi (1-based)
       }
@@ -553,11 +582,11 @@ const importUsers = async (fileBuffer) => {
       const errorWorksheet = xlsx.utils.json_to_sheet(errorData);
 
       // Thêm style cho header
-      const headerRange = xlsx.utils.decode_range(errorWorksheet['!ref']);
+      const headerRange = xlsx.utils.decode_range(errorWorksheet["!ref"]);
       for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
         const cellAddress = xlsx.utils.encode_cell({ r: 0, c: col });
         if (!errorWorksheet[cellAddress]) continue;
-        
+
         errorWorksheet[cellAddress].s = {
           fill: { fgColor: { rgb: "CCCCCC" } },
           font: { bold: true },
@@ -570,9 +599,9 @@ const importUsers = async (fileBuffer) => {
         for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
           const cellAddress = xlsx.utils.encode_cell({ r: rowNumber, c: col });
           if (!errorWorksheet[cellAddress]) {
-            errorWorksheet[cellAddress] = { t: 's', v: '' };
+            errorWorksheet[cellAddress] = { t: "s", v: "" };
           }
-          
+
           errorWorksheet[cellAddress].s = {
             fill: { fgColor: { rgb: "FF0000" } },
             font: { color: { rgb: "FFFFFF" } },
@@ -581,8 +610,8 @@ const importUsers = async (fileBuffer) => {
       });
 
       // Set column widths
-      errorWorksheet['!cols'] = [
-        { wch: 5 },  // STT
+      errorWorksheet["!cols"] = [
+        { wch: 5 }, // STT
         { wch: 15 }, // Tên đăng nhập
         { wch: 20 }, // Họ và tên
         { wch: 25 }, // Email
@@ -595,8 +624,8 @@ const importUsers = async (fileBuffer) => {
       ];
 
       xlsx.utils.book_append_sheet(errorWorkbook, errorWorksheet, "Lỗi");
-      errorFileBuffer = xlsx.write(errorWorkbook, { 
-        type: "buffer", 
+      errorFileBuffer = xlsx.write(errorWorkbook, {
+        type: "buffer",
         bookType: "xlsx",
         cellStyles: true,
       });

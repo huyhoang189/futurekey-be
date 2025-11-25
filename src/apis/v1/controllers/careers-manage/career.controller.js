@@ -91,7 +91,8 @@ const getCareerById = async (req, res) => {
  */
 const createCareer = async (req, res) => {
   try {
-    const { code, name, description, tags, is_active } = req.body;
+    const { code, name, description, tags, is_active, career_category_ids } =
+      req.body;
     const imageFile = req.file; // File từ multer middleware
 
     const { userSession } = req;
@@ -104,6 +105,12 @@ const createCareer = async (req, res) => {
         message: "Access denied",
       });
     }
+
+    //Validate career_category_ids
+    let resultArray = career_category_ids.split(",");
+    resultArray = resultArray
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
 
     // Validate required fields
     if (!name) {
@@ -121,6 +128,7 @@ const createCareer = async (req, res) => {
         created_by_admin: holderUser.id,
         tags,
         is_active: is_active === "true" || is_active === true,
+        career_category_ids: resultArray,
       },
       imageFile // Truyền file vào service
     );
@@ -151,7 +159,8 @@ const createCareer = async (req, res) => {
 const updateCareer = async (req, res) => {
   try {
     const { id } = req.params;
-    const { code, name, description, tags, is_active } = req.body;
+    const { code, name, description, tags, is_active, career_category_ids } =
+      req.body;
     const imageFile = req.file; // File từ multer middleware
 
     const { userSession } = req;
@@ -172,6 +181,12 @@ const updateCareer = async (req, res) => {
       });
     }
 
+    //Validate career_category_ids
+    let resultArray = career_category_ids.split(",");
+    resultArray = resultArray
+      .map((item) => item.trim())
+      .filter((item) => item !== "");
+
     const career = await careerService.updateCareer(
       id,
       {
@@ -184,6 +199,7 @@ const updateCareer = async (req, res) => {
           is_active !== undefined
             ? is_active === "true" || is_active === true
             : undefined,
+        career_category_ids: resultArray,
       },
       imageFile // Truyền file vào service
     );

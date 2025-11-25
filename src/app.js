@@ -2,7 +2,7 @@ const express = require("express");
 const morgan = require("morgan");
 const cors = require("cors");
 const swaggerUi = require("swagger-ui-express");
-const swaggerSpec = require("./configs/swagger");
+const swaggerSpecs = require("./configs/swagger");
 const logger = require("./loggers");
 const pagination = require("./middlewares/validation/pagination");
 const checkHealth = require("./middlewares/handler/checkHealth");
@@ -28,8 +28,36 @@ app.use(pagination);
 
 app.use(cors());
 
-// Swagger documentation
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger documentation with multiple API versions
+const swaggerOptions = {
+  explorer: true,
+  swaggerOptions: {
+    urls: [
+      {
+        url: "/api-docs/v1/swagger.json",
+        name: "API v1",
+      },
+      {
+        url: "/api-docs/v2/swagger.json",
+        name: "API v2",
+      },
+    ],
+  },
+};
+
+// Serve Swagger JSON specs
+app.get("/api-docs/v1/swagger.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpecs.v1);
+});
+
+app.get("/api-docs/v2/swagger.json", (req, res) => {
+  res.setHeader("Content-Type", "application/json");
+  res.send(swaggerSpecs.v2);
+});
+
+// Swagger UI
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(null, swaggerOptions));
 
 app.get("/", checkHealth);
 

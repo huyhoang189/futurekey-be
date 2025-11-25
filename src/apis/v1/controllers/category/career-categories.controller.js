@@ -1,14 +1,14 @@
 const { StatusCodes } = require("http-status-codes");
-const communesService = require("../../services/system-admin/communes.service");
+const careerCategoriesService = require("../../services/category/career-categories.service");
 
 /**
- * Lấy danh sách communes
- * GET /api/v1/system-admin/communes?page=1&limit=10
+ * Lấy danh sách career categories
+ * GET /api/v1/category/career-categories?page=1&limit=10
  */
-const getAllCommunes = async (req, res) => {
+const getAllCareerCategories = async (req, res) => {
   try {
     const { page, limit, skip } = req.pagination;
-    const { search, name, province_id } = req.query;
+    const { search } = req.query;
 
     // Build filters
     const filters = {};
@@ -17,15 +17,7 @@ const getAllCommunes = async (req, res) => {
       filters.OR = [{ name: { contains: search } }];
     }
 
-    if (name) {
-      filters.name = { contains: name };
-    }
-
-    if (province_id) {
-      filters.province_id = { equals: province_id };
-    }
-
-    const result = await communesService.getAllCommunes({
+    const result = await careerCategoriesService.getAllCareerCategories({
       filters,
       paging: { skip, limit },
       orderBy: { name: "asc" },
@@ -33,7 +25,7 @@ const getAllCommunes = async (req, res) => {
 
     return res.status(StatusCodes.OK).json({
       success: true,
-      message: "Get all communes successfully",
+      message: "Get all career categories successfully",
       data: result.data,
       meta: {
         ...result.meta,
@@ -49,26 +41,28 @@ const getAllCommunes = async (req, res) => {
 };
 
 /**
- * Lấy thông tin commune theo ID
- * GET /api/v1/system-admin/communes/:id
+ * Lấy thông tin career category theo ID
+ * GET /api/v1/category/career-categories/:id
  */
-const getCommuneById = async (req, res) => {
+const getCareerCategoryById = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: "Commune ID is required",
+        message: "Career category ID is required",
       });
     }
 
-    const commune = await communesService.getCommuneById(id);
+    const careerCategory = await careerCategoriesService.getCareerCategoryById(
+      id
+    );
 
     return res.status(StatusCodes.OK).json({
       success: true,
-      message: "Get commune successfully",
-      data: commune,
+      message: "Get career category successfully",
+      data: careerCategory,
     });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -79,30 +73,29 @@ const getCommuneById = async (req, res) => {
 };
 
 /**
- * Thêm mới commune
- * POST /api/v1/system-admin/communes
+ * Thêm mới career category
+ * POST /api/v1/category/career-categories
  */
-const createCommune = async (req, res) => {
+const createCareerCategory = async (req, res) => {
   try {
-    const { name, province_id } = req.body;
+    const { name } = req.body;
 
     // Validate required fields
     if (!name) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: "Commune name is required",
+        message: "Career category name is required",
       });
     }
 
-    const commune = await communesService.createCommune({
+    const careerCategory = await careerCategoriesService.createCareerCategory({
       name,
-      province_id,
     });
 
     return res.status(StatusCodes.CREATED).json({
       success: true,
-      message: "Create commune successfully",
-      data: commune,
+      message: "Create career category successfully",
+      data: careerCategory,
     });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -113,30 +106,32 @@ const createCommune = async (req, res) => {
 };
 
 /**
- * Cập nhật commune
- * PUT /api/v1/system-admin/communes/:id
+ * Cập nhật career category
+ * PUT /api/v1/category/career-categories/:id
  */
-const updateCommune = async (req, res) => {
+const updateCareerCategory = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, province_id } = req.body;
+    const { name } = req.body;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: "Commune ID is required",
+        message: "Career category ID is required",
       });
     }
 
-    const commune = await communesService.updateCommune(id, {
-      name,
-      province_id,
-    });
+    const careerCategory = await careerCategoriesService.updateCareerCategory(
+      id,
+      {
+        name,
+      }
+    );
 
     return res.status(StatusCodes.OK).json({
       success: true,
-      message: "Update commune successfully",
-      data: commune,
+      message: "Update career category successfully",
+      data: careerCategory,
     });
   } catch (error) {
     return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
@@ -147,21 +142,21 @@ const updateCommune = async (req, res) => {
 };
 
 /**
- * Xóa vĩnh viễn commune
- * DELETE /api/v1/system-admin/communes/:id
+ * Xóa vĩnh viễn career category
+ * DELETE /api/v1/category/career-categories/:id
  */
-const deleteCommune = async (req, res) => {
+const deleteCareerCategory = async (req, res) => {
   try {
     const { id } = req.params;
 
     if (!id) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: "Commune ID is required",
+        message: "Career category ID is required",
       });
     }
 
-    const result = await communesService.deleteCommune(id);
+    const result = await careerCategoriesService.deleteCareerCategory(id);
 
     return res.status(StatusCodes.OK).json({
       success: true,
@@ -176,9 +171,9 @@ const deleteCommune = async (req, res) => {
 };
 
 module.exports = {
-  getAllCommunes,
-  getCommuneById,
-  createCommune,
-  updateCommune,
-  deleteCommune,
+  getAllCareerCategories,
+  getCareerCategoryById,
+  createCareerCategory,
+  updateCareerCategory,
+  deleteCareerCategory,
 };

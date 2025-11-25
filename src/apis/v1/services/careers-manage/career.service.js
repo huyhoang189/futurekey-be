@@ -4,7 +4,7 @@ const { FR, OBJECT_TYPE, MINIO_BUCKETS } = require("../../../../common");
 const { buildWhereClause } = require("../../../../utils/func");
 const fileStorageService = require("../file-storage/file-storage.service");
 const careerCriteriaService = require("./career-criteria.service");
-
+const careerCategoryRelationService = require("./career-category-relation.service");
 const CURRENT_FR = FR.FR00011;
 
 /**
@@ -51,10 +51,14 @@ const getAllCareers = async ({
           career.id
         );
 
+        const careerCategories =
+          await careerCategoryRelationService.getCareerCategories(career.id);
+
         return {
           ...career,
           created_by_admin_info: userMap[career.created_by_admin] || null,
           background_image_url: imageMetadata?.fileUrl || null,
+          careerCategories: careerCategories || [],
         };
       })
     );
@@ -91,9 +95,13 @@ const getCareerById = async (id, select = null) => {
       career.id
     );
 
+    const careerCategories =
+      await careerCategoryRelationService.getCareerCategories(career.id);
+
     return {
       ...career,
       background_image_url: imageMetadata?.fileUrl || null,
+      careerCategories: careerCategories || [],
     };
   } catch (error) {
     throw new Error(`${CURRENT_FR} - ${error.message}`);
@@ -112,6 +120,7 @@ const createCareer = async (data, imageFile = null) => {
       created_by_admin,
       tags,
       is_active = false,
+      career_category_ids,
     } = data;
 
     // Kiểm tra mã nghề đã tồn tại
@@ -167,6 +176,13 @@ const createCareer = async (data, imageFile = null) => {
       }
     }
 
+    if (career_category_ids?.length > 0) {
+      await careerCategoryRelationService.updateCareerCategories({
+        careerId: career.id,
+        categoryIds: career_category_ids,
+      });
+    }
+
     return {
       ...career,
       background_image_url: imageUrl,
@@ -190,7 +206,15 @@ const updateCareer = async (id, data, imageFile = null) => {
       throw new Error("Career not found");
     }
 
-    const { code, name, description, created_by_admin, tags, is_active } = data;
+    const {
+      code,
+      name,
+      description,
+      created_by_admin,
+      tags,
+      is_active,
+      career_category_ids,
+    } = data;
 
     // Kiểm tra mã nghề trùng (nếu thay đổi mã)
     if (code && code !== existingCareer.code) {
@@ -260,6 +284,13 @@ const updateCareer = async (id, data, imageFile = null) => {
         career.id
       );
       imageUrl = imageMetadata?.fileUrl || null;
+    }
+
+    if (career_category_ids?.length > 0) {
+      await careerCategoryRelationService.updateCareerCategories({
+        careerId: career.id,
+        categoryIds: career_category_ids,
+      });
     }
 
     return {

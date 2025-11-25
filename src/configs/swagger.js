@@ -1,41 +1,59 @@
 const swaggerJsdoc = require("swagger-jsdoc");
 
-const options = {
-  definition: {
-    openapi: "3.0.0",
-    info: {
-      title: "Future Key API Documentation",
-      version: "1.0.0",
-      description: "API documentation for admin page",
+// Common configuration for both versions
+const commonDefinition = {
+  openapi: "3.0.0",
+  servers: [
+    {
+      url: "http://localhost:8080",
     },
-    servers: [
-      {
-        url: "http://localhost:8080",
-      },
-    ],
-    components: {
-      securitySchemes: {
-        bearerAuth: {
-          type: "http",
-          scheme: "bearer",
-          bearerFormat: "JWT",
-        },
+  ],
+  components: {
+    securitySchemes: {
+      bearerAuth: {
+        type: "http",
+        scheme: "bearer",
+        bearerFormat: "JWT",
       },
     },
-    security: [
-      {
-        bearerAuth: [],
-      },
-    ],
   },
-  // Đường dẫn đến các file chứa comments swagger
-  apis: [
-    "./src/routes/*.js",
-    "./src/apis/v1/routes/**/*.js",
-    "./src/apis/v2/routes/**/*.js",
+  security: [
+    {
+      bearerAuth: [],
+    },
   ],
 };
 
-const swaggerSpec = swaggerJsdoc(options);
+// V1 API Specification
+const v1Options = {
+  definition: {
+    ...commonDefinition,
+    info: {
+      title: "Future Key API v1",
+      version: "1.0.0",
+      description: "API documentation for Future Key v1 - Admin page",
+    },
+  },
+  apis: ["./src/routes/*.js", "./src/apis/v1/routes/**/*.js"],
+};
 
-module.exports = swaggerSpec;
+// V2 API Specification
+const v2Options = {
+  definition: {
+    ...commonDefinition,
+    info: {
+      title: "Future Key API v2",
+      version: "2.0.0",
+      description: "API documentation for Future Key v2 - New features",
+    },
+  },
+  apis: ["./src/apis/v2/routes/**/*.js"],
+};
+
+const swaggerSpecV1 = swaggerJsdoc(v1Options);
+const swaggerSpecV2 = swaggerJsdoc(v2Options);
+
+module.exports = {
+  v1: swaggerSpecV1,
+  v2: swaggerSpecV2,
+};

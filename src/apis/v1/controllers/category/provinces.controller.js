@@ -1,9 +1,9 @@
 const { StatusCodes } = require("http-status-codes");
-const provincesService = require("../../services/system-admin/provinces.service");
+const provincesService = require("../../services/category/provinces.service");
 
 /**
  * Lấy danh sách provinces
- * GET /api/v1/system-admin/provinces?page=1&limit=10
+ * GET /api/v1/category/provinces?page=1&limit=10
  */
 const getAllProvinces = async (req, res) => {
   try {
@@ -14,9 +14,7 @@ const getAllProvinces = async (req, res) => {
     const filters = {};
 
     if (search) {
-      filters.OR = [
-        { name: { contains: search } },
-      ];
+      filters.OR = [{ name: { contains: search } }];
     }
 
     if (name) {
@@ -48,7 +46,7 @@ const getAllProvinces = async (req, res) => {
 
 /**
  * Lấy thông tin province theo ID
- * GET /api/v1/system-admin/provinces/:id
+ * GET /api/v1/category/provinces/:id
  */
 const getProvinceById = async (req, res) => {
   try {
@@ -78,7 +76,7 @@ const getProvinceById = async (req, res) => {
 
 /**
  * Thêm mới province
- * POST /api/v1/system-admin/provinces
+ * POST /api/v1/category/provinces
  */
 const createProvince = async (req, res) => {
   try {
@@ -111,7 +109,7 @@ const createProvince = async (req, res) => {
 
 /**
  * Cập nhật province
- * PUT /api/v1/system-admin/provinces/:id
+ * PUT /api/v1/category/provinces/:id
  */
 const updateProvince = async (req, res) => {
   try {
@@ -144,7 +142,7 @@ const updateProvince = async (req, res) => {
 
 /**
  * Xóa vĩnh viễn province
- * DELETE /api/v1/system-admin/provinces/:id
+ * DELETE /api/v1/category/provinces/:id
  */
 const deleteProvince = async (req, res) => {
   try {
@@ -173,7 +171,7 @@ const deleteProvince = async (req, res) => {
 
 /**
  * Lấy danh sách communes trong province
- * GET /api/v1/system-admin/provinces/:id/communes
+ * GET /api/v1/category/provinces/:id/communes
  */
 const getProvinceCommunes = async (req, res) => {
   try {
@@ -187,7 +185,10 @@ const getProvinceCommunes = async (req, res) => {
       });
     }
 
-    const result = await provincesService.getProvinceCommunes(id, { skip, limit });
+    const result = await provincesService.getProvinceCommunes(id, {
+      skip,
+      limit,
+    });
 
     return res.status(StatusCodes.OK).json({
       success: true,

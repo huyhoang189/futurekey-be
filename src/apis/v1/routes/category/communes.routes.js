@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const communesController = require("../../controllers/system-admin/communes.controller");
+const communesController = require("../../controllers/category/communes.controller");
 
 /**
  * @swagger
  * tags:
- *   name: System Admin - Communes
+ *   name: Category - Communes
  *   description: API quản lý xã/phường
  */
 
@@ -44,10 +44,10 @@ const communesController = require("../../controllers/system-admin/communes.cont
 
 /**
  * @swagger
- * /api/v1/system-admin/communes:
+ * /api/v1/category/communes:
  *   get:
  *     summary: Lấy danh sách communes
- *     tags: [System Admin - Communes]
+ *     tags: [Category - Communes]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -118,10 +118,10 @@ router.get("/", communesController.getAllCommunes);
 
 /**
  * @swagger
- * /api/v1/system-admin/communes/{id}:
+ * /api/v1/category/communes/{id}:
  *   get:
  *     summary: Lấy thông tin commune theo ID
- *     tags: [System Admin - Communes]
+ *     tags: [Category - Communes]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -156,10 +156,10 @@ router.get("/:id", communesController.getCommuneById);
 
 /**
  * @swagger
- * /api/v1/system-admin/communes:
+ * /api/v1/category/communes:
  *   post:
  *     summary: Tạo mới commune
- *     tags: [System Admin - Communes]
+ *     tags: [Category - Communes]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -202,10 +202,10 @@ router.post("/", communesController.createCommune);
 
 /**
  * @swagger
- * /api/v1/system-admin/communes/{id}:
+ * /api/v1/category/communes/{id}:
  *   put:
  *     summary: Cập nhật commune
- *     tags: [System Admin - Communes]
+ *     tags: [Category - Communes]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -255,10 +255,10 @@ router.put("/:id", communesController.updateCommune);
 
 /**
  * @swagger
- * /api/v1/system-admin/communes/{id}:
+ * /api/v1/category/communes/{id}:
  *   delete:
  *     summary: Xóa commune
- *     tags: [System Admin - Communes]
+ *     tags: [Category - Communes]
  *     security:
  *       - bearerAuth: []
  *     parameters:

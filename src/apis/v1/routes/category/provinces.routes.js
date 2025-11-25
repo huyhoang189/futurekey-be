@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
-const provincesController = require("../../controllers/system-admin/provinces.controller");
+const provincesController = require("../../controllers/category/provinces.controller");
 
 /**
  * @swagger
  * tags:
- *   name: System Admin - Provinces
+ *   name: Category - Provinces
  *   description: API quản lý tỉnh/thành phố
  */
 
@@ -32,10 +32,10 @@ const provincesController = require("../../controllers/system-admin/provinces.co
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces:
+ * /api/v1/category/provinces:
  *   get:
  *     summary: Lấy danh sách provinces
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -101,10 +101,10 @@ router.get("/", provincesController.getAllProvinces);
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces/{id}:
+ * /api/v1/category/provinces/{id}:
  *   get:
  *     summary: Lấy thông tin province theo ID
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -139,10 +139,10 @@ router.get("/:id", provincesController.getProvinceById);
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces:
+ * /api/v1/category/provinces:
  *   post:
  *     summary: Tạo mới province
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -182,10 +182,10 @@ router.post("/", provincesController.createProvince);
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces/{id}:
+ * /api/v1/category/provinces/{id}:
  *   put:
  *     summary: Cập nhật province
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -232,10 +232,10 @@ router.put("/:id", provincesController.updateProvince);
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces/{id}:
+ * /api/v1/category/provinces/{id}:
  *   delete:
  *     summary: Xóa province
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -270,10 +270,10 @@ router.delete("/:id", provincesController.deleteProvince);
 
 /**
  * @swagger
- * /api/v1/system-admin/provinces/{id}/communes:
+ * /api/v1/category/provinces/{id}/communes:
  *   get:
  *     summary: Lấy danh sách communes của province
- *     tags: [System Admin - Provinces]
+ *     tags: [Category - Provinces]
  *     security:
  *       - bearerAuth: []
  *     parameters:

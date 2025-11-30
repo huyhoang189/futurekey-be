@@ -10,10 +10,7 @@ const getDefaultSchoolUserGroupId = async () => {
   try {
     const schoolUserGroup = await prisma.auth_group.findFirst({
       where: {
-        OR: [
-          { type: "SCHOOL_TEACHER" },
-          { name: { contains: "Giáo viên" } },
-        ]
+        OR: [{ type: "SCHOOL_TEACHER" }, { name: { contains: "Giáo viên" } }],
       },
     });
 
@@ -26,7 +23,12 @@ const getDefaultSchoolUserGroupId = async () => {
 /**
  * Lấy danh sách school users với phân trang và tìm kiếm
  */
-const getAllSchoolUsers = async ({ filters = {}, paging = {}, orderBy = {}, search = '' }) => {
+const getAllSchoolUsers = async ({
+  filters = {},
+  paging = {},
+  orderBy = {},
+  search = "",
+}) => {
   const { skip = 0, limit = 10 } = paging;
 
   // Nếu có search, cần tìm user_id và school_id trước
@@ -45,7 +47,7 @@ const getAllSchoolUsers = async ({ filters = {}, paging = {}, orderBy = {}, sear
       },
       select: { id: true },
     });
-    searchUserIds = matchingUsers.map(u => u.id);
+    searchUserIds = matchingUsers.map((u) => u.id);
 
     // Tìm schools matching search
     const matchingSchools = await prisma.schools.findMany({
@@ -57,13 +59,13 @@ const getAllSchoolUsers = async ({ filters = {}, paging = {}, orderBy = {}, sear
       },
       select: { id: true },
     });
-    searchSchoolIds = matchingSchools.map(s => s.id);
+    searchSchoolIds = matchingSchools.map((s) => s.id);
 
     // Thêm điều kiện search vào filters
     if (!filters.OR) {
       filters.OR = [];
     }
-    
+
     if (searchUserIds.length > 0) {
       filters.OR.push({ user_id: { in: searchUserIds } });
     }
@@ -269,7 +271,9 @@ const createSchoolUser = async (schoolUserData) => {
         full_name,
         email,
         phone_number,
-        password_hash: password ? await bcrypt.hashPassword(password, 10) : await bcrypt.hashPassword('123456', 10),
+        password_hash: password
+          ? await bcrypt.hashPassword(password, 10)
+          : await bcrypt.hashPassword("123456", 10),
         address,
         group_id: schoolUserGroupId,
         status: "ACTIVE",
@@ -380,19 +384,17 @@ const updateSchoolUser = async (id, updateData) => {
 
     // Update base_user properties if provided
     if (base_user && existingSchoolUser.user_id) {
-      const {
-        user_name,
-        full_name,
-        email,
-        phone_number,
-        address,
-        status,
-      } = base_user;
+      const { user_name, full_name, email, phone_number, address, status } =
+        base_user;
 
       // Check if there's any field to update
-      const hasUpdate = user_name !== undefined || full_name !== undefined || 
-                       email !== undefined || phone_number !== undefined || 
-                       address !== undefined || status !== undefined;
+      const hasUpdate =
+        user_name !== undefined ||
+        full_name !== undefined ||
+        email !== undefined ||
+        phone_number !== undefined ||
+        address !== undefined ||
+        status !== undefined;
 
       if (hasUpdate) {
         // Check username duplicate if being updated
@@ -445,35 +447,41 @@ const updateSchoolUser = async (id, updateData) => {
     }
 
     // Get final state
-    const finalSchoolUser = updatedSchoolUser || await tx.auth_impl_user_school.findUnique({
-      where: { id },
-      select: {
-        id: true,
-        user_id: true,
-        school_id: true,
-        description: true,
-        created_at: true,
-        updated_at: true,
-      },
-    });
-
-    const [user, school] = await Promise.all([
-      finalSchoolUser.user_id ? tx.auth_base_user.findUnique({
-        where: { id: finalSchoolUser.user_id },
+    const finalSchoolUser =
+      updatedSchoolUser ||
+      (await tx.auth_impl_user_school.findUnique({
+        where: { id },
         select: {
           id: true,
-          user_name: true,
-          full_name: true,
-          email: true,
-          phone_number: true,
-          address: true,
-          status: true,
+          user_id: true,
+          school_id: true,
+          description: true,
+          created_at: true,
+          updated_at: true,
         },
-      }) : null,
-      finalSchoolUser.school_id ? tx.schools.findUnique({
-        where: { id: finalSchoolUser.school_id },
-        select: { id: true, name: true, address: true },
-      }) : null,
+      }));
+
+    const [user, school] = await Promise.all([
+      finalSchoolUser.user_id
+        ? tx.auth_base_user.findUnique({
+            where: { id: finalSchoolUser.user_id },
+            select: {
+              id: true,
+              user_name: true,
+              full_name: true,
+              email: true,
+              phone_number: true,
+              address: true,
+              status: true,
+            },
+          })
+        : null,
+      finalSchoolUser.school_id
+        ? tx.schools.findUnique({
+            where: { id: finalSchoolUser.school_id },
+            select: { id: true, name: true, address: true },
+          })
+        : null,
     ]);
 
     return {
@@ -638,7 +646,7 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
 
     // Chuyển sheet thành JSON, bắt đầu từ row 2 (không có header)
     const jsonData = xlsx.utils.sheet_to_json(worksheet, {
-      range: 1, // Bắt đầu từ row 2 (index 1)
+      range: 2, // Bắt đầu từ row 2 (index 1)
       header: [
         "STT",
         "Tên đăng nhập",
@@ -723,7 +731,10 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
               email: email || null,
               phone_number: phone_number || null,
               address: address || null,
-              password_hash: await bcrypt.hashPassword(password || "123456", 10),
+              password_hash: await bcrypt.hashPassword(
+                password || "123456",
+                10
+              ),
               group_id: teacherGroup,
               status: "ACTIVE",
             },
@@ -753,6 +764,7 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
           user: result.user,
         });
       } catch (error) {
+        // console.error(`Error processing row ${rowNumber}:`, error);
         results.errors.push({
           row: rowNumber,
           user_name: row["Tên đăng nhập"] || "",
@@ -761,15 +773,15 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
 
         // Thêm row vào file lỗi
         errorData.push({
-          "STT": rowNumber - 1,
+          STT: rowNumber - 1,
           "Tên đăng nhập": row["Tên đăng nhập"] || "",
           "Họ và tên": row["Họ và tên"] || "",
-          "Email": row["Email"] || "",
+          Email: row["Email"] || "",
           "Số điện thoại": row["Số điện thoại"] || "",
           "Địa chỉ": row["Địa chỉ"] || "",
           "Mật khẩu": row["Mật khẩu"] || "",
           "Mô tả": row["Mô tả"] || "",
-          "Lỗi": errorMessage || error.message,
+          Lỗi: errorMessage || error.message,
         });
         errorRows.push(errorData.length);
       }
@@ -781,11 +793,11 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
       const errorWorksheet = xlsx.utils.json_to_sheet(errorData);
 
       // Thêm style cho header
-      const headerRange = xlsx.utils.decode_range(errorWorksheet['!ref']);
+      const headerRange = xlsx.utils.decode_range(errorWorksheet["!ref"]);
       for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
         const cellAddress = xlsx.utils.encode_cell({ r: 0, c: col });
         if (!errorWorksheet[cellAddress]) continue;
-        
+
         errorWorksheet[cellAddress].s = {
           fill: { fgColor: { rgb: "CCCCCC" } },
           font: { bold: true },
@@ -798,9 +810,9 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
         for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
           const cellAddress = xlsx.utils.encode_cell({ r: rowNumber, c: col });
           if (!errorWorksheet[cellAddress]) {
-            errorWorksheet[cellAddress] = { t: 's', v: '' };
+            errorWorksheet[cellAddress] = { t: "s", v: "" };
           }
-          
+
           errorWorksheet[cellAddress].s = {
             fill: { fgColor: { rgb: "FF0000" } },
             font: { color: { rgb: "FFFFFF" } },
@@ -809,8 +821,8 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
       });
 
       // Set column widths
-      errorWorksheet['!cols'] = [
-        { wch: 5 },  // STT
+      errorWorksheet["!cols"] = [
+        { wch: 5 }, // STT
         { wch: 15 }, // Tên đăng nhập
         { wch: 20 }, // Họ và tên
         { wch: 25 }, // Email
@@ -822,8 +834,8 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
       ];
 
       xlsx.utils.book_append_sheet(errorWorkbook, errorWorksheet, "Lỗi");
-      errorFileBuffer = xlsx.write(errorWorkbook, { 
-        type: "buffer", 
+      errorFileBuffer = xlsx.write(errorWorkbook, {
+        type: "buffer",
         bookType: "xlsx",
         cellStyles: true,
       });
@@ -837,6 +849,7 @@ const importSchoolUsers = async (fileBuffer, school_id) => {
       errorFileBuffer,
     };
   } catch (error) {
+    console.error("Import failed:", error);
     throw new Error(`Import failed: ${error.message}`);
   }
 };

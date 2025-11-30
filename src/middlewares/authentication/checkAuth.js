@@ -4,6 +4,7 @@ const { HEADER } = require("../../common");
 
 const checkAuth = async (req, res, next) => {
   const accessToken = req.headers[HEADER.AUTHORIZATION];
+
   if (!accessToken) {
     return res.status(StatusCodes.UNAUTHORIZED).json({
       message: ReasonPhrases.UNAUTHORIZED,

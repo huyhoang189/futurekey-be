@@ -21,6 +21,11 @@ const getClassCriteriaConfigList = async ({ class_id, career_id }) => {
       throw new Error("career_id is required");
     }
 
+    console.log(
+      "\x1b[32m%s\x1b[0m",
+      `Fetching class criteria configs for class_id: ${class_id}, career_id: ${career_id}`
+    );
+
     // Lấy danh sách class_criteria_config theo class_id và career_id
     const configs = await prisma.class_criteria_config.findMany({
       where: {

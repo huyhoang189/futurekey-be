@@ -31,6 +31,19 @@ const login = async ({ user_name, password, ip_address, user_agent }) => {
       throw new Error("Invalid username or user is not active");
     }
 
+    if (user.group_id) {
+      const group = await prisma.auth_group.findUnique({
+        where: { id: user.group_id },
+        select: {
+          id: true,
+          name: true,
+          description: true,
+          type: true,
+        },
+      });
+      user.group = group;
+    }
+
     // 2. Lấy cấu hình từ settings
     const [
       loginAttemptLimit,

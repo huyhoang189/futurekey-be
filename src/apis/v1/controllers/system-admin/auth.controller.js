@@ -178,6 +178,7 @@ const getMe = async (req, res) => {
       phone_number: true,
       address: true,
       description: true,
+      group_id: true,
     });
 
     if (!user) {
@@ -197,9 +198,65 @@ const getMe = async (req, res) => {
   }
 };
 
+/**
+ * Change a user's password (self-service or by an admin-type user).
+ */
+const changePassword = async (req, res) => {
+  try {
+    const { id, password } = req.body;
+    const requesterName = req.userSession?.user_name;
+
+    if (!id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "User ID is required",
+      });
+    }
+
+    if (!password) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Password is required",
+      });
+    }
+
+    const requester = await userService.getUserByUsername(requesterName);
+    const requesterId = requester.id;
+
+    if (requesterId !== id) {
+      const allowedTypes = [
+        "SUPER_ADMIN",
+        "ADMIN",
+        "SCHOOL_ADMIN",
+        "SCHOOL_TEACHER",
+      ];
+
+      if (!requester.group || !allowedTypes.includes(requester.group.type)) {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          success: false,
+          message: "Insufficient permissions to change another user's password",
+        });
+      }
+    }
+
+    const result = await userService.changePassword(id, password);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   login,
   refreshToken,
   logout,
   getMe,
+  changePassword,
 };

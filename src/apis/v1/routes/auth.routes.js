@@ -264,4 +264,41 @@ router.post("/logout", authController.logout);
  */
 router.get("/getme", checkAuth, authController.getMe);
 
+/**
+ * @swagger
+ * /api/v1/auth/change-password:
+ *   put:
+ *     summary: Đổi mật khẩu (có thể thay cho user khác nếu có quyền)
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - id
+ *               - password
+ *             properties:
+ *               id:
+ *                 type: string
+ *                 description: ID người dùng cần đổi mật khẩu
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *                 description: Mật khẩu mới
+ *     responses:
+ *       200:
+ *         description: Đổi mật khẩu thành công
+ *       400:
+ *         description: Thiếu id hoặc password
+ *       403:
+ *         description: Người dùng hiện tại không có quyền đổi mật khẩu cho tài khoản khác
+ *       500:
+ *         description: Lỗi server
+ */
+router.put("/change-password", checkAuth, authController.changePassword);
+
 module.exports = router;

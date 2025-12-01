@@ -172,6 +172,7 @@ const getMe = async (req, res) => {
   try {
     const user_name = req.userSession?.user_name;
     const user = await userService.getUserByUsername(user_name, {
+      id: true,
       user_name: true,
       full_name: true,
       email: true,
@@ -187,8 +188,27 @@ const getMe = async (req, res) => {
       });
     }
 
+    // Lấy avatar URL từ metadata
+    const avatarUrl = await authService.getUserAvatar(user.id);
+
+    // Lấy thông tin extend dựa trên group type
+    const extendInfo = await authService.getUserExtendInfo(
+      user.id,
+      user.group_id
+    );
+
+    // Bỏ id trước khi trả về
+    const { id, group_id, group, ...userWithoutId } = user;
+
     return res.status(StatusCodes.OK).json({
-      data: user,
+      data: {
+        ...userWithoutId,
+        group: {
+          type: group.type,
+        },
+        avatar_url: avatarUrl,
+        extend: extendInfo,
+      },
       message: "Lấy thông tin người dùng thành công",
     });
   } catch (error) {
@@ -253,10 +273,57 @@ const changePassword = async (req, res) => {
   }
 };
 
+/**
+ * Update user avatar
+ * PUT /api/v1/auth/avatar
+ */
+const updateAvatar = async (req, res) => {
+  try {
+    const avatarFile = req.file;
+    const user_name = req.userSession?.user_name;
+
+    // Validate file
+    if (!avatarFile) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "Vui lòng chọn file avatar",
+      });
+    }
+
+    // Lấy thông tin user
+    const user = await userService.getUserByUsername(user_name);
+    if (!user) {
+      return res.status(StatusCodes.NOT_FOUND).json({
+        success: false,
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    // Upload avatar
+    const result = await authService.updateUserAvatar(
+      user.id,
+      avatarFile,
+      user_name
+    );
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      data: result,
+      message: "Cập nhật avatar thành công",
+    });
+  } catch (error) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: "Lỗi khi cập nhật avatar: " + error.message,
+    });
+  }
+};
+
 module.exports = {
   login,
   refreshToken,
   logout,
   getMe,
   changePassword,
+  updateAvatar,
 };

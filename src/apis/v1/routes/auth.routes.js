@@ -2,6 +2,9 @@ const express = require("express");
 const router = express.Router();
 const authController = require("../controllers/system-admin/auth.controller");
 const checkAuth = require("../../../middlewares/authentication/checkAuth");
+const {
+  uploadImage,
+} = require("../../../middlewares/upload/file-upload.middleware");
 
 /**
  * @swagger
@@ -300,5 +303,60 @@ router.get("/getme", checkAuth, authController.getMe);
  *         description: Lỗi server
  */
 router.put("/change-password", checkAuth, authController.changePassword);
+
+/**
+ * @swagger
+ * /api/v1/auth/avatar:
+ *   put:
+ *     summary: Cập nhật avatar của người dùng
+ *     tags: [Authentication]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         multipart/form-data:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - avatar
+ *             properties:
+ *               avatar:
+ *                 type: string
+ *                 format: binary
+ *                 description: File ảnh avatar (jpeg, jpg, png, gif, webp, tối đa 5MB)
+ *     responses:
+ *       200:
+ *         description: Cập nhật avatar thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     avatar_url:
+ *                       type: string
+ *                       example: https://minio.example.com/users-avatar/user-avatar.jpg
+ *                 message:
+ *                   type: string
+ *                   example: Cập nhật avatar thành công
+ *       400:
+ *         description: Thiếu file hoặc lỗi upload
+ *       401:
+ *         description: Chưa xác thực
+ *       404:
+ *         description: Người dùng không tồn tại
+ */
+router.put(
+  "/avatar",
+  uploadImage.single("avatar"),
+  checkAuth,
+  authController.updateAvatar
+);
 
 module.exports = router;

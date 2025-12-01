@@ -281,6 +281,18 @@ model career_categories {
   updated_at DateTime? @default(now()) @db.Timestamp(0)
 }
 
+model student_learn_progress {
+  id                   String                         @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id           String                         @db.VarChar(36)
+  career_id            String                         @db.VarChar(36)
+  criteria_id          String                         @db.VarChar(36)
+  progress_percent     Float?                         @default(0)
+  last_watched_positon Float?
+  status               student_learn_progress_status? @default(WATCHING)
+  created_at           DateTime?                      @default(now()) @db.Timestamp(0)
+  updated_at           DateTime?                      @default(now()) @db.Timestamp(0)
+}
+
 enum auth_impl_user_student_sex {
   MALE   @map("1")
   FEMALE @map("2")
@@ -303,4 +315,12 @@ enum school_career_licenses_status {
   EXPIRED
   REVOKED
   PENDING_ACTIVATION
+}
+
+enum student_learn_progress_status {
+  WATCHING
+  PAUSED
+  SEEK_ATTEMPT
+  COMPLETED
+  EXIT
 }

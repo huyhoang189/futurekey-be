@@ -3,8 +3,9 @@ const prisma = new PrismaClient();
 const { v4: uuidv4 } = require("uuid");
 const { hashPassword, verifyPassword } = require("../../../../utils/bcrypt");
 const { encode } = require("../../../../utils/jwt");
-const { FR } = require("../../../../common");
+const { FR, OBJECT_TYPE, MINIO_BUCKETS } = require("../../../../common");
 const settingService = require("./settings.service");
+const fileStorageService = require("../file-storage/file-storage.service");
 
 const CURRENT_FR = FR.FR00003 || "FR00003";
 
@@ -358,8 +359,168 @@ const logout = async ({ refresh_token }) => {
   }
 };
 
+/**
+ * Update user avatar
+ * @param {String} userId - User ID
+ * @param {Object} avatarFile - File object from multer
+ * @param {String} uploadBy - Username of uploader
+ * @returns {Object} - {avatar_url}
+ */
+const updateUserAvatar = async (userId, avatarFile, uploadBy) => {
+  try {
+    // Xóa avatar cũ và upload avatar mới
+    const uploadResult = await fileStorageService.updateFile(
+      OBJECT_TYPE.AVATAR,
+      userId,
+      {
+        fileBuffer: avatarFile.buffer,
+        fileName: avatarFile.originalname,
+        mimeType: avatarFile.mimetype,
+        fileSize: avatarFile.size,
+        bucketName: MINIO_BUCKETS.USERS_AVATAR,
+        uploadBy: uploadBy,
+      }
+    );
+
+    return {
+      avatar_url: uploadResult.fileUrl,
+    };
+  } catch (error) {
+    throw new Error(`${CURRENT_FR} - ${error.message}`);
+  }
+};
+
+/**
+ * Get user avatar URL
+ * @param {String} userId - User ID
+ * @returns {String|null} - Avatar URL or null
+ */
+const getUserAvatar = async (userId) => {
+  try {
+    const avatarMetadata = await fileStorageService.getFirstMetadata(
+      OBJECT_TYPE.AVATAR,
+      userId
+    );
+    return avatarMetadata?.fileUrl || null;
+  } catch (error) {
+    // Return null if no avatar found
+    return null;
+  }
+};
+
+/**
+ * Get user extend info based on group type
+ * @param {String} userId - User ID
+ * @param {String} groupId - Group ID
+ * @returns {Object|null} - Extend info or null
+ */
+const getUserExtendInfo = async (userId, groupId) => {
+  try {
+    if (!groupId) {
+      return null;
+    }
+
+    // Lấy thông tin group để biết type
+    const group = await prisma.auth_group.findUnique({
+      where: { id: groupId },
+      select: { type: true },
+    });
+
+    if (!group || !group.type) {
+      return null;
+    }
+
+    const groupType = group.type;
+
+    // Nếu là SCHOOL_ADMIN hoặc SCHOOL_TEACHER
+    if (groupType === "SCHOOL_ADMIN" || groupType === "SCHOOL_TEACHER") {
+      const schoolUser = await prisma.auth_impl_user_school.findFirst({
+        where: { user_id: userId },
+        select: {
+          school_id: true,
+          description: true,
+        },
+      });
+
+      if (!schoolUser || !schoolUser.school_id) {
+        return null;
+      }
+
+      const school = await prisma.schools.findUnique({
+        where: { id: schoolUser.school_id },
+        select: {
+          name: true,
+        },
+      });
+
+      return {
+        school_name: school?.name || null,
+        school_description: schoolUser.description || null,
+      };
+    }
+
+    // Nếu là SCHOOL_STUDENT
+    if (groupType === "SCHOOL_STUDENT") {
+      const studentUser = await prisma.auth_impl_user_student.findFirst({
+        where: { user_id: userId },
+        select: {
+          class_id: true,
+          school_id: true,
+          student_code: true,
+          sex: true,
+          birthday: true,
+          description: true,
+          major_interest: true,
+        },
+      });
+
+      if (!studentUser) {
+        return null;
+      }
+
+      // Lấy thông tin class
+      let className = null;
+      if (studentUser.class_id) {
+        const classInfo = await prisma.classes.findUnique({
+          where: { id: studentUser.class_id },
+          select: { name: true },
+        });
+        className = classInfo?.name || null;
+      }
+
+      // Lấy thông tin school
+      let schoolName = null;
+      if (studentUser.school_id) {
+        const school = await prisma.schools.findUnique({
+          where: { id: studentUser.school_id },
+          select: { name: true },
+        });
+        schoolName = school?.name || null;
+      }
+
+      return {
+        class_name: className,
+        school_name: schoolName,
+        student_code: studentUser.student_code || null,
+        sex: studentUser.sex || null,
+        birthday: studentUser.birthday || null,
+        description: studentUser.description || null,
+        major_interest: studentUser.major_interest || null,
+      };
+    }
+
+    return null;
+  } catch (error) {
+    console.error("Error getting user extend info:", error);
+    return null;
+  }
+};
+
 module.exports = {
   login,
   refreshToken,
   logout,
+  updateUserAvatar,
+  getUserAvatar,
+  getUserExtendInfo,
 };

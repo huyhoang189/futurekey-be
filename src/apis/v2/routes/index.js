@@ -8,4 +8,5 @@ const studentsRoutes = require("./students");
 router.use("/public", publicRoutes);
 router.use("/schools", schoolsRoutes);
 router.use("/students", studentsRoutes);
+
 module.exports = router;

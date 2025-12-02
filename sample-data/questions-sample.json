@@ -1,0 +1,414 @@
+{
+  "samples": [
+    {
+      "name": "Câu hỏi trắc nghiệm - Lập trình cơ bản",
+      "data": {
+        "content": "Trong JavaScript, từ khóa nào được sử dụng để khai báo một biến không thể thay đổi giá trị?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "EASY",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+        "points": 1,
+        "explanation": "Từ khóa 'const' được sử dụng để khai báo hằng số, giá trị không thể thay đổi sau khi được gán.",
+        "tags": "javascript,biến,const",
+        "metadata": {
+          "subject": "Lập trình JavaScript",
+          "topic": "Biến và kiểu dữ liệu"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "var",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "let",
+            "is_correct": false,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "const",
+            "is_correct": true,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "function",
+            "is_correct": false,
+            "order_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi Đúng/Sai - Cơ sở dữ liệu",
+      "data": {
+        "content": "SQL là ngôn ngữ lập trình hướng đối tượng.",
+        "question_type": "TRUE_FALSE",
+        "difficulty_level": "EASY",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+        "points": 1,
+        "explanation": "SQL (Structured Query Language) là ngôn ngữ truy vấn cơ sở dữ liệu quan hệ, không phải ngôn ngữ lập trình hướng đối tượng.",
+        "tags": "sql,database,cơ bản",
+        "metadata": {
+          "subject": "Cơ sở dữ liệu",
+          "topic": "SQL cơ bản",
+          "correct_answer": false
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "TRUE",
+            "option_text": "Đúng",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "FALSE",
+            "option_text": "Sai",
+            "is_correct": true,
+            "order_index": 1
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi tự luận ngắn - Thuật toán",
+      "data": {
+        "content": "Độ phức tạp thời gian của thuật toán Binary Search là gì?",
+        "question_type": "SHORT_ANSWER",
+        "difficulty_level": "MEDIUM",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+        "points": 2,
+        "explanation": "Binary Search có độ phức tạp O(log n) vì mỗi lần lặp giảm không gian tìm kiếm đi một nửa.",
+        "tags": "thuật toán,binary search,độ phức tạp",
+        "metadata": {
+          "subject": "Cấu trúc dữ liệu và Giải thuật",
+          "topic": "Độ phức tạp thuật toán",
+          "expected_keywords": ["O(log n)", "logarit", "log n"],
+          "max_length": 100
+        },
+        "is_active": true,
+        "options": []
+      }
+    },
+    {
+      "name": "Câu hỏi tự luận - OOP",
+      "data": {
+        "content": "Giải thích khái niệm Polymorphism (đa hình) trong lập trình hướng đối tượng và cho ví dụ minh họa bằng Java hoặc C#.",
+        "question_type": "ESSAY",
+        "difficulty_level": "HARD",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+        "points": 5,
+        "explanation": "Polymorphism cho phép các đối tượng khác nhau có thể được xử lý thông qua cùng một interface. Có 2 loại: Compile-time (Overloading) và Runtime (Overriding).",
+        "tags": "oop,polymorphism,java,c#",
+        "metadata": {
+          "subject": "Lập trình hướng đối tượng",
+          "topic": "4 tính chất OOP",
+          "min_words": 100,
+          "grading_rubric": {
+            "definition": 2,
+            "example": 2,
+            "explanation": 1
+          }
+        },
+        "is_active": true,
+        "options": []
+      }
+    },
+    {
+      "name": "Câu hỏi nhiều đáp án đúng - Web Development",
+      "data": {
+        "content": "Những công nghệ nào sau đây thuộc về Frontend Development? (Chọn tất cả đáp án đúng)",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "EASY",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+        "points": 2,
+        "explanation": "Frontend Development bao gồm HTML, CSS, JavaScript và các framework như React, Vue, Angular.",
+        "tags": "frontend,web development",
+        "metadata": {
+          "subject": "Phát triển Web",
+          "topic": "Frontend Technologies",
+          "allow_multiple_answers": true
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "React.js",
+            "is_correct": true,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "Node.js",
+            "is_correct": false,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "HTML/CSS",
+            "is_correct": true,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "MongoDB",
+            "is_correct": false,
+            "order_index": 3
+          },
+          {
+            "option_key": "E",
+            "option_text": "Vue.js",
+            "is_correct": true,
+            "order_index": 4
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi về Mạng máy tính",
+      "data": {
+        "content": "Giao thức HTTP hoạt động ở tầng nào trong mô hình OSI?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "MEDIUM",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+        "points": 1,
+        "explanation": "HTTP hoạt động ở tầng Application (tầng 7) trong mô hình OSI.",
+        "tags": "mạng,http,osi model",
+        "metadata": {
+          "subject": "Mạng máy tính",
+          "topic": "Mô hình OSI"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "Tầng Transport (Layer 4)",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "Tầng Network (Layer 3)",
+            "is_correct": false,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "Tầng Application (Layer 7)",
+            "is_correct": true,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "Tầng Session (Layer 5)",
+            "is_correct": false,
+            "order_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi về Git",
+      "data": {
+        "content": "Lệnh Git nào được sử dụng để hoàn tác (revert) commit cuối cùng nhưng vẫn giữ lại các thay đổi trong working directory?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "MEDIUM",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+        "points": 2,
+        "explanation": "git reset --soft HEAD~1 sẽ hoàn tác commit nhưng giữ lại các thay đổi đã staged.",
+        "tags": "git,version control,reset",
+        "metadata": {
+          "subject": "Version Control",
+          "topic": "Git Commands"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "git reset --hard HEAD~1",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "git reset --soft HEAD~1",
+            "is_correct": true,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "git revert HEAD",
+            "is_correct": false,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "git checkout HEAD~1",
+            "is_correct": false,
+            "order_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi về Design Pattern",
+      "data": {
+        "content": "Singleton Pattern đảm bảo điều gì?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "MEDIUM",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+        "points": 2,
+        "explanation": "Singleton Pattern đảm bảo một class chỉ có duy nhất một instance và cung cấp một điểm truy cập global đến instance đó.",
+        "tags": "design pattern,singleton,oop",
+        "metadata": {
+          "subject": "Software Design",
+          "topic": "Design Patterns"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "Một class có thể có nhiều instance",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "Một class chỉ có duy nhất một instance",
+            "is_correct": true,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "Các instance được tạo theo thứ tự",
+            "is_correct": false,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "Instance được tự động hủy sau khi sử dụng",
+            "is_correct": false,
+            "order_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi về API",
+      "data": {
+        "content": "RESTful API sử dụng HTTP method nào để cập nhật một phần tài nguyên?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "EASY",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+        "points": 1,
+        "explanation": "PATCH được sử dụng để cập nhật một phần tài nguyên, trong khi PUT được dùng để cập nhật toàn bộ tài nguyên.",
+        "tags": "api,rest,http methods",
+        "metadata": {
+          "subject": "Web API",
+          "topic": "RESTful API"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "GET",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "POST",
+            "is_correct": false,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "PUT",
+            "is_correct": false,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "PATCH",
+            "is_correct": true,
+            "order_index": 3
+          }
+        ]
+      }
+    },
+    {
+      "name": "Câu hỏi về Security",
+      "data": {
+        "content": "Kỹ thuật mã hóa nào được coi là an toàn hơn cho việc lưu trữ mật khẩu?",
+        "question_type": "MULTIPLE_CHOICE",
+        "difficulty_level": "HARD",
+        "category_id": "category-uuid-here",
+        "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+        "points": 3,
+        "explanation": "Bcrypt là một hàm băm mật khẩu được thiết kế đặc biệt với salt và cost factor, an toàn hơn MD5 hoặc SHA-1 đã bị coi là lỗi thời.",
+        "tags": "security,password,encryption,bcrypt",
+        "metadata": {
+          "subject": "Application Security",
+          "topic": "Password Hashing"
+        },
+        "is_active": true,
+        "options": [
+          {
+            "option_key": "A",
+            "option_text": "MD5",
+            "is_correct": false,
+            "order_index": 0
+          },
+          {
+            "option_key": "B",
+            "option_text": "SHA-1",
+            "is_correct": false,
+            "order_index": 1
+          },
+          {
+            "option_key": "C",
+            "option_text": "Bcrypt",
+            "is_correct": true,
+            "order_index": 2
+          },
+          {
+            "option_key": "D",
+            "option_text": "Base64",
+            "is_correct": false,
+            "order_index": 3
+          }
+        ]
+      }
+    }
+  ],
+  "instructions": {
+    "how_to_use": "Copy một trong các object 'data' ở trên và thay thế các UUID placeholder",
+    "placeholders_to_replace": {
+      "category_id": "Thay bằng ID thực của question category (lấy từ GET /api/v2/schools/question-categories)"
+    },
+    "available_career_criteria_ids": [
+      "09352b7e-c88e-11f0-afc5-2626c197d041",
+      "136a34be-c88e-11f0-afc5-2626c197d041",
+      "1eb661d4-c88e-11f0-afc5-2626c197d041"
+    ],
+    "auto_fields": {
+      "created_by": "TỰ ĐỘNG lấy từ user đang đăng nhập (req.user.id) - KHÔNG cần truyền lên"
+    },
+    "api_endpoint": "POST /api/v2/schools/questions",
+    "example_curl": "curl -X POST http://localhost:8080/api/v2/schools/questions -H 'Content-Type: application/json' -H 'Authorization: Bearer YOUR_TOKEN' -d '{...data...}'"
+  }
+}

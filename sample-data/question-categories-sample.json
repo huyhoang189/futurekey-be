@@ -1,0 +1,243 @@
+{
+  "categories": [
+    {
+      "name": "Danh mục cha - Lập trình",
+      "description": "Các câu hỏi về lập trình máy tính",
+      "data": {
+        "name": "Lập trình",
+        "description": "Danh mục tổng quát về các câu hỏi lập trình máy tính",
+        "parent_id": null,
+        "order_index": 1,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục con - Lập trình Web",
+      "description": "Các câu hỏi về phát triển web",
+      "data": {
+        "name": "Lập trình Web",
+        "description": "Frontend, Backend, Full-stack Development",
+        "parent_id": "parent-category-uuid-here",
+        "order_index": 1,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục con - Lập trình Mobile",
+      "description": "Các câu hỏi về phát triển ứng dụng di động",
+      "data": {
+        "name": "Lập trình Mobile",
+        "description": "Android, iOS, React Native, Flutter",
+        "parent_id": "parent-category-uuid-here",
+        "order_index": 2,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - Cơ sở dữ liệu",
+      "description": "Các câu hỏi về database",
+      "data": {
+        "name": "Cơ sở dữ liệu",
+        "description": "SQL, NoSQL, Database Design",
+        "parent_id": null,
+        "order_index": 2,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục con - SQL",
+      "description": "Các câu hỏi về SQL",
+      "data": {
+        "name": "SQL",
+        "description": "MySQL, PostgreSQL, SQL Server, Oracle",
+        "parent_id": "database-category-uuid-here",
+        "order_index": 1,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục con - NoSQL",
+      "description": "Các câu hỏi về NoSQL",
+      "data": {
+        "name": "NoSQL",
+        "description": "MongoDB, Redis, Cassandra, DynamoDB",
+        "parent_id": "database-category-uuid-here",
+        "order_index": 2,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - Mạng máy tính",
+      "description": "Các câu hỏi về network",
+      "data": {
+        "name": "Mạng máy tính",
+        "description": "Network fundamentals, protocols, security",
+        "parent_id": null,
+        "order_index": 3,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - Thuật toán",
+      "description": "Các câu hỏi về algorithms & data structures",
+      "data": {
+        "name": "Thuật toán & Cấu trúc dữ liệu",
+        "description": "Sorting, Searching, Trees, Graphs, Dynamic Programming",
+        "parent_id": null,
+        "order_index": 4,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - Kiến trúc phần mềm",
+      "description": "Các câu hỏi về software architecture",
+      "data": {
+        "name": "Kiến trúc phần mềm",
+        "description": "Design Patterns, Microservices, Clean Architecture",
+        "parent_id": null,
+        "order_index": 5,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục con - Design Patterns",
+      "description": "Các câu hỏi về design patterns",
+      "data": {
+        "name": "Design Patterns",
+        "description": "Creational, Structural, Behavioral Patterns",
+        "parent_id": "architecture-category-uuid-here",
+        "order_index": 1,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - DevOps & Cloud",
+      "description": "Các câu hỏi về DevOps và Cloud Computing",
+      "data": {
+        "name": "DevOps & Cloud",
+        "description": "CI/CD, Docker, Kubernetes, AWS, Azure, GCP",
+        "parent_id": null,
+        "order_index": 6,
+        "is_active": true
+      }
+    },
+    {
+      "name": "Danh mục cha - Security",
+      "description": "Các câu hỏi về bảo mật",
+      "data": {
+        "name": "An ninh bảo mật",
+        "description": "Application Security, Network Security, Cryptography",
+        "parent_id": null,
+        "order_index": 7,
+        "is_active": true
+      }
+    }
+  ],
+  "instructions": {
+    "step_1": "Tạo các danh mục cha trước (parent_id = null)",
+    "step_2": "Lấy ID của các danh mục cha đã tạo",
+    "step_3": "Thay parent_id trong các danh mục con bằng ID thực",
+    "step_4": "Tạo các danh mục con",
+    "auto_fields": {
+      "created_by": "TỰ ĐỘNG lấy từ user đang đăng nhập (req.user.id) - KHÔNG cần truyền lên"
+    },
+    "api_endpoint": "POST /api/v2/schools/question-categories"
+  },
+  "workflow": {
+    "step_1_create_parent_categories": [
+      {
+        "name": "Lập trình",
+        "description": "Danh mục tổng quát về các câu hỏi lập trình máy tính",
+        "parent_id": null,
+        "order_index": 1,
+        "is_active": true
+      },
+      {
+        "name": "Cơ sở dữ liệu",
+        "description": "SQL, NoSQL, Database Design",
+        "parent_id": null,
+        "order_index": 2,
+        "is_active": true
+      },
+      {
+        "name": "Mạng máy tính",
+        "description": "Network fundamentals, protocols, security",
+        "parent_id": null,
+        "order_index": 3,
+        "is_active": true
+      },
+      {
+        "name": "Thuật toán & Cấu trúc dữ liệu",
+        "description": "Sorting, Searching, Trees, Graphs, Dynamic Programming",
+        "parent_id": null,
+        "order_index": 4,
+        "is_active": true
+      },
+      {
+        "name": "Kiến trúc phần mềm",
+        "description": "Design Patterns, Microservices, Clean Architecture",
+        "parent_id": null,
+        "order_index": 5,
+        "is_active": true
+      },
+      {
+        "name": "DevOps & Cloud",
+        "description": "CI/CD, Docker, Kubernetes, AWS, Azure, GCP",
+        "parent_id": null,
+        "order_index": 6,
+        "is_active": true
+      },
+      {
+        "name": "An ninh bảo mật",
+        "description": "Application Security, Network Security, Cryptography",
+        "parent_id": null,
+        "order_index": 7,
+        "is_active": true
+      }
+    ],
+    "step_2_get_parent_ids": "Sau khi tạo, lấy ID của các danh mục cha từ response hoặc GET /api/v2/schools/question-categories",
+    "step_3_create_child_categories": "Thay PARENT_ID_HERE bằng ID thực từ step 2",
+    "example_child_categories": [
+      {
+        "comment": "Con của 'Lập trình'",
+        "name": "Lập trình Web",
+        "description": "Frontend, Backend, Full-stack Development",
+        "parent_id": "PARENT_ID_HERE",
+        "order_index": 1,
+        "is_active": true
+      },
+      {
+        "comment": "Con của 'Lập trình'",
+        "name": "Lập trình Mobile",
+        "description": "Android, iOS, React Native, Flutter",
+        "parent_id": "PARENT_ID_HERE",
+        "order_index": 2,
+        "is_active": true
+      },
+      {
+        "comment": "Con của 'Cơ sở dữ liệu'",
+        "name": "SQL",
+        "description": "MySQL, PostgreSQL, SQL Server, Oracle",
+        "parent_id": "DATABASE_PARENT_ID_HERE",
+        "order_index": 1,
+        "is_active": true
+      },
+      {
+        "comment": "Con của 'Cơ sở dữ liệu'",
+        "name": "NoSQL",
+        "description": "MongoDB, Redis, Cassandra, DynamoDB",
+        "parent_id": "DATABASE_PARENT_ID_HERE",
+        "order_index": 2,
+        "is_active": true
+      },
+      {
+        "comment": "Con của 'Kiến trúc phần mềm'",
+        "name": "Design Patterns",
+        "description": "Creational, Structural, Behavioral Patterns",
+        "parent_id": "ARCHITECTURE_PARENT_ID_HERE",
+        "order_index": 1,
+        "is_active": true
+      }
+    ]
+  }
+}

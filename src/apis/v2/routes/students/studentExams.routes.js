@@ -98,8 +98,40 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  * @swagger
  * /api/v2/students/student-exams/{examId}/start:
  *   post:
- *     summary: Bắt đầu bài thi (sinh viên)
- *     description: Tạo attempt mới, random câu hỏi theo phân bổ, shuffle câu hỏi/đáp án, lưu snapshot
+ *     summary: Bắt đầu bài thi - Random câu hỏi và tạo snapshot
+ *     description: |
+ *       API quan trọng nhất - Tự động generate đề thi cá nhân cho học sinh.
+ *       
+ *       **Quy trình tự động:**
+ *       1. **Validate**: Kiểm tra đề thi (published, thời gian, số lần thi)
+ *       2. **Random câu hỏi**: Lấy ngẫu nhiên từ DB theo distributions
+ *          - Priority: usage_count thấp → đề thi cân bằng
+ *          - Phân bổ theo: category, difficulty (EASY/MEDIUM/HARD), question_type
+ *       3. **Shuffle**: Xáo trộn câu hỏi và đáp án (nếu cấu hình)
+ *       4. **Snapshot**: Lưu toàn bộ câu hỏi + đáp án vào attempt.snapshot_data
+ *          - BAO GỔM: content, options, correct_answer, is_correct, explanation
+ *          - Mục đích: Đề không thay đổi dù admin sửa DB sau này
+ *       5. **Update usage_count**: Tăng đếm số lần câu hỏi được dùng
+ *       6. **Create attempt**: Trạng thái IN_PROGRESS, bắt đầu đếm giờ
+ *       
+ *       **Nếu đã có attempt IN_PROGRESS:**
+ *       - Không tạo mới, trả về attempt cũ (cho phép tiếp tục làm)
+ *       
+ *       **Validations:**
+ *       - is_published = false → Lỗi "Exam is not published yet"
+ *       - now < start_time → Lỗi "Exam has not started yet"
+ *       - now > end_time → Lỗi "Exam has ended"
+ *       - Đạt max_attempts → Lỗi "Maximum attempts reached"
+ *       - Không đủ câu hỏi trong DB → Lỗi "Not enough questions"
+ *       
+ *       **Response:**
+ *       - attempt: Thông tin attempt (id, status, start_time, max_score,...)
+ *       - questions: Mảng câu hỏi đầy đủ (content, options, points) đã shuffle
+ *       
+ *       **Lưu ý:**
+ *       - Mỗi học sinh nhận đề KHÁC NHAU (random)
+ *       - Đáp án đã được lưu trong snapshot (không phụ thuộc DB)
+ *       - Questions trả về KHÔNG bao gồm correct_answer/is_correct (anti-cheat)
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -193,8 +225,41 @@ router.post("/:examId/start", checkAuth, studentExamsController.startExam);
  * @swagger
  * /api/v2/students/student-exams/attempts/{attemptId}/answers:
  *   post:
- *     summary: Lưu câu trả lời (auto-save)
- *     description: Lưu hoặc cập nhật câu trả lời trong quá trình làm bài
+ *     summary: Lưu câu trả lời - Auto-save mỗi khi học sinh chọn đáp án
+ *     description: |
+ *       Upsert (create hoặc update) câu trả lời của học sinh.
+ *       
+ *       **Cách hoạt động:**
+ *       - Lần đầu trả lời → CREATE mới (student_answers)
+ *       - Thay đổi đáp án → UPDATE answer_data
+ *       - Unique constraint: (attempt_id, question_id) → Mỗi câu chỉ 1 answer
+ *       
+ *       **Validations:**
+ *       - Attempt không tồn tại → Lỗi "Attempt not found"
+ *       - Attempt.status ≠ IN_PROGRESS → Lỗi "Cannot save answer. Exam is not in progress"
+ *       
+ *       **answer_data format theo question_type:**
+ *       
+ *       1. **TRUE_FALSE**: `{ "value": true }` hoặc `{ "value": false }`
+ *       
+ *       2. **MULTIPLE_CHOICE**: 
+ *          - 1 đáp án: `{ "selected": ["A"] }`
+ *          - Nhiều đáp án: `{ "selected": ["A", "C", "D"] }`
+ *       
+ *       3. **SHORT_ANSWER**: `{ "text": "25 cm²" }`
+ *       
+ *       4. **ESSAY**: `{ "text": "Bài luận dài..." }`
+ *       
+ *       **Use case:**
+ *       - Frontend call API này MỔI KHI học sinh:
+ *         + Chọn/bỏ chọn checkbox
+ *         + Nhập text (debounce 500ms)
+ *         + Chuyển sang câu khác
+ *       - Mục đích: Không mất dữ liệu khi reload trang/mất mạng
+ *       
+ *       **Lưu ý:**
+ *       - KHÔNG chấm điểm ở đây (chỉ lưu answer_data)
+ *       - Chấm điểm khi nộp bài (POST submit)
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -277,8 +342,48 @@ router.post("/attempts/:attemptId/answers", checkAuth, studentExamsController.sa
  * @swagger
  * /api/v2/students/student-exams/attempts/{attemptId}/submit:
  *   post:
- *     summary: Nộp bài thi
- *     description: Nộp bài thi và trigger auto-grading (trừ câu tự luận)
+ *     summary: Nộp bài thi - Tự động chấm điểm trắc nghiệm
+ *     description: |
+ *       Kết thúc bài thi và trigger auto-grading cho câu trắc nghiệm.
+ *       
+ *       **Quy trình tự động:**
+ *       1. **Update attempt**:
+ *          - submit_time = now
+ *          - duration_seconds = (submit_time - start_time) / 1000
+ *          - status = SUBMITTED
+ *       
+ *       2. **Auto-grading** (chạy tự động):
+ *          - Chấm câu MULTIPLE_CHOICE:
+ *            + Lấy correct_answer từ snapshot (KHÔNG query DB)
+ *            + So sánh với student answer
+ *            + is_correct = true/false
+ *            + score = max_score (nếu đúng) hoặc 0
+ *          
+ *          - Chấm câu TRUE_FALSE:
+ *            + Lấy correct_answer từ snapshot
+ *            + So sánh với student answer.value
+ *          
+ *          - Bỏ qua câu ESSAY và SHORT_ANSWER (chấm thủ công sau)
+ *       
+ *       3. **Tính tổng điểm**:
+ *          - total_score = Σ(score của các câu trắc nghiệm)
+ *          - Update attempt.total_score, is_auto_graded = true
+ *          - status = GRADED (nếu không có tự luận) hoặc giữ SUBMITTED
+ *       
+ *       **Validations:**
+ *       - Attempt không tồn tại → Lỗi "Attempt not found"
+ *       - status ≠ IN_PROGRESS → Lỗi "Exam is not in progress" (không nộp lại)
+ *       
+ *       **Response:**
+ *       - message: "Exam submitted successfully"
+ *       - duration_seconds: Thời gian làm bài (giây)
+ *       - auto_graded: true nếu chấm xong, false nếu có tự luận chờ giáo viên
+ *       
+ *       **Lưu ý quan trọng:**
+ *       - Auto-grading dùng SNAPSHOT, KHÔNG query database
+ *         → Nếu admin sửa câu hỏi sau khi học sinh start, không ảnh hưởng kết quả
+ *       - Câu tự luận (ESSAY/SHORT_ANSWER) đợi giáo viên chấm thủ công
+ *       - Học sinh CHỈ nộp được 1 lần (không edit sau khi nộp)
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -328,8 +433,47 @@ router.post("/attempts/:attemptId/submit", checkAuth, studentExamsController.sub
  * @swagger
  * /api/v2/students/student-exams/attempts/{attemptId}/results:
  *   get:
- *     summary: Xem kết quả bài thi
- *     description: Lấy kết quả chi tiết bài thi (sau khi chấm xong)
+ *     summary: Xem kết quả chi tiết bài thi - Breakdown từng câu + thống kê
+ *     description: |
+ *       Lấy kết quả đầy đủ của bài thi (sau khi đã chấm xong).
+ *       
+ *       **Response gồm 3 phần:**
+ *       
+ *       **1. summary** - Tổng quan:
+ *       - exam_title, attempt_number
+ *       - total_score, earned_score, percentage
+ *       - passed (true/false) - So với passing_score
+ *       - duration_seconds - Thời gian làm bài
+ *       - started_at, submitted_at, graded_at
+ *       
+ *       **2. detailed_answers** - Chi tiết từng câu:
+ *       - question_id, question_text, question_type
+ *       - student_answer: Đáp án học sinh chọn
+ *       - correct_answer: Đáp án đúng (nếu show_results_immediately = true)
+ *       - is_correct: true/false
+ *       - max_score, earned_score
+ *       - feedback: Nhận xét của giáo viên (nếu có)
+ *       
+ *       **3. category_statistics** - Thống kê theo danh mục:
+ *       - category_name: Hình học, Đại số, Vật lý,...
+ *       - total_questions: Tổng số câu trong category
+ *       - correct_answers: Số câu trả lời đúng
+ *       - max_score, earned_score, percentage
+ *       
+ *       **Điều kiện xem kết quả:**
+ *       - Nếu show_results_immediately = false:
+ *         + Phải chờ giáo viên chấm hết tự luận (status = GRADED)
+ *       - Nếu show_results_immediately = true:
+ *         + Xem ngay sau khi nộp bài (dù chưa chấm tự luận)
+ *       
+ *       **Use case:**
+ *       - Học sinh xem lại bài thi
+ *       - Xem câu nào sai, đáp án đúng là gì
+ *       - Phân tích điểm mạnh/yếu theo category
+ *       
+ *       **Lưu ý:**
+ *       - correct_answer chỉ hiển thị nếu exam.show_results_immediately = true
+ *       - Nếu còn câu tự luận chưa chấm: earned_score chưa bao gồm điểm tự luận
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -463,8 +607,39 @@ router.get("/attempts/:attemptId/results", checkAuth, studentExamsController.get
  * @swagger
  * /api/v2/students/student-exams/need-grading:
  *   get:
- *     summary: Lấy danh sách bài thi cần chấm (giáo viên)
- *     description: Lấy danh sách các câu tự luận chưa được chấm điểm
+ *     summary: Lấy danh sách câu tự luận cần chấm (giáo viên)
+ *     description: |
+ *       Dashboard cho giáo viên - Hiển thị tất cả câu ESSAY/SHORT_ANSWER chưa chấm.
+ *       
+ *       **Logic query:**
+ *       - Tìm attempts có status = SUBMITTED hoặc GRADED
+ *       - Lọc các answers có:
+ *         + question_type IN (ESSAY, SHORT_ANSWER)
+ *         + is_correct = null (chưa chấm)
+ *       
+ *       **Response mỗi item gồm:**
+ *       - answer_id: ID cần dùng để chấm (POST /answers/{answerId}/grade)
+ *       - attempt_id, exam_id, exam_title
+ *       - student_id, student_name
+ *       - question_id, question_text
+ *       - answer_data: Bài làm của học sinh `{ "text": "..." }`
+ *       - max_score: Điểm tối đa của câu
+ *       - submitted_at: Thời gian nộp bài
+ *       
+ *       **Filters:**
+ *       - exam_id: Lọc theo đề thi cụ thể
+ *       - page, limit: Pagination
+ *       
+ *       **Use case:**
+ *       - Dashboard giáo viên: "Bạn có 50 câu tự luận cần chấm"
+ *       - Sắp xếp theo thời gian nộp (submit_time ASC) → Chấm câu cũ trước
+ *       - Hiển thị thông tin học sinh và bài làm
+ *       
+ *       **Workflow chấm bài:**
+ *       1. GET /need-grading → Lấy danh sách
+ *       2. Hiển thị question_text + answer_data.text cho giáo viên
+ *       3. Giáo viên nhập earned_score + feedback
+ *       4. POST /answers/{answerId}/grade → Chấm điểm
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -556,7 +731,48 @@ router.get("/need-grading", checkAuth, studentExamsController.getExamsNeedGradin
  * /api/v2/students/student-exams/answers/{answerId}/grade:
  *   post:
  *     summary: Chấm điểm câu tự luận (giáo viên)
- *     description: Chấm điểm câu ESSAY hoặc SHORT_ANSWER thủ công
+ *     description: |
+ *       Giáo viên chấm thủ công các câu ESSAY hoặc SHORT_ANSWER.
+ *       
+ *       **Quy trình chấm:**
+ *       1. **Validate**:
+ *          - Kiểm tra answer tồn tại
+ *          - Kiểm tra question_type IN (ESSAY, SHORT_ANSWER)
+ *          - earned_score phải 0 ≤ earned_score ≤ max_score
+ *       
+ *       2. **Update student_answers**:
+ *          - earned_score: Điểm giáo viên cho
+ *          - feedback: Nhận xét (optional)
+ *          - is_correct: null (không áp dụng cho tự luận)
+ *          - graded_by: ID giáo viên (từ JWT)
+ *          - graded_at: Timestamp
+ *       
+ *       3. **Kiểm tra attempt**:
+ *          - Nếu tất cả câu đã chấm xong:
+ *            + Tính lại total_score (trắc nghiệm + tự luận)
+ *            + Update attempt.status = GRADED
+ *            + Update attempt.graded_at, graded_by
+ *       
+ *       **Request body:**
+ *       - earned_score (required): Điểm số (0 - max_score)
+ *       - feedback (optional): Nhận xét chi tiết
+ *       
+ *       **Validations:**
+ *       - answer_id không tồn tại → Lỗi "Answer not found"
+ *       - question_type không phải tự luận → Lỗi (trắc nghiệm tự động chấm)
+ *       - earned_score < 0 hoặc > max_score → Lỗi "Invalid score"
+ *       
+ *       **Use case:**
+ *       - Giáo viên chấm từng câu tự luận
+ *       - Hệ thống tự động cập nhật tổng điểm khi chấm xong hết
+ *       
+ *       **Ví dụ:**
+ *       ```json
+ *       {
+ *         "earned_score": 18,
+ *         "feedback": "Bài viết tốt, lập luận rõ ràng. Cần bổ sung ví dụ cụ thể hơn."
+ *       }
+ *       ```
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []

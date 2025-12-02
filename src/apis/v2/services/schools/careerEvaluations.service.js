@@ -204,11 +204,10 @@ const configureCriteriaWeights = async (classId, careerId, weights, createdBy) =
     where: {
       class_id: classId,
       career_id: careerId,
-      is_active: true,
     },
   });
 
-  const configuredIds = configuredCriteria.map((c) => c.career_criteria_id);
+  const configuredIds = configuredCriteria.map((c) => c.criteria_id);
   const weightIds = weights.map((w) => w.criteria_id);
 
   const missingIds = weightIds.filter((id) => !configuredIds.includes(id));

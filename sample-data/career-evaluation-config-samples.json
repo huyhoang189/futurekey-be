@@ -1,0 +1,192 @@
+{
+  "description": "Sample data cho Career Evaluation Configuration APIs",
+  
+  "IMPORTANT_NOTES": {
+    "tables": {
+      "class_criteria_weights": "Cấu hình trọng số tiêu chí cho từng nghề nghiệp trong lớp",
+      "career_evaluation_thresholds": "Cấu hình ngưỡng phân loại (Rất phù hợp, Phù hợp, Không phù hợp)"
+    },
+    "weight_rules": {
+      "total_must_equal_100": "Tổng weight của tất cả tiêu chí phải = 100",
+      "weight_range": "Mỗi weight: 0-100 (integer)",
+      "example": "5 tiêu chí: [20, 20, 20, 20, 20] = 100"
+    },
+    "threshold_rules": {
+      "max_score": "Tự động tính = số tiêu chí × 10",
+      "very_suitable_min": "Ngưỡng tối thiểu cho 'Rất phù hợp' (VD: >= 40/50)",
+      "suitable_min": "Ngưỡng tối thiểu cho 'Phù hợp' (VD: >= 30/50)",
+      "not_suitable": "< suitable_min = Không phù hợp"
+    }
+  },
+
+  "SAMPLE_1_configure_weights": {
+    "api": "POST /api/v2/schools/career-evaluation-config/weights",
+    "description": "Cấu hình trọng số tiêu chí cho nghề Software Engineer",
+    "data": {
+      "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+      "career_id": "CAREER_ID_SOFTWARE_ENGINEER",
+      "weights": [
+        {
+          "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+          "weight": 25
+        },
+        {
+          "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+          "weight": 25
+        },
+        {
+          "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+          "weight": 30
+        },
+        {
+          "criteria_id": "CRITERIA_ID_4",
+          "weight": 20
+        }
+      ]
+    },
+    "note": "Tổng weight = 25 + 25 + 30 + 20 = 100 ✓"
+  },
+
+  "SAMPLE_2_configure_weights_balanced": {
+    "api": "POST /api/v2/schools/career-evaluation-config/weights",
+    "description": "Cấu hình trọng số đồng đều cho nghề Data Analyst",
+    "data": {
+      "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+      "career_id": "CAREER_ID_DATA_ANALYST",
+      "weights": [
+        {
+          "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+          "weight": 20
+        },
+        {
+          "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+          "weight": 20
+        },
+        {
+          "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+          "weight": 20
+        },
+        {
+          "criteria_id": "CRITERIA_ID_4",
+          "weight": 20
+        },
+        {
+          "criteria_id": "CRITERIA_ID_5",
+          "weight": 20
+        }
+      ]
+    },
+    "note": "5 tiêu chí × 20% = 100 ✓"
+  },
+
+  "SAMPLE_3_configure_thresholds_4_criteria": {
+    "api": "POST /api/v2/schools/career-evaluation-config/thresholds",
+    "description": "Cấu hình ngưỡng cho nghề có 4 tiêu chí (max_score = 40)",
+    "data": {
+      "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+      "career_id": "CAREER_ID_SOFTWARE_ENGINEER",
+      "very_suitable_min": 32,
+      "suitable_min": 24
+    },
+    "calculation": {
+      "max_score": "4 tiêu chí × 10 = 40 điểm",
+      "very_suitable": ">= 32/40 (80%)",
+      "suitable": ">= 24/40 (60%)",
+      "not_suitable": "< 24/40 (< 60%)"
+    }
+  },
+
+  "SAMPLE_4_configure_thresholds_5_criteria": {
+    "api": "POST /api/v2/schools/career-evaluation-config/thresholds",
+    "description": "Cấu hình ngưỡng cho nghề có 5 tiêu chí (max_score = 50)",
+    "data": {
+      "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+      "career_id": "CAREER_ID_DATA_ANALYST",
+      "very_suitable_min": 40,
+      "suitable_min": 30
+    },
+    "calculation": {
+      "max_score": "5 tiêu chí × 10 = 50 điểm",
+      "very_suitable": ">= 40/50 (80%)",
+      "suitable": ">= 30/50 (60%)",
+      "not_suitable": "< 30/50 (< 60%)"
+    }
+  },
+
+  "SAMPLE_5_configure_thresholds_strict": {
+    "api": "POST /api/v2/schools/career-evaluation-config/thresholds",
+    "description": "Cấu hình ngưỡng nghiêm ngặt hơn",
+    "data": {
+      "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+      "career_id": "CAREER_ID_AI_ENGINEER",
+      "very_suitable_min": 45,
+      "suitable_min": 35
+    },
+    "calculation": {
+      "max_score": "5 tiêu chí × 10 = 50 điểm",
+      "very_suitable": ">= 45/50 (90%)",
+      "suitable": ">= 35/50 (70%)",
+      "not_suitable": "< 35/50 (< 70%)"
+    }
+  },
+
+  "GET_EXAMPLES": {
+    "get_weights": {
+      "api": "GET /api/v2/schools/career-evaluation-config/weights?class_id=2f238ea5-cd51-11f0-afc5-2626c197d041&career_id=CAREER_ID_SOFTWARE_ENGINEER",
+      "description": "Lấy cấu hình trọng số đã thiết lập"
+    },
+    "get_thresholds": {
+      "api": "GET /api/v2/schools/career-evaluation-config/thresholds?class_id=2f238ea5-cd51-11f0-afc5-2626c197d041&career_id=CAREER_ID_SOFTWARE_ENGINEER",
+      "description": "Lấy cấu hình ngưỡng đã thiết lập"
+    },
+    "get_statistics": {
+      "api": "GET /api/v2/schools/career-evaluation-config/statistics?class_id=2f238ea5-cd51-11f0-afc5-2626c197d041&career_id=CAREER_ID_SOFTWARE_ENGINEER",
+      "description": "Xem thống kê kết quả đánh giá của lớp"
+    }
+  },
+
+  "WORKFLOW_EXAMPLE": {
+    "step_1": "Cấu hình trọng số tiêu chí (POST /weights)",
+    "step_2": "Cấu hình ngưỡng đánh giá (POST /thresholds)",
+    "step_3": "Học sinh làm bài đánh giá nghề nghiệp",
+    "step_4": "Hệ thống tính điểm theo trọng số và phân loại theo ngưỡng",
+    "step_5": "Giáo viên xem thống kê (GET /statistics)"
+  },
+
+  "VALIDATION_RULES": {
+    "weights": [
+      "Tổng weight PHẢI = 100",
+      "Mỗi weight: integer từ 0-100",
+      "Tất cả tiêu chí của nghề nghiệp phải có weight"
+    ],
+    "thresholds": [
+      "very_suitable_min > suitable_min",
+      "suitable_min > 0",
+      "very_suitable_min <= max_score",
+      "max_score = số tiêu chí × 10"
+    ]
+  },
+
+  "TODO_REPLACE_PLACEHOLDERS": {
+    "CAREER_ID_SOFTWARE_ENGINEER": "Thay bằng career_id thật từ bảng careers",
+    "CAREER_ID_DATA_ANALYST": "Thay bằng career_id thật từ bảng careers",
+    "CAREER_ID_AI_ENGINEER": "Thay bằng career_id thật từ bảng careers",
+    "CRITERIA_ID_4": "Thay bằng criteria_id thật từ bảng career_criterias",
+    "CRITERIA_ID_5": "Thay bằng criteria_id thật từ bảng career_criterias"
+  },
+
+  "REFERENCE_IDS": {
+    "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+    "criteria_ids_available": {
+      "criteria_1": "09352b7e-c88e-11f0-afc5-2626c197d041",
+      "criteria_2": "136a34be-c88e-11f0-afc5-2626c197d041",
+      "criteria_3": "1eb661d4-c88e-11f0-afc5-2626c197d041"
+    }
+  },
+
+  "API_REFERENCE": {
+    "controller": "src/apis/v2/controllers/schools/careerEvaluationConfig.controller.js",
+    "routes": "src/apis/v2/routes/schools/careerEvaluationConfig.routes.js",
+    "schema": "prisma/schema.prisma (class_criteria_weights, career_evaluation_thresholds)"
+  }
+}

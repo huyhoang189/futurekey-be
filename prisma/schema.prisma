@@ -281,6 +281,7 @@ model career_categories {
   updated_at DateTime? @default(now()) @db.Timestamp(0)
 }
 
+
 model question_categories {
   id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
   name        String    @db.VarChar(255)
@@ -448,6 +449,19 @@ model question_options {
 
   @@index([question_id], map: "idx_question_id")
   @@index([question_id, order_index], map: "idx_question_order")
+  }
+
+model student_learn_progress {
+  id                   String                         @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id           String                         @db.VarChar(36)
+  career_id            String                         @db.VarChar(36)
+  criteria_id          String                         @db.VarChar(36)
+  progress_percent     Float?                         @default(0)
+  last_watched_positon Float?
+  status               student_learn_progress_status? @default(WATCHING)
+  created_at           DateTime?                      @default(now()) @db.Timestamp(0)
+  updated_at           DateTime?                      @default(now()) @db.Timestamp(0)
+
 }
 
 enum auth_impl_user_student_sex {
@@ -473,6 +487,7 @@ enum school_career_licenses_status {
   REVOKED
   PENDING_ACTIVATION
 }
+
 
 enum question_type {
   MULTIPLE_CHOICE
@@ -581,4 +596,11 @@ enum evaluation_result_type {
   VERY_SUITABLE    // Rất phù hợp
   SUITABLE         // Phù hợp
   NOT_SUITABLE     // Không phù hợp
+}
+enum student_learn_progress_status {
+  WATCHING
+  PAUSED
+  SEEK_ATTEMPT
+  COMPLETED
+  EXIT
 }

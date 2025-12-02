@@ -16,13 +16,13 @@ const generateStudentCode = async (className) => {
 
   // Chuẩn hóa tên lớp: "Lớp 10A" -> "Lop10A"
   const normalizedClassName = className
-    .replace(/Lớp\s*/gi, 'Lop')
-    .replace(/\s+/g, '')
-    .replace(/[^a-zA-Z0-9]/g, '');
+    .replace(/Lớp\s*/gi, "Lop")
+    .replace(/\s+/g, "")
+    .replace(/[^a-zA-Z0-9]/g, "");
 
   // Generate số ngẫu nhiên 9 chữ số
   const randomNumber = Math.floor(100000000 + Math.random() * 900000000);
-  
+
   const code = `${normalizedClassName}_HS_${randomNumber}`;
 
   // Check duplicate
@@ -43,22 +43,27 @@ const generateStudentCode = async (className) => {
  */
 const getDefaultStudentGroupId = async () => {
   const studentGroup = await prisma.auth_group.findFirst({
-    where: { 
+    where: {
       OR: [
         { type: "SCHOOL_STUDENT" },
         { name: { contains: "Student" } },
-        { name: { contains: "Học sinh" } }
-      ]
+        { name: { contains: "Học sinh" } },
+      ],
     },
   });
-  
+
   return studentGroup?.id || null;
 };
 
 /**
  * Lấy danh sách students với phân trang và tìm kiếm
  */
-const getAllStudents = async ({ filters = {}, paging = {}, orderBy = {}, search = '' }) => {
+const getAllStudents = async ({
+  filters = {},
+  paging = {},
+  orderBy = {},
+  search = "",
+}) => {
   const { skip = 0, limit = 10 } = paging;
 
   // Nếu có search, cần tìm user_id, school_id, class_id trước
@@ -78,36 +83,31 @@ const getAllStudents = async ({ filters = {}, paging = {}, orderBy = {}, search 
       },
       select: { id: true },
     });
-    searchUserIds = matchingUsers.map(u => u.id);
+    searchUserIds = matchingUsers.map((u) => u.id);
 
     // Tìm schools matching search
     const matchingSchools = await prisma.schools.findMany({
       where: {
-        OR: [
-          { name: { contains: search } },
-          { address: { contains: search } },
-        ],
+        OR: [{ name: { contains: search } }, { address: { contains: search } }],
       },
       select: { id: true },
     });
-    searchSchoolIds = matchingSchools.map(s => s.id);
+    searchSchoolIds = matchingSchools.map((s) => s.id);
 
     // Tìm classes matching search
     const matchingClasses = await prisma.classes.findMany({
       where: {
-        OR: [
-          { name: { contains: search } },
-        ],
+        OR: [{ name: { contains: search } }],
       },
       select: { id: true },
     });
-    searchClassIds = matchingClasses.map(c => c.id);
+    searchClassIds = matchingClasses.map((c) => c.id);
 
     // Thêm điều kiện search vào filters
     if (!filters.OR) {
       filters.OR = [];
     }
-    
+
     if (searchUserIds.length > 0) {
       filters.OR.push({ user_id: { in: searchUserIds } });
     }
@@ -148,43 +148,61 @@ const getAllStudents = async ({ filters = {}, paging = {}, orderBy = {}, search 
   // Manual join với users, schools, classes
   if (data.length > 0) {
     // Get unique IDs
-    const userIds = [...new Set(data.map(student => student.user_id).filter(Boolean))];
-    const schoolIds = [...new Set(data.map(student => student.school_id).filter(Boolean))];
-    const classIds = [...new Set(data.map(student => student.class_id).filter(Boolean))];
-    
+    const userIds = [
+      ...new Set(data.map((student) => student.user_id).filter(Boolean)),
+    ];
+    const schoolIds = [
+      ...new Set(data.map((student) => student.school_id).filter(Boolean)),
+    ];
+    const classIds = [
+      ...new Set(data.map((student) => student.class_id).filter(Boolean)),
+    ];
+
     // Parallel queries
     const [users, schools, classes] = await Promise.all([
-      userIds.length > 0 ? prisma.auth_base_user.findMany({
-        where: { id: { in: userIds } },
-        select: {
-          id: true,
-          user_name: true,
-          full_name: true,
-          email: true,
-          phone_number: true,
-          status: true,
-        },
-      }) : [],
-      schoolIds.length > 0 ? prisma.schools.findMany({
-        where: { id: { in: schoolIds } },
-        select: { id: true, name: true },
-      }) : [],
-      classIds.length > 0 ? prisma.classes.findMany({
-        where: { id: { in: classIds } },
-        select: { id: true, name: true, grade_level: true },
-      }) : [],
+      userIds.length > 0
+        ? prisma.auth_base_user.findMany({
+            where: { id: { in: userIds } },
+            select: {
+              id: true,
+              user_name: true,
+              full_name: true,
+              email: true,
+              phone_number: true,
+              status: true,
+            },
+          })
+        : [],
+      schoolIds.length > 0
+        ? prisma.schools.findMany({
+            where: { id: { in: schoolIds } },
+            select: { id: true, name: true },
+          })
+        : [],
+      classIds.length > 0
+        ? prisma.classes.findMany({
+            where: { id: { in: classIds } },
+            select: { id: true, name: true, grade_level: true },
+          })
+        : [],
     ]);
 
     // Create maps for fast lookup
-    const usersMap = Object.fromEntries(users.map(user => [user.id, user]));
-    const schoolsMap = Object.fromEntries(schools.map(school => [school.id, school]));
-    const classesMap = Object.fromEntries(classes.map(cls => [cls.id, cls]));
+    const usersMap = Object.fromEntries(users.map((user) => [user.id, user]));
+    const schoolsMap = Object.fromEntries(
+      schools.map((school) => [school.id, school])
+    );
+    const classesMap = Object.fromEntries(classes.map((cls) => [cls.id, cls]));
 
     // Attach related data
-    data.forEach(student => {
+    data.forEach((student) => {
       student.user = student.user_id ? usersMap[student.user_id] || null : null;
-      student.school = student.school_id ? schoolsMap[student.school_id] || null : null;
-      student.class = student.class_id ? classesMap[student.class_id] || null : null;
+      student.school = student.school_id
+        ? schoolsMap[student.school_id] || null
+        : null;
+      student.class = student.class_id
+        ? classesMap[student.class_id] || null
+        : null;
     });
   }
 
@@ -225,26 +243,94 @@ const getStudentById = async (id) => {
 
   // Manual join với user, school, class
   const [user, school, classData] = await Promise.all([
-    student.user_id ? prisma.auth_base_user.findUnique({
-      where: { id: student.user_id },
-      select: {
-        id: true,
-        user_name: true,
-        full_name: true,
-        email: true,
-        phone_number: true,
-        status: true,
-        group_id: true,
-      },
-    }) : null,
-    student.school_id ? prisma.schools.findUnique({
-      where: { id: student.school_id },
-      select: { id: true, name: true },
-    }) : null,
-    student.class_id ? prisma.classes.findUnique({
-      where: { id: student.class_id },
-      select: { id: true, name: true, grade_level: true },
-    }) : null,
+    student.user_id
+      ? prisma.auth_base_user.findUnique({
+          where: { id: student.user_id },
+          select: {
+            id: true,
+            user_name: true,
+            full_name: true,
+            email: true,
+            phone_number: true,
+            status: true,
+            group_id: true,
+          },
+        })
+      : null,
+    student.school_id
+      ? prisma.schools.findUnique({
+          where: { id: student.school_id },
+          select: { id: true, name: true },
+        })
+      : null,
+    student.class_id
+      ? prisma.classes.findUnique({
+          where: { id: student.class_id },
+          select: { id: true, name: true, grade_level: true },
+        })
+      : null,
+  ]);
+
+  student.user = user;
+  student.school = school;
+  student.class = classData;
+
+  return student;
+};
+
+/**
+ * Lấy thông tin student theo ID
+ */
+const getStudentByUserId = async (user_id) => {
+  const student = await prisma.auth_impl_user_student.findFirst({
+    where: { user_id },
+    select: {
+      id: true,
+      user_id: true,
+      school_id: true,
+      class_id: true,
+      student_code: true,
+      sex: true,
+      birthday: true,
+      description: true,
+      major_interest: true,
+      created_at: true,
+      updated_at: true,
+    },
+  });
+
+  if (!student) {
+    throw new Error("Student not found");
+  }
+
+  // Manual join với user, school, class
+  const [user, school, classData] = await Promise.all([
+    student.user_id
+      ? prisma.auth_base_user.findUnique({
+          where: { id: student.user_id },
+          select: {
+            id: true,
+            user_name: true,
+            full_name: true,
+            email: true,
+            phone_number: true,
+            status: true,
+            group_id: true,
+          },
+        })
+      : null,
+    student.school_id
+      ? prisma.schools.findUnique({
+          where: { id: student.school_id },
+          select: { id: true, name: true },
+        })
+      : null,
+    student.class_id
+      ? prisma.classes.findUnique({
+          where: { id: student.class_id },
+          select: { id: true, name: true, grade_level: true },
+        })
+      : null,
   ]);
 
   student.user = user;
@@ -339,10 +425,12 @@ const createStudent = async (studentData) => {
         full_name,
         email,
         phone_number,
-        password_hash: password ? await bcrypt.hashPassword(password, 10) : await bcrypt.hashPassword('123456', 10),
+        password_hash: password
+          ? await bcrypt.hashPassword(password, 10)
+          : await bcrypt.hashPassword("123456", 10),
         address,
         group_id: studentGroupId,
-        status: 'ACTIVE',
+        status: "ACTIVE",
       },
       select: {
         id: true,
@@ -385,14 +473,18 @@ const createStudent = async (studentData) => {
 
     // Get related data for response
     const [school, classData] = await Promise.all([
-      school_id ? tx.schools.findUnique({
-        where: { id: school_id },
-        select: { id: true, name: true },
-      }) : null,
-      class_id ? tx.classes.findUnique({
-        where: { id: class_id },
-        select: { id: true, name: true, grade_level: true },
-      }) : null,
+      school_id
+        ? tx.schools.findUnique({
+            where: { id: school_id },
+            select: { id: true, name: true },
+          })
+        : null,
+      class_id
+        ? tx.classes.findUnique({
+            where: { id: class_id },
+            select: { id: true, name: true, grade_level: true },
+          })
+        : null,
     ]);
 
     return {
@@ -435,9 +527,13 @@ const updateStudent = async (id, updateData) => {
       } = student;
 
       // Check if there's any field to update
-      const hasUpdate = school_id !== undefined || class_id !== undefined || 
-                       sex !== undefined || birthday !== undefined || 
-                       description !== undefined || major_interest !== undefined;
+      const hasUpdate =
+        school_id !== undefined ||
+        class_id !== undefined ||
+        sex !== undefined ||
+        birthday !== undefined ||
+        description !== undefined ||
+        major_interest !== undefined;
 
       if (hasUpdate) {
         // Validate school exists if school_id is being updated
@@ -466,7 +562,9 @@ const updateStudent = async (id, updateData) => {
             ...(school_id !== undefined && { school_id }),
             ...(class_id !== undefined && { class_id }),
             ...(sex !== undefined && { sex }),
-            ...(birthday !== undefined && { birthday: birthday ? new Date(birthday) : null }),
+            ...(birthday !== undefined && {
+              birthday: birthday ? new Date(birthday) : null,
+            }),
             ...(description !== undefined && { description }),
             ...(major_interest !== undefined && { major_interest }),
           },
@@ -476,19 +574,17 @@ const updateStudent = async (id, updateData) => {
 
     // Update base_user properties if provided
     if (base_user && existingStudent.user_id) {
-      const {
-        user_name,
-        full_name,
-        email,
-        phone_number,
-        address,
-        status,
-      } = base_user;
+      const { user_name, full_name, email, phone_number, address, status } =
+        base_user;
 
       // Check if there's any field to update
-      const hasUpdate = user_name !== undefined || full_name !== undefined || 
-                       email !== undefined || phone_number !== undefined || 
-                       address !== undefined || status !== undefined;
+      const hasUpdate =
+        user_name !== undefined ||
+        full_name !== undefined ||
+        email !== undefined ||
+        phone_number !== undefined ||
+        address !== undefined ||
+        status !== undefined;
 
       if (hasUpdate) {
         // Check username duplicate if being updated
@@ -550,26 +646,32 @@ const updateStudent = async (id, updateData) => {
     });
 
     const [user, school, classData] = await Promise.all([
-      finalStudent.user_id ? tx.auth_base_user.findUnique({
-        where: { id: finalStudent.user_id },
-        select: {
-          id: true,
-          user_name: true,
-          full_name: true,
-          email: true,
-          phone_number: true,
-          address: true,
-          status: true,
-        },
-      }) : null,
-      finalStudent.school_id ? tx.schools.findUnique({
-        where: { id: finalStudent.school_id },
-        select: { id: true, name: true },
-      }) : null,
-      finalStudent.class_id ? tx.classes.findUnique({
-        where: { id: finalStudent.class_id },
-        select: { id: true, name: true, grade_level: true },
-      }) : null,
+      finalStudent.user_id
+        ? tx.auth_base_user.findUnique({
+            where: { id: finalStudent.user_id },
+            select: {
+              id: true,
+              user_name: true,
+              full_name: true,
+              email: true,
+              phone_number: true,
+              address: true,
+              status: true,
+            },
+          })
+        : null,
+      finalStudent.school_id
+        ? tx.schools.findUnique({
+            where: { id: finalStudent.school_id },
+            select: { id: true, name: true },
+          })
+        : null,
+      finalStudent.class_id
+        ? tx.classes.findUnique({
+            where: { id: finalStudent.class_id },
+            select: { id: true, name: true, grade_level: true },
+          })
+        : null,
     ]);
 
     return {
@@ -585,13 +687,7 @@ const updateStudent = async (id, updateData) => {
  * Cập nhật user info của student
  */
 const updateStudentUser = async (id, userData) => {
-  const {
-    user_name,
-    full_name,
-    email,
-    phone_number,
-    address,
-  } = userData;
+  const { user_name, full_name, email, phone_number, address } = userData;
 
   // Get student info
   const student = await prisma.auth_impl_user_student.findUnique({
@@ -697,8 +793,8 @@ const deleteStudent = async (id, options = {}) => {
     }
 
     return {
-      message: deleteUser 
-        ? "Delete student and user account successfully" 
+      message: deleteUser
+        ? "Delete student and user account successfully"
         : "Delete student successfully",
     };
   });
@@ -743,7 +839,7 @@ const importStudents = async (fileBuffer, class_id) => {
       ],
       defval: "",
       raw: false, // Chuyển date thành string thay vì số
-      dateNF: 'dd/mm/yyyy', // Format ngày tháng
+      dateNF: "dd/mm/yyyy", // Format ngày tháng
     });
 
     if (!jsonData || jsonData.length === 0) {
@@ -800,28 +896,41 @@ const importStudents = async (fileBuffer, class_id) => {
         const school_id = classData.school_id;
 
         // Map sex
-        const sexMap = { "NAM": "MALE", "NỮ": "FEMALE", "MALE": "MALE", "FEMALE": "FEMALE" };
+        const sexMap = {
+          NAM: "MALE",
+          NỮ: "FEMALE",
+          MALE: "MALE",
+          FEMALE: "FEMALE",
+        };
         const sex = sexRaw ? sexMap[sexRaw] || null : null;
 
         // Parse birthday
         let birthday = null;
         if (birthdayRaw) {
-          console.log(`Row ${rowNumber}: birthdayRaw = "${birthdayRaw}", type = ${typeof birthdayRaw}`);
-          
+          console.log(
+            `Row ${rowNumber}: birthdayRaw = "${birthdayRaw}", type = ${typeof birthdayRaw}`
+          );
+
           // Nếu là số (Excel serial date), convert sang Date
-          if (typeof birthdayRaw === 'number') {
+          if (typeof birthdayRaw === "number") {
             // Excel date serial number (số ngày từ 1/1/1900)
             const excelEpoch = new Date(1899, 11, 30); // 30/12/1899
-            birthday = new Date(excelEpoch.getTime() + birthdayRaw * 24 * 60 * 60 * 1000);
-          } else if (typeof birthdayRaw === 'string') {
+            birthday = new Date(
+              excelEpoch.getTime() + birthdayRaw * 24 * 60 * 60 * 1000
+            );
+          } else if (typeof birthdayRaw === "string") {
             const trimmed = birthdayRaw.trim();
-            
+
             // Try DD/MM/YYYY format
-            const ddmmyyyyMatch = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+            const ddmmyyyyMatch = trimmed.match(
+              /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/
+            );
             if (ddmmyyyyMatch) {
               const [, day, month, year] = ddmmyyyyMatch;
-              birthday = new Date(`${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`);
-            } 
+              birthday = new Date(
+                `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`
+              );
+            }
             // Try YYYY-MM-DD format
             else if (trimmed.match(/^\d{4}-\d{1,2}-\d{1,2}$/)) {
               birthday = new Date(trimmed);
@@ -873,7 +982,10 @@ const importStudents = async (fileBuffer, class_id) => {
               email: email || null,
               phone_number: phone_number || null,
               address: address || null,
-              password_hash: await bcrypt.hashPassword(password || "123456", 10),
+              password_hash: await bcrypt.hashPassword(
+                password || "123456",
+                10
+              ),
               group_id: studentGroup,
               status: "ACTIVE",
             },
@@ -917,10 +1029,10 @@ const importStudents = async (fileBuffer, class_id) => {
 
         // Thêm row vào file lỗi
         errorData.push({
-          "STT": rowNumber - 1,
+          STT: rowNumber - 1,
           "Tên đăng nhập": row["Tên đăng nhập"] || "",
           "Họ và tên": row["Họ và tên"] || "",
-          "Email": row["Email"] || "",
+          Email: row["Email"] || "",
           "Số điện thoại": row["Số điện thoại"] || "",
           "Địa chỉ": row["Địa chỉ"] || "",
           "Nhóm người dùng": row["Nhóm người dùng"] || "",
@@ -929,7 +1041,7 @@ const importStudents = async (fileBuffer, class_id) => {
           "Ngày sinh": row["Ngày sinh"] || "",
           "Mô tả": row["Mô tả"] || "",
           "Ngành yêu thích": row["Ngành yêu thích"] || "",
-          "Lỗi": errorMessage || error.message,
+          Lỗi: errorMessage || error.message,
         });
         errorRows.push(errorData.length);
       }
@@ -941,11 +1053,11 @@ const importStudents = async (fileBuffer, class_id) => {
       const errorWorksheet = xlsx.utils.json_to_sheet(errorData);
 
       // Thêm style cho header
-      const headerRange = xlsx.utils.decode_range(errorWorksheet['!ref']);
+      const headerRange = xlsx.utils.decode_range(errorWorksheet["!ref"]);
       for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
         const cellAddress = xlsx.utils.encode_cell({ r: 0, c: col });
         if (!errorWorksheet[cellAddress]) continue;
-        
+
         errorWorksheet[cellAddress].s = {
           fill: { fgColor: { rgb: "CCCCCC" } },
           font: { bold: true },
@@ -958,9 +1070,9 @@ const importStudents = async (fileBuffer, class_id) => {
         for (let col = headerRange.s.c; col <= headerRange.e.c; col++) {
           const cellAddress = xlsx.utils.encode_cell({ r: rowNumber, c: col });
           if (!errorWorksheet[cellAddress]) {
-            errorWorksheet[cellAddress] = { t: 's', v: '' };
+            errorWorksheet[cellAddress] = { t: "s", v: "" };
           }
-          
+
           errorWorksheet[cellAddress].s = {
             fill: { fgColor: { rgb: "FF0000" } },
             font: { color: { rgb: "FFFFFF" } },
@@ -969,8 +1081,8 @@ const importStudents = async (fileBuffer, class_id) => {
       });
 
       // Set column widths
-      errorWorksheet['!cols'] = [
-        { wch: 5 },  // STT
+      errorWorksheet["!cols"] = [
+        { wch: 5 }, // STT
         { wch: 15 }, // Tên đăng nhập
         { wch: 20 }, // Họ và tên
         { wch: 25 }, // Email
@@ -986,8 +1098,8 @@ const importStudents = async (fileBuffer, class_id) => {
       ];
 
       xlsx.utils.book_append_sheet(errorWorkbook, errorWorksheet, "Lỗi");
-      errorFileBuffer = xlsx.write(errorWorkbook, { 
-        type: "buffer", 
+      errorFileBuffer = xlsx.write(errorWorkbook, {
+        type: "buffer",
         bookType: "xlsx",
         cellStyles: true,
       });
@@ -1008,6 +1120,7 @@ const importStudents = async (fileBuffer, class_id) => {
 module.exports = {
   getAllStudents,
   getStudentById,
+  getStudentByUserId,
   createStudent,
   updateStudent,
   updateStudentUser,

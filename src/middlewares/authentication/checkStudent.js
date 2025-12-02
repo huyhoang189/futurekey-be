@@ -1,6 +1,6 @@
-const schoolUserService = require("../../apis/v1/services/system-admin/schoolUsers.service");
+const studentService = require("../../apis/v1/services/system-admin/students.service");
 const userService = require("../../apis/v1/services/system-admin/users.service");
-const checkSchool = async (req, res, next) => {
+const checkStudent = async (req, res, next) => {
   const { userSession } = req;
 
   const user = await userService.getUserByUsername(userSession.user_name);
@@ -12,30 +12,25 @@ const checkSchool = async (req, res, next) => {
     });
   }
 
-  if (
-    user?.group?.type !== "SCHOOL_ADMIN" &&
-    user?.group?.type !== "SCHOOL_TEACHER"
-  ) {
+  if (user?.group?.type !== "SCHOOL_STUDENT") {
     return res.status(403).json({
       success: false,
-      message: "Access denied. User is not a school admin or staff",
+      message: "Access denied. User is not a student",
     });
   }
 
-  const schoolUser = await schoolUserService.checkUserSchoolAssociation(
-    user.id
-  );
+  const student = await studentService.getStudentByUserId(user.id);
 
-  if (!schoolUser || schoolUser.length === 0) {
+  if (!student || student.length === 0) {
     return res.status(403).json({
       success: false,
       message: "User is not associated with any school",
     });
   }
 
-  req.schoolUser = schoolUser;
+  req.student = student;
 
   return next();
 };
 
-module.exports = checkSchool;
+module.exports = checkStudent;

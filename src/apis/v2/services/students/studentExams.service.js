@@ -284,7 +284,7 @@ const saveStudentAnswer = async (attemptId, questionId, answerData) => {
   // Upsert answer
   const answer = await prisma.student_answers.upsert({
     where: {
-      unique_attempt_question: {
+      attempt_id_question_id: {
         attempt_id: attemptId,
         question_id: questionId,
       },

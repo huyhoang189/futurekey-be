@@ -105,7 +105,25 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  * @swagger
  * /api/v2/schools/exams:
  *   get:
- *     summary: Lấy danh sách đề thi
+ *     summary: Lấy danh sách đề thi (admin/giáo viên)
+ *     description: |
+ *       Truy vấn danh sách đề thi với pagination, search và filter.
+ *       
+ *       **Tính năng:**
+ *       - Phân trang (page, limit)
+ *       - Tìm kiếm theo tiêu đề (search)
+ *       - Lọc theo loại đề (exam_type: PRACTICE, QUIZ, MIDTERM, FINAL, MOCK_TEST)
+ *       - Lọc theo trạng thái công bố (is_published: true/false)
+ *       
+ *       **Response bao gồm:**
+ *       - Danh sách đề thi với metadata
+ *       - Thông tin distributions (phân bổ câu hỏi)
+ *       - Pagination meta (total, skip, limit)
+ *       
+ *       **Use case:**
+ *       - Xem tất cả đề thi của trường/giáo viên
+ *       - Tìm kiếm đề thi cụ thể
+ *       - Dashboard quản lý đề thi
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -175,7 +193,24 @@ router.get("/", checkAuth, examsController.getAllExams);
  * @swagger
  * /api/v2/schools/exams/{id}:
  *   get:
- *     summary: Lấy đề thi theo ID
+ *     summary: Lấy chi tiết đề thi theo ID (admin view)
+ *     description: |
+ *       Lấy thông tin đầy đủ của 1 đề thi (chỉ metadata và question_ids).
+ *       
+ *       **Response bao gồm:**
+ *       - Thông tin đề thi: tiêu đề, loại, thời gian, điểm,...
+ *       - Distributions: cấu hình phân bổ câu hỏi
+ *       - exam_questions: danh sách question_id và points (KHÔNG có content)
+ *       
+ *       **Lưu ý:**
+ *       - API này CHỈ trả về question_ids
+ *       - Để xem full câu hỏi, cần loop và call GET /questions/{id}
+ *       - Hoặc tạo endpoint riêng: GET /exams/{id}/full-details
+ *       
+ *       **Use case:**
+ *       - Xem metadata đề thi để edit
+ *       - Kiểm tra cấu hình distributions
+ *       - Xem danh sách câu hỏi đã chọn (chỉ IDs)
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -207,7 +242,44 @@ router.get("/:id", checkAuth, examsController.getExamById);
  * @swagger
  * /api/v2/schools/exams:
  *   post:
- *     summary: Tạo đề thi mới
+ *     summary: Tạo đề thi mới với cấu hình distributions
+ *     description: |
+ *       Tạo template đề thi với cấu hình random câu hỏi theo distributions.
+ *       
+ *       **Quy trình tạo đề thi:**
+ *       1. Tạo metadata đề thi (title, type, duration, points,...)
+ *       2. Cấu hình distributions (phân bổ câu hỏi theo category/difficulty)
+ *       3. Hệ thống chưa generate câu hỏi (cần call POST /exams/{id}/generate-questions)
+ *       
+ *       **Fields quan trọng:**
+ *       - **class_id**: BẮT BUỘC - ID lớp học
+ *       - **total_points**: Tổng điểm đề thi (VD: 10)
+ *       - **distributions**: Mảng cấu hình random câu hỏi
+ *         + Nếu có distributions → hệ thống sẽ random câu hỏi khi học sinh start
+ *         + Nếu không có → cần thêm câu hỏi thủ công sau
+ *       
+ *       **Field names ĐÚNG:**
+ *       - is_shuffle_questions (KHÔNG phải shuffle_questions)
+ *       - is_shuffle_options (KHÔNG phải shuffle_options)
+ *       - total_points (KHÔNG phải total_score)
+ *       
+ *       **Distributions explained:**
+ *       - category_id: Chọn câu hỏi từ danh mục nào
+ *       - question_type: Loại câu hỏi (MULTIPLE_CHOICE, TRUE_FALSE, ESSAY,...)
+ *       - difficulty_level: null → lấy mix, hoặc chỉ định EASY/MEDIUM/HARD
+ *       - quantity: Tổng số câu (= easy_count + medium_count + hard_count)
+ *       - easy_count, medium_count, hard_count: Số câu từng mức độ
+ *       - points_per_question: Điểm mỗi câu
+ *       - order_index: Thứ tự xuất hiện trong đề
+ *       
+ *       **Ví dụ distributions:**
+ *       - Distribution 1: 15 câu trắc nghiệm (6 dễ + 7 TB + 2 khó), 0.5đ/câu = 7.5đ
+ *       - Distribution 2: 1 câu tự luận khó, 2.5đ/câu = 2.5đ
+ *       → Tổng: 10 điểm
+ *       
+ *       **Sau khi tạo:**
+ *       - is_published = false (mặc định)
+ *       - Cần call PUT /exams/{id} với is_published: true để học sinh thấy
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -358,7 +430,28 @@ router.post("/", checkAuth, examsController.createExam);
  * @swagger
  * /api/v2/schools/exams/{id}:
  *   put:
- *     summary: Cập nhật đề thi
+ *     summary: Cập nhật thông tin đề thi
+ *     description: |
+ *       Sửa metadata của đề thi (tất cả fields đều optional).
+ *       
+ *       **Có thể update:**
+ *       - Thông tin cơ bản: title, description, instructions
+ *       - Cấu hình: duration, passing_score, total_points
+ *       - Thời gian: start_time, end_time
+ *       - Tùy chọn: is_shuffle_questions, is_shuffle_options, max_attempts
+ *       - Publish: is_published (true → học sinh thấy đề, false → ẩn)
+ *       
+ *       **KHÔNG update distributions ở đây:**
+ *       - Dùng PUT /exams/{id}/distributions để update phân bổ câu hỏi
+ *       
+ *       **Use case phổ biến:**
+ *       - Publish đề thi: { "is_published": true }
+ *       - Gia hạn thời gian: { "end_time": "2024-12-31T23:59:59Z" }
+ *       - Sửa điểm: { "total_points": 12, "passing_score": 7 }
+ *       
+ *       **Lưu ý:**
+ *       - Chỉ gửi fields cần update (không cần gửi tất cả)
+ *       - Nếu đã có học sinh làm bài, cẩn thận khi sửa total_points
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -443,7 +536,25 @@ router.put("/:id", checkAuth, examsController.updateExam);
  * @swagger
  * /api/v2/schools/exams/{id}:
  *   delete:
- *     summary: Xóa đề thi
+ *     summary: Xóa đề thi (nếu chưa có học sinh thi)
+ *     description: |
+ *       Xóa vĩnh viễn đề thi và các dữ liệu liên quan.
+ *       
+ *       **Xóa cascade:**
+ *       - exam_questions (liên kết câu hỏi với đề)
+ *       - exam_question_distributions (phân bổ)
+ *       
+ *       **KHÔNG xóa được nếu:**
+ *       - Đã có học sinh làm bài (tồn tại student_exam_attempts)
+ *       → Trả về lỗi 400: "Cannot delete exam with existing attempts"
+ *       
+ *       **Giải pháp thay thế:**
+ *       - Thay vì xóa, nên set is_published = false để ẩn đề
+ *       - Hoặc thêm field is_deleted = true (soft delete)
+ *       
+ *       **Use case:**
+ *       - Xóa đề thi tạo nhầm (chưa ai làm)
+ *       - Dọn dẹp đề thi test/draft
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -476,7 +587,28 @@ router.delete("/:id", checkAuth, examsController.deleteExam);
  * @swagger
  * /api/v2/schools/exams/{id}/distributions:
  *   put:
- *     summary: Cập nhật phân bổ câu hỏi cho đề thi
+ *     summary: Cập nhật cấu hình phân bổ câu hỏi (distributions)
+ *     description: |
+ *       Sửa hoặc thay thế toàn bộ distributions của đề thi.
+ *       
+ *       **Cách hoạt động:**
+ *       - Xóa tất cả distributions cũ
+ *       - Tạo mới theo data gửi lên
+ *       - Re-generate câu hỏi (nếu cần)
+ *       
+ *       **Khi nào dùng API này:**
+ *       - Thay đổi số lượng câu hỏi theo category
+ *       - Điều chỉnh tỷ lệ dễ/TB/khó
+ *       - Thêm/bớt distributions
+ *       
+ *       **Ví dụ use case:**
+ *       - Ban đầu: 10 câu Toán + 10 câu Lý
+ *       - Update thành: 15 câu Toán + 5 câu Lý + 5 câu Hóa
+ *       
+ *       **Lưu ý:**
+ *       - API này chỉ update cấu hình, KHÔNG generate câu hỏi
+ *       - Sau khi update, cần call POST /exams/{id}/generate-questions
+ *       - Hoặc đợi học sinh start exam (auto generate)
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []
@@ -556,7 +688,49 @@ router.put("/:id/distributions", checkAuth, examsController.updateExamDistributi
  * @swagger
  * /api/v2/schools/exams/{id}/generate-questions:
  *   post:
- *     summary: Tạo câu hỏi ngẫu nhiên cho đề thi theo phân bổ
+ *     summary: Random câu hỏi ngay lập tức theo distributions (admin preview)
+ *     description: |
+ *       Generate câu hỏi ngẫu nhiên từ database theo cấu hình distributions.
+ *       
+ *       **Khi nào cần dùng:**
+ *       - Preview đề thi trước khi publish
+ *       - Kiểm tra xem có đủ câu hỏi trong DB không
+ *       - Tạo template câu hỏi cố định (không random mỗi lần thi)
+ *       
+ *       **Lưu ý QUAN TRỌNG:**
+ *       - Học sinh start exam → Hệ thống TỰ ĐỘNG generate (không cần API này)
+ *       - API này chỉ dành cho admin muốn:
+ *         + Xem trước đề thi
+ *         + Tạo đề thi cố định (tất cả học sinh làm cùng câu hỏi)
+ *       
+ *       **Quy trình:**
+ *       1. Đọc distributions của đề thi
+ *       2. Random câu hỏi từ DB theo:
+ *          - category_id
+ *          - question_type
+ *          - difficulty_level
+ *          - quantity (easy_count, medium_count, hard_count)
+ *       3. Lưu vào bảng exam_questions
+ *       4. Update usage_count của câu hỏi
+ *       
+ *       **Response:**
+ *       - total_questions: Tổng số câu đã generate
+ *       - breakdown: Chi tiết số câu theo category và độ khó
+ *       
+ *       **Lỗi có thể gặp:**
+ *       - "No distributions found": Chưa cấu hình distributions
+ *       - "Not enough questions": Không đủ câu hỏi trong DB
+ *       
+ *       **Ví dụ breakdown:**
+ *       ```json
+ *       {
+ *         "total_questions": 16,
+ *         "breakdown": [
+ *           { "category_id": "cat-123", "easy": 6, "medium": 7, "hard": 2 },
+ *           { "category_id": "cat-456", "easy": 0, "medium": 0, "hard": 1 }
+ *         ]
+ *       }
+ *       ```
  *     tags: [V2 - Schools - Exams]
  *     security:
  *       - bearerAuth: []

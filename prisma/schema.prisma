@@ -281,6 +281,175 @@ model career_categories {
   updated_at DateTime? @default(now()) @db.Timestamp(0)
 }
 
+model question_categories {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name        String    @db.VarChar(255)
+  description String?   @db.Text
+  parent_id   String?   @db.VarChar(36)
+  order_index Int?
+  created_by  String?   @db.VarChar(36)
+  is_active   Boolean?  @default(true)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([parent_id], map: "idx_parent_id")
+  @@index([created_by], map: "idx_created_by")
+  @@index([is_active], map: "idx_is_active")
+}
+
+model questions {
+  id                  String              @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  category_id         String?             @db.VarChar(36)
+  career_criteria_id  String?             @db.VarChar(36)
+  question_type       question_type?
+  difficulty_level    question_difficulty?
+  content             String              @db.Text
+  options             Json?
+  correct_answer      String?             @db.Text
+  explanation         String?             @db.Text
+  points              Decimal?            @default(1) @db.Decimal(5, 2)
+  time_limit          Int?
+  metadata            Json?
+  tags                String?             @db.VarChar(500)
+  usage_count         Int?                @default(0)
+  created_by          String?             @db.VarChar(36)
+  is_active           Boolean?            @default(true)
+  created_at          DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?           @default(now()) @db.Timestamp(0)
+
+  @@index([category_id], map: "idx_category_id")
+  @@index([career_criteria_id], map: "idx_career_criteria_id")
+  @@index([question_type], map: "idx_question_type")
+  @@index([difficulty_level], map: "idx_difficulty_level")
+  @@index([created_by], map: "idx_created_by")
+  @@index([is_active], map: "idx_is_active")
+  @@index([category_id, is_active], map: "idx_category_active")
+}
+
+model exams {
+  id                        String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  title                     String    @db.VarChar(500)
+  description               String?   @db.Text
+  exam_code                 String?   @unique @db.VarChar(50)
+  class_id                  String?   @db.VarChar(36)
+  exam_type                 exam_type? @default(PRACTICE)
+  duration_minutes          Int?
+  total_points              Decimal?  @db.Decimal(6, 2)
+  passing_score             Decimal?  @db.Decimal(6, 2)
+  instructions              String?   @db.Text
+  is_shuffle_questions      Boolean?  @default(false)
+  is_shuffle_options        Boolean?  @default(false)
+  show_results_immediately  Boolean?  @default(false)
+  max_attempts              Int?
+  start_time                DateTime? @db.DateTime(0)
+  end_time                  DateTime? @db.DateTime(0)
+  created_by                String?   @db.VarChar(36)
+  is_published              Boolean?  @default(false)
+  created_at                DateTime? @default(now()) @db.Timestamp(0)
+  updated_at                DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([exam_code], map: "idx_exam_code")
+  @@index([class_id], map: "idx_class_id")
+  @@index([exam_type], map: "idx_exam_type")
+  @@index([created_by], map: "idx_created_by")
+  @@index([is_published], map: "idx_is_published")
+}
+
+model exam_question_distributions {
+  id                  String              @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  exam_id             String              @db.VarChar(36)
+  category_id         String?             @db.VarChar(36)
+  career_criteria_id  String?             @db.VarChar(36)
+  question_type       question_type?
+  difficulty_level    question_difficulty?
+  quantity            Int
+  easy_count          Int?                @default(0)
+  medium_count        Int?                @default(0)
+  hard_count          Int?                @default(0)
+  points_per_question Decimal?            @default(1) @db.Decimal(5, 2)
+  order_index         Int?
+  created_at          DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?           @default(now()) @db.Timestamp(0)
+
+  @@index([exam_id], map: "idx_exam_id")
+  @@index([category_id], map: "idx_category_id")
+  @@index([career_criteria_id], map: "idx_career_criteria_id")
+  @@index([question_type], map: "idx_question_type")
+  @@index([difficulty_level], map: "idx_difficulty_level")
+  @@index([exam_id, order_index], map: "idx_exam_order")
+}
+
+model exam_questions {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  exam_id     String    @db.VarChar(36)
+  question_id String    @db.VarChar(36)
+  order_index Int
+  points      Decimal?  @default(1) @db.Decimal(5, 2)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([exam_id, question_id], map: "unique_exam_question")
+  @@index([exam_id], map: "idx_exam_id")
+  @@index([question_id], map: "idx_question_id")
+  @@index([exam_id, order_index], map: "idx_exam_order")
+}
+
+model student_exam_attempts {
+  id               String                       @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id       String                       @db.VarChar(36)
+  exam_id          String                       @db.VarChar(36)
+  snapshot_data    Json?
+  start_time       DateTime?                    @db.DateTime(0)
+  submit_time      DateTime?                    @db.DateTime(0)
+  duration_seconds Int?
+  total_score      Decimal?                     @default(0) @db.Decimal(6, 2)
+  max_score        Decimal?                     @db.Decimal(6, 2)
+  status           student_exam_attempt_status? @default(IN_PROGRESS)
+  is_auto_graded   Boolean?                     @default(false)
+  graded_by        String?                      @db.VarChar(36)
+  graded_at        DateTime?                    @db.DateTime(0)
+  created_at       DateTime?                    @default(now()) @db.Timestamp(0)
+  updated_at       DateTime?                    @default(now()) @db.Timestamp(0)
+
+  @@index([student_id], map: "idx_student_id")
+  @@index([exam_id], map: "idx_exam_id")
+  @@index([status], map: "idx_status")
+  @@index([student_id, exam_id], map: "idx_student_exam")
+}
+
+model student_answers {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  attempt_id  String    @db.VarChar(36)
+  question_id String    @db.VarChar(36)
+  answer_data Json?
+  is_correct  Boolean?
+  score       Decimal?  @default(0) @db.Decimal(5, 2)
+  max_score   Decimal?  @db.Decimal(5, 2)
+  feedback    String?   @db.Text
+  graded_by   String?   @db.VarChar(36)
+  graded_at   DateTime? @db.DateTime(0)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([attempt_id, question_id], map: "unique_attempt_question")
+  @@index([attempt_id], map: "idx_attempt_id")
+  @@index([question_id], map: "idx_question_id")
+  @@index([attempt_id, question_id], map: "idx_attempt_question")
+}
+
+model question_options {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  question_id String    @db.VarChar(36)
+  option_key  String    @db.VarChar(10)
+  option_text String    @db.Text
+  is_correct  Boolean   @default(false)
+  order_index Int?
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@index([question_id], map: "idx_question_id")
+  @@index([question_id, order_index], map: "idx_question_order")
+}
+
 enum auth_impl_user_student_sex {
   MALE   @map("1")
   FEMALE @map("2")
@@ -303,4 +472,113 @@ enum school_career_licenses_status {
   EXPIRED
   REVOKED
   PENDING_ACTIVATION
+}
+
+enum question_type {
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  SHORT_ANSWER
+  ESSAY
+}
+
+enum question_difficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum exam_type {
+  PRACTICE
+  QUIZ
+  MIDTERM
+  FINAL
+  MOCK_TEST
+}
+
+enum student_exam_attempt_status {
+  IN_PROGRESS
+  SUBMITTED
+  GRADED
+}
+
+// ============================================
+// CAREER EVALUATION SYSTEM
+// ============================================
+
+// Cấu hình trọng số tiêu chí theo lớp
+model class_criteria_weights {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  class_id    String    @db.VarChar(36)
+  career_id   String    @db.VarChar(36)
+  criteria_id String    @db.VarChar(36)
+  weight      Int       // Trọng số (0-100%), VD: 20 = 20%
+  created_by  String?   @db.VarChar(36)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([class_id, career_id, criteria_id], map: "unique_class_career_criteria")
+  @@index([class_id, career_id], map: "idx_class_career")
+  @@index([criteria_id], map: "idx_criteria")
+}
+
+// Ngưỡng đánh giá nghề nghiệp theo lớp
+model career_evaluation_thresholds {
+  id                  String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  class_id            String    @db.VarChar(36)
+  career_id           String    @db.VarChar(36)
+  
+  // Điểm tối đa = Số tiêu chí × 10
+  // VD: 5 tiêu chí → max_score = 50, 10 tiêu chí → max_score = 100
+  max_score           Float     // Tự động tính hoặc cấu hình
+  
+  // Ngưỡng phân loại (giá trị tuyệt đối)
+  very_suitable_min   Float     // VD: >= 40/50 hoặc >= 80/100
+  suitable_min        Float     // VD: >= 30/50 hoặc >= 60/100
+  // < suitable_min = Không phù hợp
+  
+  created_by          String?   @db.VarChar(36)
+  created_at          DateTime? @default(now()) @db.Timestamp(0)
+  updated_at          DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([class_id, career_id], map: "unique_class_career_threshold")
+  @@index([class_id], map: "idx_class")
+  @@index([career_id], map: "idx_career")
+}
+
+// Kết quả đánh giá nghề nghiệp của học sinh
+model student_career_evaluations {
+  id                String                   @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id        String                   @db.VarChar(36)
+  class_id          String                   @db.VarChar(36)
+  career_id         String                   @db.VarChar(36)
+  
+  // Điểm thô học sinh tự đánh giá
+  // Format: [{ criteria_id: "TC1", score: 8 }, { criteria_id: "TC2", score: 6 }, ...]
+  raw_scores        Json                     
+  
+  // Kết quả tính toán
+  weighted_score    Float                    // Điểm sau khi áp dụng trọng số
+  max_score         Float                    // Điểm tối đa (số tiêu chí × 10)
+  percentage        Float                    // % = (weighted_score / max_score) × 100
+  
+  // Kết quả đánh giá
+  evaluation_result evaluation_result_type?  @default(NOT_SUITABLE)
+  
+  // Metadata
+  notes             String?                  @db.Text
+  evaluated_at      DateTime?                @default(now()) @db.Timestamp(0)
+  created_at        DateTime?                @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?                @default(now()) @db.Timestamp(0)
+
+  @@unique([student_id, career_id, class_id], map: "unique_student_career_class")
+  @@index([student_id], map: "idx_student")
+  @@index([career_id], map: "idx_career_eval")
+  @@index([class_id, career_id], map: "idx_class_career_eval")
+  @@index([evaluation_result], map: "idx_eval_result")
+}
+
+enum evaluation_result_type {
+  VERY_SUITABLE    // Rất phù hợp
+  SUITABLE         // Phù hợp
+  NOT_SUITABLE     // Không phù hợp
 }

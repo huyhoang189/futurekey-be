@@ -36,7 +36,7 @@ const getAllQuestions = async ({ filters = {}, paging = {}, orderBy = {}, search
         where: { id: { in: categoryIds } },
         select: { id: true, name: true },
       }) : [],
-      criteriaIds.length > 0 ? prisma.career_criterias.findMany({
+      criteriaIds.length > 0 ? prisma.career_criteria.findMany({
         where: { id: { in: criteriaIds } },
         select: { id: true, name: true },
       }) : [],
@@ -69,7 +69,7 @@ const getQuestionById = async (id) => {
       where: { id: question.category_id },
       select: { id: true, name: true },
     }) : null,
-    question.career_criteria_id ? prisma.career_criterias.findUnique({
+    question.career_criteria_id ? prisma.career_criteria.findUnique({
       where: { id: question.career_criteria_id },
       select: { id: true, name: true },
     }) : null,
@@ -100,7 +100,7 @@ const createQuestion = async (questionData) => {
   }
 
   if (career_criteria_id) {
-    const criteria = await prisma.career_criterias.findUnique({ where: { id: career_criteria_id } });
+    const criteria = await prisma.career_criteria.findUnique({ where: { id: career_criteria_id } });
     if (!criteria) throw new Error("Career criteria not found");
   }
 
@@ -139,7 +139,7 @@ const updateQuestion = async (id, updateData) => {
   }
 
   if (career_criteria_id !== undefined && career_criteria_id !== null) {
-    const criteria = await prisma.career_criterias.findUnique({ where: { id: career_criteria_id } });
+    const criteria = await prisma.career_criteria.findUnique({ where: { id: career_criteria_id } });
     if (!criteria) throw new Error("Career criteria not found");
   }
 

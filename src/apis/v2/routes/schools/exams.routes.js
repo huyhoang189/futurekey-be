@@ -41,15 +41,15 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *         id:
  *           type: string
  *           example: exam-123-abc
- *         exam_code:
- *           type: string
- *           example: EXAM-2024-001
  *         title:
  *           type: string
  *           example: Đề thi giữa kỳ Toán học
  *         description:
  *           type: string
  *           example: Đề thi giữa kỳ môn Toán
+ *         class_id:
+ *           type: string
+ *           example: class-123-abc
  *         exam_type:
  *           type: string
  *           enum: [PRACTICE, QUIZ, MIDTERM, FINAL, MOCK_TEST]
@@ -60,13 +60,13 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *         passing_score:
  *           type: number
  *           example: 50
- *         total_score:
+ *         total_points:
  *           type: number
  *           example: 100
- *         shuffle_questions:
+ *         is_shuffle_questions:
  *           type: boolean
  *           example: true
- *         shuffle_options:
+ *         is_shuffle_options:
  *           type: boolean
  *           example: true
  *         show_results_immediately:
@@ -89,9 +89,6 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *         created_by:
  *           type: string
  *           example: user-123-abc
- *         is_active:
- *           type: boolean
- *           example: true
  *         distributions:
  *           type: array
  *           items:
@@ -222,36 +219,41 @@ router.get("/:id", checkAuth, examsController.getExamById);
  *             type: object
  *             required:
  *               - title
+ *               - class_id
  *               - exam_type
  *               - duration_minutes
- *               - total_score
+ *               - total_points
  *             properties:
- *               exam_code:
- *                 type: string
- *                 example: EXAM-2024-002
  *               title:
  *                 type: string
- *                 example: Đề thi cuối kỳ Toán học
+ *                 example: Kiểm tra Lập trình - Giữa kỳ 1
  *               description:
  *                 type: string
- *                 example: Đề thi cuối kỳ 1 môn Toán lớp 10
+ *                 example: Đề thi giữa kỳ 1 môn Lập trình căn bản
+ *               class_id:
+ *                 type: string
+ *                 description: ID lớp học (BẮT BUỘC)
+ *                 example: class-uuid-here
  *               exam_type:
  *                 type: string
  *                 enum: [PRACTICE, QUIZ, MIDTERM, FINAL, MOCK_TEST]
- *                 example: FINAL
+ *                 example: MIDTERM
  *               duration_minutes:
  *                 type: integer
  *                 example: 90
  *               passing_score:
  *                 type: number
- *                 example: 60
- *               total_score:
+ *                 example: 5
+ *               total_points:
  *                 type: number
- *                 example: 100
- *               shuffle_questions:
+ *                 example: 10
+ *               instructions:
+ *                 type: string
+ *                 example: "- Làm bài trong 90 phút\n- Không được sử dụng tài liệu"
+ *               is_shuffle_questions:
  *                 type: boolean
  *                 example: true
- *               shuffle_options:
+ *               is_shuffle_options:
  *                 type: boolean
  *                 example: true
  *               show_results_immediately:
@@ -260,20 +262,82 @@ router.get("/:id", checkAuth, examsController.getExamById);
  *               start_time:
  *                 type: string
  *                 format: date-time
- *                 example: 2024-06-15T08:00:00Z
+ *                 example: 2024-12-10T08:00:00.000Z
  *               end_time:
  *                 type: string
  *                 format: date-time
- *                 example: 2024-06-15T10:30:00Z
+ *                 example: 2024-12-15T17:00:00.000Z
  *               max_attempts:
  *                 type: integer
  *                 example: 1
  *               is_published:
  *                 type: boolean
  *                 example: false
- *               is_active:
- *                 type: boolean
- *                 example: true
+ *               distributions:
+ *                 type: array
+ *                 description: Cấu hình random câu hỏi (QUAN TRỌNG)
+ *                 items:
+ *                   type: object
+ *                   required:
+ *                     - category_id
+ *                     - quantity
+ *                     - points_per_question
+ *                     - order_index
+ *                   properties:
+ *                     category_id:
+ *                       type: string
+ *                       example: category-uuid-here
+ *                     career_criteria_id:
+ *                       type: string
+ *                       nullable: true
+ *                       example: null
+ *                     question_type:
+ *                       type: string
+ *                       enum: [MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY]
+ *                       example: MULTIPLE_CHOICE
+ *                     difficulty_level:
+ *                       type: string
+ *                       enum: [EASY, MEDIUM, HARD]
+ *                       nullable: true
+ *                       example: null
+ *                     quantity:
+ *                       type: integer
+ *                       example: 15
+ *                     easy_count:
+ *                       type: integer
+ *                       example: 6
+ *                     medium_count:
+ *                       type: integer
+ *                       example: 7
+ *                     hard_count:
+ *                       type: integer
+ *                       example: 2
+ *                     points_per_question:
+ *                       type: number
+ *                       example: 0.5
+ *                     order_index:
+ *                       type: integer
+ *                       example: 1
+ *                 example:
+ *                   - category_id: "cat-123-abc"
+ *                     career_criteria_id: null
+ *                     question_type: "MULTIPLE_CHOICE"
+ *                     difficulty_level: null
+ *                     quantity: 15
+ *                     easy_count: 6
+ *                     medium_count: 7
+ *                     hard_count: 2
+ *                     points_per_question: 0.5
+ *                     order_index: 1
+ *                   - category_id: "cat-456-def"
+ *                     question_type: "ESSAY"
+ *                     difficulty_level: "HARD"
+ *                     quantity: 1
+ *                     easy_count: 0
+ *                     medium_count: 0
+ *                     hard_count: 1
+ *                     points_per_question: 2.5
+ *                     order_index: 2
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -311,15 +375,15 @@ router.post("/", checkAuth, examsController.createExam);
  *           schema:
  *             type: object
  *             properties:
- *               exam_code:
- *                 type: string
- *                 example: EXAM-2024-002-UPDATED
  *               title:
  *                 type: string
  *                 example: Đề thi cuối kỳ Toán học (Cập nhật)
  *               description:
  *                 type: string
  *                 example: Đề thi cuối kỳ 1 môn Toán lớp 10 - Phiên bản mới
+ *               class_id:
+ *                 type: string
+ *                 example: class-456-xyz
  *               exam_type:
  *                 type: string
  *                 enum: [PRACTICE, QUIZ, MIDTERM, FINAL, MOCK_TEST]
@@ -329,14 +393,17 @@ router.post("/", checkAuth, examsController.createExam);
  *                 example: 120
  *               passing_score:
  *                 type: number
- *                 example: 70
- *               total_score:
+ *                 example: 7
+ *               total_points:
  *                 type: number
- *                 example: 120
- *               shuffle_questions:
+ *                 example: 12
+ *               instructions:
+ *                 type: string
+ *                 example: Hướng dẫn đã cập nhật
+ *               is_shuffle_questions:
  *                 type: boolean
  *                 example: false
- *               shuffle_options:
+ *               is_shuffle_options:
  *                 type: boolean
  *                 example: false
  *               show_results_immediately:
@@ -345,18 +412,15 @@ router.post("/", checkAuth, examsController.createExam);
  *               start_time:
  *                 type: string
  *                 format: date-time
- *                 example: 2024-06-20T08:00:00Z
+ *                 example: 2024-06-20T08:00:00.000Z
  *               end_time:
  *                 type: string
  *                 format: date-time
- *                 example: 2024-06-20T11:00:00Z
+ *                 example: 2024-06-20T11:00:00.000Z
  *               max_attempts:
  *                 type: integer
  *                 example: 3
  *               is_published:
- *                 type: boolean
- *                 example: true
- *               is_active:
  *                 type: boolean
  *                 example: true
  *     responses:

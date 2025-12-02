@@ -222,36 +222,34 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
  *           schema:
  *             type: object
  *             required:
- *               - question_text
+ *               - content
  *               - question_type
- *               - difficulty
- *               - max_score
+ *               - difficulty_level
  *               - category_id
- *               - career_criteria_id
  *             properties:
- *               question_text:
+ *               content:
  *                 type: string
  *                 example: Tính chu vi hình tròn có bán kính 10cm?
  *               question_type:
  *                 type: string
  *                 enum: [MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY]
  *                 example: MULTIPLE_CHOICE
- *               difficulty:
+ *               difficulty_level:
  *                 type: string
  *                 enum: [EASY, MEDIUM, HARD]
  *                 example: MEDIUM
- *               max_score:
+ *               points:
  *                 type: number
- *                 example: 15
+ *                 example: 1
  *               explanation:
  *                 type: string
  *                 example: Công thức C = 2πr
  *               category_id:
  *                 type: string
- *                 example: cat-hinhoc-123
+ *                 example: 494aa72f-cf32-11f0-afc5-2626c197d041
  *               career_criteria_id:
  *                 type: string
- *                 example: criteria-toantu-456
+ *                 example: 09352b7e-c88e-11f0-afc5-2626c197d041
  *               metadata:
  *                 type: object
  *                 description: |
@@ -268,18 +266,20 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
  *                   "difficulty_note": "Cần nhớ công thức chu vi hình tròn"
  *                 }
  *               tags:
- *                 type: array
- *                 items:
- *                   type: string
- *                 example: ["hình học", "chu vi", "hình tròn"]
+ *                 type: string
+ *                 example: hình học,chu vi,hình tròn
  *               is_active:
  *                 type: boolean
  *                 example: true
  *               options:
  *                 type: array
+ *                 description: Mảng các đáp án (cho MULTIPLE_CHOICE, TRUE_FALSE)
  *                 items:
  *                   type: object
  *                   properties:
+ *                     option_key:
+ *                       type: string
+ *                       example: A
  *                     option_text:
  *                       type: string
  *                       example: 62.8 cm

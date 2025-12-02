@@ -98,10 +98,12 @@ const createQuestion = async (req, res) => {
       explanation,
       points,
       time_limit,
+      tags,
+      metadata,
       is_active,
     } = req.body;
     
-    const created_by = req.user.id;
+    const created_by = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const question = await questionsService.createQuestion({
       category_id,
@@ -114,6 +116,8 @@ const createQuestion = async (req, res) => {
       explanation,
       points,
       time_limit,
+      tags,
+      metadata,
       created_by,
       is_active,
     });

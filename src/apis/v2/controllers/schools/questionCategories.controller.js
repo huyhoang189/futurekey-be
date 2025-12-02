@@ -77,7 +77,7 @@ const getQuestionCategoryById = async (req, res) => {
 const createQuestionCategory = async (req, res) => {
   try {
     const { name, description, is_active } = req.body;
-    const created_by = req.user.id;
+    const created_by = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const category = await questionCategoriesService.createQuestionCategory({
       name,

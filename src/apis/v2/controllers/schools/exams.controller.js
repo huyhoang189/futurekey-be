@@ -19,7 +19,7 @@ const getAllExams = async (req, res) => {
     } = req.query;
 
     const filters = {};
-    if (class_id) filters.class_id = parseInt(class_id);
+    if (class_id) filters.class_id = class_id;
     if (exam_type) filters.exam_type = exam_type;
     if (is_published !== undefined) filters.is_published = is_published === 'true';
 
@@ -60,7 +60,7 @@ const getAllExams = async (req, res) => {
 const getExamById = async (req, res) => {
   try {
     const { id } = req.params;
-    const exam = await examsService.getExamById(parseInt(id));
+    const exam = await examsService.getExamById(id);
 
     return res.status(200).json({
       success: true,
@@ -102,7 +102,7 @@ const createExam = async (req, res) => {
       distributions,
     } = req.body;
 
-    const created_by = req.user.id;
+    const created_by = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const exam = await examsService.createExam({
       title,
@@ -164,7 +164,7 @@ const updateExam = async (req, res) => {
       is_published,
     } = req.body;
 
-    const exam = await examsService.updateExam(parseInt(id), {
+    const exam = await examsService.updateExam(id, {
       title,
       description,
       class_id,
@@ -204,7 +204,7 @@ const updateExam = async (req, res) => {
 const deleteExam = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await examsService.deleteExam(parseInt(id));
+    const result = await examsService.deleteExam(id);
 
     return res.status(200).json({
       success: true,
@@ -230,7 +230,7 @@ const updateExamDistributions = async (req, res) => {
     const { id } = req.params;
     const { distributions } = req.body;
 
-    const result = await examsService.updateExamDistributions(parseInt(id), distributions);
+    const result = await examsService.updateExamDistributions(id, distributions);
 
     return res.status(200).json({
       success: true,
@@ -254,7 +254,7 @@ const updateExamDistributions = async (req, res) => {
 const generateExamQuestions = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await examsService.generateExamQuestions(parseInt(id));
+    const result = await examsService.generateExamQuestions(id);
 
     return res.status(200).json({
       success: true,

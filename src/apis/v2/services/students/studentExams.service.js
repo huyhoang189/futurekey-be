@@ -154,9 +154,12 @@ const generateExamForStudent = async (examId, studentId) => {
             points: dist.points_per_question,
             content: q.content,
             question_type: q.question_type,
+            explanation: q.explanation,
+            correct_answer: q.correct_answer,
             options: shuffledOptions.map(opt => ({
               key: opt.option_key,
               text: opt.option_text,
+              is_correct: opt.is_correct,
             })),
           };
         })
@@ -202,9 +205,12 @@ const generateExamForStudent = async (examId, studentId) => {
         points: eq.points,
         content: q.content,
         question_type: q.question_type,
+        explanation: q.explanation,
+        correct_answer: q.correct_answer,
         options: shuffledOptions.map(opt => ({
           key: opt.option_key,
           text: opt.option_text,
+          is_correct: opt.is_correct,
         })),
       });
 
@@ -382,19 +388,17 @@ const autoGradeExam = async (attemptId) => {
     // Chỉ chấm tự động trắc nghiệm
     if (['MULTIPLE_CHOICE', 'TRUE_FALSE'].includes(question.question_type)) {
       if (question.question_type === 'TRUE_FALSE') {
-        // TRUE_FALSE: so sánh với metadata
-        const correctAnswer = question.metadata?.correct_answer;
+        // TRUE_FALSE: lấy đáp án từ snapshot (đã lưu trong correct_answer)
+        const correctAnswer = snapshotQuestion?.correct_answer;
         const studentAnswer = answer.answer_data?.value;
         isCorrect = correctAnswer === studentAnswer;
       } else if (question.question_type === 'MULTIPLE_CHOICE') {
-        // MULTIPLE_CHOICE: lấy đáp án từ question_options
-        const options = await prisma.question_options.findMany({
-          where: { question_id: question.id },
-        });
+        // MULTIPLE_CHOICE: lấy đáp án từ snapshot (đã lưu is_correct trong options)
+        const snapshotOptions = snapshotQuestion?.options || [];
 
-        const correctOptions = options
+        const correctOptions = snapshotOptions
           .filter(opt => opt.is_correct)
-          .map(opt => opt.option_key)
+          .map(opt => opt.key)
           .sort();
 
         const studentSelected = (answer.answer_data?.selected || []).sort();

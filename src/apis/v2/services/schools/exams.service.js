@@ -35,7 +35,7 @@ const getAllExams = async ({ filters = {}, paging = {}, orderBy = {}, search = '
     const creatorIds = [...new Set(data.map(e => e.created_by).filter(Boolean))];
 
     const [classes, creators] = await Promise.all([
-      classIds.length > 0 ? prisma.class.findMany({
+      classIds.length > 0 ? prisma.classes.findMany({
         where: { id: { in: classIds } },
         select: { id: true, name: true },
       }) : [],
@@ -78,7 +78,7 @@ const getExamById = async (id) => {
 
   // Join with related data
   const [classInfo, creator, distributions, examQuestions] = await Promise.all([
-    exam.class_id ? prisma.class.findUnique({
+    exam.class_id ? prisma.classes.findUnique({
       where: { id: exam.class_id },
       select: { id: true, name: true },
     }) : null,
@@ -128,7 +128,7 @@ const createExam = async (examData) => {
   } = examData;
 
   // Validate class
-  const classInfo = await prisma.class.findUnique({
+  const classInfo = await prisma.classes.findUnique({
     where: { id: class_id },
   });
 
@@ -169,7 +169,11 @@ const createExam = async (examData) => {
           question_type: dist.question_type,
           difficulty_level: dist.difficulty_level,
           quantity: dist.quantity,
+          easy_count: dist.easy_count || 0,
+          medium_count: dist.medium_count || 0,
+          hard_count: dist.hard_count || 0,
           points_per_question: dist.points_per_question,
+          order_index: dist.order_index,
         })),
       });
     }
@@ -213,7 +217,7 @@ const updateExam = async (id, updateData) => {
 
   // Validate class if being updated
   if (class_id !== undefined && class_id !== null) {
-    const classInfo = await prisma.class.findUnique({
+    const classInfo = await prisma.classes.findUnique({
       where: { id: class_id },
     });
 

@@ -10,7 +10,7 @@ const studentExamsService = require("../../services/students/studentExams.servic
 const startExam = async (req, res) => {
   try {
     const { examId } = req.params;
-    const studentId = req.user.id;
+    const studentId = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const result = await studentExamsService.generateExamForStudent(examId, studentId);
 
@@ -144,7 +144,7 @@ const gradeEssayQuestion = async (req, res) => {
   try {
     const { answerId } = req.params;
     const { score, feedback } = req.body;
-    const gradedBy = req.user.id;
+    const gradedBy = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const result = await studentExamsService.gradeEssayQuestion(answerId, score, feedback, gradedBy);
 

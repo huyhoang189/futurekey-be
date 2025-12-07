@@ -2,17 +2,47 @@ const studentExamsService = require("../../services/students/studentExams.servic
 
 /**
  * @swagger
- * /api/v1/student/exams/{examId}/start:
+ * /api/v2/students/exams/start:
  *   post:
- *     tags: [Student Exams]
+ *     tags: [V2 - Students - Exams]
  *     summary: Bắt đầu làm bài thi
+ *     description: |
+ *       **Flow mới (không còn bảng exams):**
+ *       - Học sinh chọn loại bài thi: COMPREHENSIVE (tổng hợp) hoặc CRITERIA_SPECIFIC (theo tiêu chí)
+ *       - Hệ thống random câu hỏi từ ngân hàng theo exam_config
+ *       - Lưu snapshot_data (câu hỏi + đáp án đúng) vào student_exam_attempts
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - exam_type
+ *               - exam_config_id
+ *             properties:
+ *               exam_type:
+ *                 type: string
+ *                 enum: [COMPREHENSIVE, CRITERIA_SPECIFIC]
+ *                 example: COMPREHENSIVE
+ *               exam_config_id:
+ *                 type: string
+ *                 example: config-123-abc
+ *               career_criteria_id:
+ *                 type: string
+ *                 example: criteria-456-def
+ *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC
  */
 const startExam = async (req, res) => {
   try {
-    const { examId } = req.params;
-    const studentId = req.userSession.sub; // JWT payload sử dụng 'sub' field
+    const { exam_type, career_criteria_id } = req.body;
+    const student_id = req.userSession.sub;
 
-    const result = await studentExamsService.generateExamForStudent(examId, studentId);
+    const result = await studentExamsService.startExam({
+      exam_type,
+      career_criteria_id,
+      student_id,
+    });
 
     return res.status(200).json({
       success: true,
@@ -27,25 +57,27 @@ const startExam = async (req, res) => {
 };
 
 /**
- * @swagger
- * /api/v1/student/exams/attempts/{attemptId}/answers:
- *   post:
- *     tags: [Student Exams]
- *     summary: Lưu câu trả lời (auto-save)
+ * Get student's exam attempts
  */
-const saveAnswer = async (req, res) => {
+const getMyAttempts = async (req, res) => {
   try {
-    const { attemptId } = req.params;
-    const { question_id, answer_data } = req.body;
+    const student_id = req.userSession.sub;
+    const { exam_type, career_criteria_id, page, limit } = req.query;
 
-    const answer = await studentExamsService.saveStudentAnswer(attemptId, question_id, answer_data);
+    const result = await studentExamsService.getStudentExamAttempts({
+      student_id,
+      exam_type,
+      career_criteria_id,
+      page: parseInt(page) || 1,
+      limit: parseInt(limit) || 10,
+    });
 
     return res.status(200).json({
       success: true,
-      data: answer,
+      ...result,
     });
   } catch (error) {
-    return res.status(error.message.includes("not found") ? 404 : 400).json({
+    return res.status(500).json({
       success: false,
       message: error.message,
     });
@@ -53,17 +85,73 @@ const saveAnswer = async (req, res) => {
 };
 
 /**
+ * Get attempt details
+ */
+const getAttemptDetails = async (req, res) => {
+  try {
+    const { attemptId } = req.params;
+    const student_id = req.userSession.sub;
+
+    const result = await studentExamsService.getAttemptDetails(attemptId, student_id);
+
+    return res.status(200).json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    return res.status(error.message.includes("not found") ? 404 : 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+/**
+ * @deprecated - Save answer không cần thiết với snapshot approach
+ */
+const saveAnswer = async (req, res) => {
+  return res.status(400).json({
+    success: false,
+    message: "This API is deprecated. Submit all answers at once using /submit endpoint",
+  });
+};
+
+/**
  * @swagger
- * /api/v1/student/exams/attempts/{attemptId}/submit:
+ * /api/v2/students/exams/attempts/{attemptId}/submit:
  *   post:
- *     tags: [Student Exams]
+ *     tags: [V2 - Students - Exams]
  *     summary: Nộp bài thi
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - answers
+ *             properties:
+ *               answers:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *                   properties:
+ *                     question_id:
+ *                       type: string
+ *                     answer_data:
+ *                       type: string
  */
 const submitExam = async (req, res) => {
   try {
     const { attemptId } = req.params;
+    const { answers } = req.body;
+    const student_id = req.userSession.sub;
 
-    const result = await studentExamsService.submitExam(attemptId);
+    const result = await studentExamsService.submitExam({
+      attempt_id: attemptId,
+      answers,
+      student_id,
+    });
 
     return res.status(200).json({
       success: true,
@@ -162,9 +250,11 @@ const gradeEssayQuestion = async (req, res) => {
 
 module.exports = {
   startExam,
-  saveAnswer,
   submitExam,
-  getExamResults,
+  getMyAttempts,
+  getAttemptDetails,
+  saveAnswer, // deprecated
+  getExamResults, // giữ lại cho compatibility
   getExamsNeedGrading,
   gradeEssayQuestion,
 };

@@ -1,13 +1,13 @@
 const express = require("express");
 const router = express.Router();
-const questionCategoriesController = require("../../controllers/schools/questionCategories.controller");
+const questionCategoriesController = require("../../controllers/question-manage/questionCategories.controller");
 const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
  * tags:
- *   name: V2 - Schools - Question Categories
- *   description: API quản lý danh mục câu hỏi
+ *   name: V1 - Question Categories
+ *   description: API quản lý danh mục câu hỏi (không phân cấp)
  */
 
 /**
@@ -22,22 +22,16 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *           example: cat-123-abc
  *         name:
  *           type: string
- *           example: Đại số
+ *           example: I. Câu hỏi tự luận cá nhân (Khám phá nhận thức & giá trị)
  *         description:
  *           type: string
- *           example: Danh mục câu hỏi về đại số
- *         parent_id:
- *           type: string
- *           example: cat-parent-123
+ *           example: Các câu hỏi giúp học sinh tự luận, khám phá và nhận thức về bản thân
  *         order_index:
  *           type: integer
  *           example: 1
  *         created_by:
  *           type: string
  *           example: user-123-abc
- *         is_active:
- *           type: boolean
- *           example: true
  *         created_at:
  *           type: string
  *           format: date-time
@@ -48,10 +42,17 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
- * /api/v2/schools/question-categories:
+ * /api/v1/question-manage/question-categories:
  *   get:
  *     summary: Lấy danh sách danh mục câu hỏi
- *     tags: [V2 - Schools - Question Categories]
+ *     description: |
+ *       Lấy tất cả question categories với pagination.
+ *       
+ *       **Lưu ý:**
+ *       - Danh mục KHÔNG phân cấp (flat structure)
+ *       - order_index xác định thứ tự hiển thị trong đề thi
+ *       - VD: I. Câu hỏi tự luận → II. Khai thác sở thích → III. Định hướng nghề nghiệp
+ *     tags: [V1 - Question Categories]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -69,12 +70,7 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *         name: search
  *         schema:
  *           type: string
- *         description: Tìm kiếm theo tên
- *       - in: query
- *         name: is_active
- *         schema:
- *           type: boolean
- *         description: Lọc theo trạng thái
+ *         description: Tìm kiếm theo tên danh mục
  *     responses:
  *       200:
  *         description: Thành công
@@ -95,22 +91,21 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *                   properties:
  *                     total:
  *                       type: integer
- *                       example: 50
- *                     skip:
+ *                     page:
  *                       type: integer
- *                       example: 0
  *                     limit:
  *                       type: integer
- *                       example: 10
+ *                     totalPages:
+ *                       type: integer
  */
-router.get("/", checkAuth, questionCategoriesController.getAllQuestionCategories);
+router.get("/", checkAuth, questionCategoriesController.getAllCategories);
 
 /**
  * @swagger
- * /api/v2/schools/question-categories/{id}:
+ * /api/v1/question-manage/question-categories/{id}:
  *   get:
- *     summary: Lấy danh mục câu hỏi theo ID
- *     tags: [V2 - Schools - Question Categories]
+ *     summary: Lấy chi tiết danh mục theo ID
+ *     tags: [V1 - Question Categories]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -135,14 +130,21 @@ router.get("/", checkAuth, questionCategoriesController.getAllQuestionCategories
  *       404:
  *         description: Không tìm thấy
  */
-router.get("/:id", checkAuth, questionCategoriesController.getQuestionCategoryById);
+router.get("/:id", checkAuth, questionCategoriesController.getCategoryById);
 
 /**
  * @swagger
- * /api/v2/schools/question-categories:
+ * /api/v1/question-manage/question-categories:
  *   post:
  *     summary: Tạo danh mục câu hỏi mới
- *     tags: [V2 - Schools - Question Categories]
+ *     description: |
+ *       Tạo danh mục để phân loại câu hỏi theo phần trong đề thi.
+ *       
+ *       **Ví dụ danh mục:**
+ *       - I. Câu hỏi tự luận cá nhân (order_index: 1)
+ *       - II. Khai thác sở thích – giá trị cá nhân (order_index: 2)
+ *       - III. Câu hỏi định hướng nghề nghiệp (order_index: 3)
+ *     tags: [V1 - Question Categories]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -156,19 +158,14 @@ router.get("/:id", checkAuth, questionCategoriesController.getQuestionCategoryBy
  *             properties:
  *               name:
  *                 type: string
- *                 example: Hình học
+ *                 example: I. Câu hỏi tự luận cá nhân (Khám phá nhận thức & giá trị)
  *               description:
  *                 type: string
- *                 example: Danh mục câu hỏi hình học
- *               parent_id:
- *                 type: string
- *                 example: cat-parent-123
+ *                 example: Các câu hỏi giúp học sinh tự luận, khám phá và nhận thức về bản thân, giá trị cá nhân
  *               order_index:
  *                 type: integer
- *                 example: 2
- *               is_active:
- *                 type: boolean
- *                 example: true
+ *                 example: 1
+ *                 description: Thứ tự hiển thị trong đề thi
  *     responses:
  *       201:
  *         description: Tạo thành công
@@ -183,14 +180,14 @@ router.get("/:id", checkAuth, questionCategoriesController.getQuestionCategoryBy
  *                 data:
  *                   $ref: '#/components/schemas/QuestionCategory'
  */
-router.post("/", checkAuth, questionCategoriesController.createQuestionCategory);
+router.post("/", checkAuth, questionCategoriesController.createCategory);
 
 /**
  * @swagger
- * /api/v2/schools/question-categories/{id}:
+ * /api/v1/question-manage/question-categories/{id}:
  *   put:
  *     summary: Cập nhật danh mục câu hỏi
- *     tags: [V2 - Schools - Question Categories]
+ *     tags: [V1 - Question Categories]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -208,19 +205,12 @@ router.post("/", checkAuth, questionCategoriesController.createQuestionCategory)
  *             properties:
  *               name:
  *                 type: string
- *                 example: Hình học không gian
+ *                 example: I. Câu hỏi tự luận cá nhân (Khám phá nhận thức & giá trị) - Updated
  *               description:
  *                 type: string
- *                 example: Câu hỏi về hình học không gian
- *               parent_id:
- *                 type: string
- *                 example: cat-parent-456
  *               order_index:
  *                 type: integer
- *                 example: 3
- *               is_active:
- *                 type: boolean
- *                 example: false
+ *                 example: 2
  *     responses:
  *       200:
  *         description: Cập nhật thành công
@@ -235,14 +225,20 @@ router.post("/", checkAuth, questionCategoriesController.createQuestionCategory)
  *                 data:
  *                   $ref: '#/components/schemas/QuestionCategory'
  */
-router.put("/:id", checkAuth, questionCategoriesController.updateQuestionCategory);
+router.put("/:id", checkAuth, questionCategoriesController.updateCategory);
 
 /**
  * @swagger
- * /api/v2/schools/question-categories/{id}:
+ * /api/v1/question-manage/question-categories/{id}:
  *   delete:
  *     summary: Xóa danh mục câu hỏi
- *     tags: [V2 - Schools - Question Categories]
+ *     description: |
+ *       Xóa danh mục (chỉ nếu chưa có câu hỏi hoặc cấu hình đề thi sử dụng).
+ *       
+ *       **KHÔNG xóa được nếu:**
+ *       - Có câu hỏi thuộc danh mục này (questions.category_id)
+ *       - Có cấu hình đề thi sử dụng (exam_config_distributions.category_id)
+ *     tags: [V1 - Question Categories]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -268,7 +264,6 @@ router.put("/:id", checkAuth, questionCategoriesController.updateQuestionCategor
  *       400:
  *         description: Không thể xóa (đang được sử dụng)
  */
-router.delete("/:id", checkAuth, questionCategoriesController.deleteQuestionCategory);
+router.delete("/:id", checkAuth, questionCategoriesController.deleteCategory);
 
 module.exports = router;
-

@@ -96,54 +96,91 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
- * /api/v2/students/student-exams/{examId}/start:
+ * /api/v2/students/student-exams/start:
  *   post:
- *     summary: Bắt đầu bài thi - Random câu hỏi và tạo snapshot
+ *     summary: Bắt đầu bài thi - Tự động tìm config và random câu hỏi
  *     description: |
  *       API quan trọng nhất - Tự động generate đề thi cá nhân cho học sinh.
  *       
+ *       **Mô hình mới (KHÔNG còn bảng exams):**
+ *       - Học sinh chỉ truyền exam_type + career_criteria_id (nếu có)
+ *       - Hệ thống TỰ ĐỘNG tìm exam_config phù hợp:
+ *         + COMPREHENSIVE: Tìm config duy nhất có exam_type_scope = COMPREHENSIVE
+ *         + CRITERIA_SPECIFIC: Tìm config theo career_criteria_id
+ *       - Random câu hỏi từ ngân hàng theo distributions
+ *       - Lưu snapshot để đề không đổi khi admin sửa DB
+ *       
  *       **Quy trình tự động:**
- *       1. **Validate**: Kiểm tra đề thi (published, thời gian, số lần thi)
- *       2. **Random câu hỏi**: Lấy ngẫu nhiên từ DB theo distributions
- *          - Priority: usage_count thấp → đề thi cân bằng
- *          - Phân bổ theo: category, difficulty (EASY/MEDIUM/HARD), question_type
- *       3. **Shuffle**: Xáo trộn câu hỏi và đáp án (nếu cấu hình)
- *       4. **Snapshot**: Lưu toàn bộ câu hỏi + đáp án vào attempt.snapshot_data
- *          - BAO GỔM: content, options, correct_answer, is_correct, explanation
+ *       1. **Tìm exam_config**:
+ *          - COMPREHENSIVE: WHERE exam_type_scope = 'COMPREHENSIVE' AND career_criteria_id IS NULL
+ *          - CRITERIA_SPECIFIC: WHERE exam_type_scope = 'CRITERIA_SPECIFIC' AND career_criteria_id = ?
+ *       
+ *       2. **Lấy distributions**: Query exam_config_distributions theo config_id
+ *       
+ *       3. **Random câu hỏi** theo từng distribution:
+ *          - WHERE category_id = ? AND difficulty_level = ? AND is_active = true
+ *          - ORDER BY usage_count ASC (ưu tiên câu ít dùng)
+ *          - LIMIT theo quantity (easy_count, medium_count, hard_count)
+ *       
+ *       4. **Shuffle**: Xáo trộn câu hỏi và đáp án
+ *       
+ *       5. **Snapshot**: Lưu toàn bộ vào attempt.snapshot_data
+ *          - BAO GỔM: content, options, correct_answer, explanation
  *          - Mục đích: Đề không thay đổi dù admin sửa DB sau này
- *       5. **Update usage_count**: Tăng đếm số lần câu hỏi được dùng
- *       6. **Create attempt**: Trạng thái IN_PROGRESS, bắt đầu đếm giờ
+ *       
+ *       6. **Update usage_count**: Tăng đếm số lần câu hỏi được dùng
+ *       
+ *       7. **Create attempt**: Status = IN_PROGRESS
  *       
  *       **Nếu đã có attempt IN_PROGRESS:**
  *       - Không tạo mới, trả về attempt cũ (cho phép tiếp tục làm)
  *       
  *       **Validations:**
- *       - is_published = false → Lỗi "Exam is not published yet"
- *       - now < start_time → Lỗi "Exam has not started yet"
- *       - now > end_time → Lỗi "Exam has ended"
- *       - Đạt max_attempts → Lỗi "Maximum attempts reached"
- *       - Không đủ câu hỏi trong DB → Lỗi "Not enough questions"
+ *       - COMPREHENSIVE: Chỉ 1 config duy nhất, nếu không có → Lỗi "COMPREHENSIVE exam config not found"
+ *       - CRITERIA_SPECIFIC: Phải truyền career_criteria_id, không tìm thấy config → Lỗi "Exam config not found for criteria"
+ *       - Không đủ câu hỏi trong DB → Lỗi "Not enough questions in category X"
  *       
  *       **Response:**
- *       - attempt: Thông tin attempt (id, status, start_time, max_score,...)
+ *       - attempt: Thông tin attempt (id, status, exam_config_id, started_at,...)
  *       - questions: Mảng câu hỏi đầy đủ (content, options, points) đã shuffle
+ *       - config: Thông tin exam_config (time_limit_minutes, total_points, pass_score)
  *       
  *       **Lưu ý:**
  *       - Mỗi học sinh nhận đề KHÁC NHAU (random)
- *       - Đáp án đã được lưu trong snapshot (không phụ thuộc DB)
  *       - Questions trả về KHÔNG bao gồm correct_answer/is_correct (anti-cheat)
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
- *     parameters:
- *       - in: path
- *         name: examId
- *         required: true
- *         schema:
- *           type: string
- *         description: ID của đề thi
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - exam_type
+ *             properties:
+ *               exam_type:
+ *                 type: string
+ *                 enum: [COMPREHENSIVE, CRITERIA_SPECIFIC]
+ *                 example: COMPREHENSIVE
+ *                 description: Loại bài thi - COMPREHENSIVE (tổng hợp) hoặc CRITERIA_SPECIFIC (theo tiêu chí)
+ *               career_criteria_id:
+ *                 type: string
+ *                 example: 4f704084-c29a-11f0-afc5-2626c197d041
+ *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC, null nếu COMPREHENSIVE
+ *           examples:
+ *             comprehensive:
+ *               summary: Bài thi tổng hợp
+ *               value:
+ *                 exam_type: COMPREHENSIVE
+ *             criteriaSpecific:
+ *               summary: Bài thi theo tiêu chí
+ *               value:
+ *                 exam_type: CRITERIA_SPECIFIC
+ *                 career_criteria_id: 4f704084-c29a-11f0-afc5-2626c197d041
  *     responses:
- *       201:
+ *       200:
  *         description: Bắt đầu bài thi thành công
  *         content:
  *           application/json:
@@ -162,48 +199,49 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *                         id:
  *                           type: string
  *                           example: attempt-123-abc
- *                         exam_id:
+ *                         exam_config_id:
  *                           type: string
- *                           example: exam-123-abc
+ *                           example: config-123-abc
+ *                           description: Config được tìm tự động dựa vào exam_type
  *                         student_id:
  *                           type: string
  *                           example: student-123-abc
- *                         attempt_number:
- *                           type: integer
- *                           example: 1
+ *                         exam_type:
+ *                           type: string
+ *                           example: COMPREHENSIVE
+ *                         career_criteria_id:
+ *                           type: string
+ *                           example: null
  *                         status:
  *                           type: string
  *                           example: IN_PROGRESS
  *                         started_at:
  *                           type: string
  *                           format: date-time
- *                         duration_seconds:
- *                           type: integer
- *                           example: 3600
  *                         total_score:
  *                           type: number
- *                           example: 100
+ *                           example: 10
  *                     questions:
  *                       type: array
- *                       description: Danh sách câu hỏi đã shuffle (nếu cấu hình)
+ *                       description: Danh sách câu hỏi đã shuffle theo distributions
  *                       items:
  *                         type: object
  *                         properties:
  *                           id:
  *                             type: string
  *                             example: ques-456-def
- *                           question_text:
+ *                           content:
  *                             type: string
- *                             example: Tính diện tích hình vuông cạnh 5cm?
+ *                             example: Bạn thích làm việc độc lập hay theo nhóm?
  *                           question_type:
  *                             type: string
  *                             example: MULTIPLE_CHOICE
- *                           max_score:
+ *                           points:
  *                             type: number
- *                             example: 10
+ *                             example: 1
  *                           options:
  *                             type: array
- *                             description: Đáp án đã shuffle (nếu cấu hình)
+ *                             description: Đáp án đã shuffle
  *                             items:
  *                               type: object
  *                               properties:
@@ -212,14 +250,31 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *                                   example: opt-789-ghi
  *                                 option_text:
  *                                   type: string
- *                                   example: 25 cm²
+ *                                   example: Làm việc độc lập
  *                                 order_index:
  *                                   type: integer
  *                                   example: 1
+ *                     config:
+ *                       type: object
+ *                       properties:
+ *                         config_name:
+ *                           type: string
+ *                           example: Bài kiểm tra tổng hợp - Khám phá bản thân
+ *                         time_limit_minutes:
+ *                           type: integer
+ *                           example: 45
+ *                         total_points:
+ *                           type: number
+ *                           example: 10
+ *                         pass_score:
+ *                           type: number
+ *                           example: 5
  *       400:
- *         description: Đề thi chưa công bố, hết lượt thi, hoặc ngoài thời gian thi
+ *         description: Không tìm thấy config hoặc không đủ câu hỏi
+ *       404:
+ *         description: Exam config not found
  */
-router.post("/:examId/start", checkAuth, studentExamsController.startExam);
+router.post("/start", checkAuth, studentExamsController.startExam);
 
 /**
  * @swagger

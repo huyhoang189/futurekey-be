@@ -16,7 +16,6 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
     where: {
       class_id: classId,
       career_id: careerId,
-      is_active: true,
     },
     select: {
       career_criteria_id: true,
@@ -68,7 +67,7 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
   // Lấy ngưỡng đánh giá
   const threshold = await prisma.career_evaluation_thresholds.findUnique({
     where: {
-      unique_class_career_threshold: {
+      class_id_career_id: {
         class_id: classId,
         career_id: careerId,
       },
@@ -92,7 +91,7 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
   // Lưu kết quả
   const result = await prisma.student_career_evaluations.upsert({
     where: {
-      unique_student_career_class: {
+      student_id_career_id_class_id: {
         student_id: studentId,
         career_id: careerId,
         class_id: classId,
@@ -282,7 +281,6 @@ const configureEvaluationThresholds = async (classId, careerId, thresholds, crea
     where: {
       class_id: classId,
       career_id: careerId,
-      is_active: true,
     },
   });
 
@@ -294,7 +292,7 @@ const configureEvaluationThresholds = async (classId, careerId, thresholds, crea
 
   const result = await prisma.career_evaluation_thresholds.upsert({
     where: {
-      unique_class_career_threshold: {
+      class_id_career_id: {
         class_id: classId,
         career_id: careerId,
       },
@@ -324,7 +322,7 @@ const configureEvaluationThresholds = async (classId, careerId, thresholds, crea
 const getEvaluationThresholds = async (classId, careerId) => {
   const threshold = await prisma.career_evaluation_thresholds.findUnique({
     where: {
-      unique_class_career_threshold: {
+      class_id_career_id: {
         class_id: classId,
         career_id: careerId,
       },

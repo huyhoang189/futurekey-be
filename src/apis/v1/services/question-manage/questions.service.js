@@ -46,12 +46,12 @@ const getAllQuestions = async ({ filters = {}, paging = {}, orderBy = {}, search
       }) : [],
     ]);
 
-    const categoriesMap = Object.fromEntries(categories.map(c => [c.id, c]));
+    const categoryMap = Object.fromEntries(categories.map(c => [c.id, c]));
     const criteriaMap = Object.fromEntries(criteria.map(c => [c.id, c]));
     const creatorsMap = Object.fromEntries(creators.map(c => [c.id, c]));
 
     data.forEach(question => {
-      question.category = question.category_id ? categoriesMap[question.category_id] || null : null;
+      question.category = question.category_id ? categoryMap[question.category_id] || null : null;
       question.career_criteria = question.career_criteria_id ? criteriaMap[question.career_criteria_id] || null : null;
       question.creator = question.created_by ? creatorsMap[question.created_by] || null : null;
     });
@@ -96,7 +96,7 @@ const createQuestion = async (questionData) => {
 
   if (category_id) {
     const category = await prisma.question_categories.findUnique({ where: { id: category_id } });
-    if (!category) throw new Error("Category not found");
+    if (!category) throw new Error("Question category not found");
   }
 
   if (career_criteria_id) {
@@ -121,7 +121,17 @@ const createQuestion = async (questionData) => {
       });
     }
 
-    return question;
+    // Lấy lại question kèm options
+    const questionWithOptions = await tx.questions.findUnique({
+      where: { id: question.id },
+    });
+
+    const questionOptions = await tx.question_options.findMany({
+      where: { question_id: question.id },
+      orderBy: { order_index: 'asc' },
+    });
+
+    return { ...questionWithOptions, options: questionOptions };
   });
 
   return result;
@@ -135,7 +145,7 @@ const updateQuestion = async (id, updateData) => {
 
   if (category_id !== undefined && category_id !== null) {
     const category = await prisma.question_categories.findUnique({ where: { id: category_id } });
-    if (!category) throw new Error("Category not found");
+    if (!category) throw new Error("Question category not found");
   }
 
   if (career_criteria_id !== undefined && career_criteria_id !== null) {

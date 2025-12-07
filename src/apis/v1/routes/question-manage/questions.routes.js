@@ -1,12 +1,12 @@
 const express = require("express");
 const router = express.Router();
-const questionsController = require("../../controllers/schools/questions.controller");
+const questionsController = require("../../controllers/question-manage/questions.controller");
 const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
  * tags:
- *   name: V2 - Schools - Questions
+ *   name: V1 - Question Management - Questions
  *   description: API quản lý câu hỏi
  */
 
@@ -35,20 +35,20 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *         id:
  *           type: string
  *           example: ques-123-abc
- *         question_text:
+ *         content:
  *           type: string
  *           example: Tính diện tích hình vuông có cạnh 5cm?
  *         question_type:
  *           type: string
  *           enum: [MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY]
  *           example: MULTIPLE_CHOICE
- *         difficulty:
+ *         difficulty_level:
  *           type: string
  *           enum: [EASY, MEDIUM, HARD]
  *           example: EASY
- *         max_score:
+ *         points:
  *           type: number
- *           example: 10
+ *           example: 1
  *         explanation:
  *           type: string
  *           example: Công thức S = a²
@@ -62,8 +62,8 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *           type: object
  *           description: |
  *             Metadata linh hoạt tùy loại câu hỏi:
- *             - TRUE_FALSE: {"correct_answer": true/false}
- *             - MULTIPLE_CHOICE: Đáp án lưu trong question_options
+ *             - TRUE_FALSE: {"correct_answer": "TRUE" hoặc "FALSE"}
+ *             - MULTIPLE_CHOICE: Đáp án lưu trong question_options.is_correct
  *             - SHORT_ANSWER: {"correct_answer": "text", "case_sensitive": false}
  *             - ESSAY: {"min_words": 100, "max_words": 500, "grading_criteria": "..."}
  *             Có thể thêm: hint, time_limit, difficulty_note, reference_materials, v.v.
@@ -96,10 +96,10 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
- * /api/v2/schools/questions:
+ * /api/v1/question-manage/questions:
  *   get:
  *     summary: Lấy danh sách câu hỏi
- *     tags: [V2 - Schools - Questions]
+ *     tags: [V1 - Question Management - Questions]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -125,7 +125,7 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *           enum: [MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY]
  *         description: Lọc theo loại câu hỏi
  *       - in: query
- *         name: difficulty
+ *         name: difficulty_level
  *         schema:
  *           type: string
  *           enum: [EASY, MEDIUM, HARD]
@@ -177,10 +177,10 @@ router.get("/", checkAuth, questionsController.getAllQuestions);
 
 /**
  * @swagger
- * /api/v2/schools/questions/{id}:
+ * /api/v1/question-manage/questions/{id}:
  *   get:
  *     summary: Lấy câu hỏi theo ID
- *     tags: [V2 - Schools - Questions]
+ *     tags: [V1 - Question Management - Questions]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -209,10 +209,10 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
 
 /**
  * @swagger
- * /api/v2/schools/questions:
+ * /api/v1/question-manage/questions:
  *   post:
  *     summary: Tạo câu hỏi mới
- *     tags: [V2 - Schools - Questions]
+ *     tags: [V1 - Question Management - Questions]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -254,8 +254,8 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
  *                 type: object
  *                 description: |
  *                   Metadata linh hoạt cho từng loại câu hỏi:
- *                   - TRUE_FALSE: {"correct_answer": true}
- *                   - MULTIPLE_CHOICE: Đáp án được lưu trong bảng question_options
+ *                   - TRUE_FALSE: {"correct_answer": "TRUE" hoặc "FALSE"}
+ *                   - MULTIPLE_CHOICE: Đáp án được lưu trong bảng question_options (is_correct: true)
  *                   - SHORT_ANSWER: {"correct_answer": "62.8 cm", "case_sensitive": false}
  *                   - ESSAY: {"min_words": 100, "max_words": 500, "grading_criteria": "Đánh giá logic, ngữ pháp"}
  *                   Có thể thêm các trường: hint, time_limit, difficulty_note, explanation_video, reference_materials
@@ -320,10 +320,10 @@ router.post("/", checkAuth, questionsController.createQuestion);
 
 /**
  * @swagger
- * /api/v2/schools/questions/{id}:
+ * /api/v1/question-manage/questions/{id}:
  *   put:
  *     summary: Cập nhật câu hỏi
- *     tags: [V2 - Schools - Questions]
+ *     tags: [V1 - Question Management - Questions]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -339,20 +339,20 @@ router.post("/", checkAuth, questionsController.createQuestion);
  *           schema:
  *             type: object
  *             properties:
- *               question_text:
+ *               content:
  *                 type: string
  *                 example: Tính chu vi hình tròn có đường kính 20cm?
  *               question_type:
  *                 type: string
  *                 enum: [MULTIPLE_CHOICE, TRUE_FALSE, SHORT_ANSWER, ESSAY]
  *                 example: SHORT_ANSWER
- *               difficulty:
+ *               difficulty_level:
  *                 type: string
  *                 enum: [EASY, MEDIUM, HARD]
  *                 example: HARD
- *               max_score:
+ *               points:
  *                 type: number
- *                 example: 20
+ *                 example: 2
  *               explanation:
  *                 type: string
  *                 example: C = πd hoặc C = 2πr
@@ -366,8 +366,8 @@ router.post("/", checkAuth, questionsController.createQuestion);
  *                 type: object
  *                 description: |
  *                   Metadata linh hoạt cho từng loại câu hỏi:
- *                   - TRUE_FALSE: {"correct_answer": false}
- *                   - MULTIPLE_CHOICE: Đáp án được lưu trong bảng question_options
+ *                   - TRUE_FALSE: {"correct_answer": "TRUE" hoặc "FALSE"}
+ *                   - MULTIPLE_CHOICE: Đáp án được lưu trong bảng question_options (is_correct: true)
  *                   - SHORT_ANSWER: {"correct_answer": "62.8 cm", "case_sensitive": false, "accept_variations": ["~63", "20π"]}
  *                   - ESSAY: {"min_words": 150, "max_words": 800, "grading_criteria": "Đánh giá logic, độ sâu, trình bày"}
  *                   Các trường tùy chỉnh khác: hint, time_limit, reference_materials, difficulty_note
@@ -422,10 +422,10 @@ router.put("/:id", checkAuth, questionsController.updateQuestion);
 
 /**
  * @swagger
- * /api/v2/schools/questions/{id}:
+ * /api/v1/question-manage/questions/{id}:
  *   delete:
  *     summary: Xóa câu hỏi
- *     tags: [V2 - Schools - Questions]
+ *     tags: [V1 - Question Management - Questions]
  *     security:
  *       - bearerAuth: []
  *     parameters:

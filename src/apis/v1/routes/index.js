@@ -7,6 +7,8 @@ const systemAdminRoutes = require("./system-admin");
 const careersManageRoutes = require("./careers-manage");
 const schoolManageRoutes = require("./school-manage");
 const categoryRoutes = require("./category");
+
+const questionManageRoutes = require("./question-manage");
 const checkAuth = require("../../../middlewares/authentication/checkAuth");
 const checkAdminRole = require("../../../middlewares/authentication/checkAdmin");
 
@@ -15,5 +17,5 @@ router.use("/system-admin", checkAuth, checkAdminRole, systemAdminRoutes);
 router.use("/careers-manage", checkAuth, checkAdminRole, careersManageRoutes);
 router.use("/school-manage", checkAuth, checkAdminRole, schoolManageRoutes);
 router.use("/category", checkAuth, checkAdminRole, categoryRoutes);
-
+router.use("/question-manage", checkAuth, checkAdminRole, questionManageRoutes);
 module.exports = router;

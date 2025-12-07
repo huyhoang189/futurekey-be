@@ -1,4 +1,4 @@
-const questionsService = require("../../services/schools/questions.service");
+const questionsService = require("../../services/question-manage/questions.service");
 
 /**
  * @swagger
@@ -21,8 +21,8 @@ const getAllQuestions = async (req, res) => {
     } = req.query;
 
     const filters = {};
-    if (category_id) filters.category_id = parseInt(category_id);
-    if (career_criteria_id) filters.career_criteria_id = parseInt(career_criteria_id);
+    if (category_id) filters.category_id = category_id;
+    if (career_criteria_id) filters.career_criteria_id = career_criteria_id;
     if (question_type) filters.question_type = question_type;
     if (difficulty_level) filters.difficulty_level = difficulty_level;
     if (is_active !== undefined) filters.is_active = is_active === 'true';
@@ -94,7 +94,6 @@ const createQuestion = async (req, res) => {
       difficulty_level,
       content,
       options,
-      correct_answer,
       explanation,
       points,
       time_limit,
@@ -112,7 +111,6 @@ const createQuestion = async (req, res) => {
       difficulty_level,
       content,
       options,
-      correct_answer,
       explanation,
       points,
       time_limit,
@@ -151,7 +149,6 @@ const updateQuestion = async (req, res) => {
       difficulty_level,
       content,
       options,
-      correct_answer,
       explanation,
       points,
       time_limit,
@@ -165,7 +162,6 @@ const updateQuestion = async (req, res) => {
       difficulty_level,
       content,
       options,
-      correct_answer,
       explanation,
       points,
       time_limit,

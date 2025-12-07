@@ -1,366 +1,244 @@
 [
   {
-    "content": "Trong JavaScript, từ khóa nào được sử dụng để khai báo một biến không thể thay đổi giá trị?",
+    "content": "Hãy mô tả bản thân bạn trong 3 từ khóa và giải thích tại sao?",
+    "question_type": "ESSAY",
+    "difficulty_level": "EASY",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 5,
+    "explanation": "Câu hỏi giúp học sinh tự nhận thức về bản thân, khám phá điểm mạnh và đặc điểm cá nhân.",
+    "tags": "tự luận,nhận thức bản thân,giá trị cá nhân",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Khám phá nhận thức & giá trị"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Điều gì quan trọng nhất đối với bạn trong cuộc sống? (Gia đình, bạn bè, sự nghiệp, sức khỏe...)",
+    "question_type": "SHORT_ANSWER",
+    "difficulty_level": "EASY",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
+    "points": 3,
+    "explanation": "Câu hỏi giúp xác định giá trị sống cốt lõi của học sinh.",
+    "tags": "giá trị sống,ưu tiên cá nhân",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Khám phá giá trị"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Hãy chia sẻ một trải nghiệm khó khăn mà bạn đã vượt qua và bài học rút ra được.",
+    "question_type": "ESSAY",
+    "difficulty_level": "MEDIUM",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "points": 7,
+    "explanation": "Đánh giá khả năng phản tư và học hỏi từ kinh nghiệm cá nhân.",
+    "tags": "tự luận,trải nghiệm,tư duy phản biện",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Phát triển tư duy phản tư"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Bạn cảm thấy hứng thú với những hoạt động nào sau đây?",
     "question_type": "MULTIPLE_CHOICE",
     "difficulty_level": "EASY",
-    "category_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
-    "points": 1,
-    "explanation": "Từ khóa 'const' được sử dụng để khai báo hằng số, giá trị không thể thay đổi sau khi được gán.",
-    "tags": "javascript,biến,const",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 2,
+    "explanation": "Xác định sở thích và khuynh hướng nghề nghiệp của học sinh.",
+    "tags": "sở thích,đánh giá bản thân",
     "metadata": {
-      "subject": "Lập trình JavaScript",
-      "topic": "Biến và kiểu dữ liệu"
+      "category": "II. Khai thác sở thích",
+      "purpose": "Tự đánh giá"
     },
     "is_active": true,
     "options": [
       {
         "option_key": "A",
-        "option_text": "var",
+        "option_text": "Làm việc với máy tính, công nghệ",
         "is_correct": false,
         "order_index": 0
       },
       {
         "option_key": "B",
-        "option_text": "let",
+        "option_text": "Giao tiếp, làm việc với con người",
         "is_correct": false,
         "order_index": 1
       },
       {
         "option_key": "C",
-        "option_text": "const",
-        "is_correct": true,
+        "option_text": "Sáng tạo, nghệ thuật",
+        "is_correct": false,
         "order_index": 2
       },
       {
         "option_key": "D",
-        "option_text": "function",
+        "option_text": "Phân tích, nghiên cứu",
         "is_correct": false,
         "order_index": 3
       }
     ]
   },
   {
-    "content": "SQL là ngôn ngữ lập trình hướng đối tượng.",
+    "content": "Bạn thích làm việc một mình hay làm việc nhóm?",
     "question_type": "TRUE_FALSE",
     "difficulty_level": "EASY",
-    "category_id": "56d87ee2-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
     "points": 1,
-    "explanation": "SQL (Structured Query Language) là ngôn ngữ truy vấn cơ sở dữ liệu quan hệ, không phải ngôn ngữ lập trình hướng đối tượng.",
-    "tags": "sql,database,cơ bản",
+    "explanation": "Đánh giá phong cách làm việc cá nhân.",
+    "tags": "sở thích,phong cách làm việc",
     "metadata": {
-      "subject": "Cơ sở dữ liệu",
-      "topic": "SQL cơ bản",
-      "correct_answer": false
+      "category": "II. Khai thác sở thích",
+      "purpose": "Tự đánh giá phong cách"
     },
     "is_active": true,
     "options": [
       {
         "option_key": "TRUE",
-        "option_text": "Đúng",
+        "option_text": "Làm việc nhóm",
         "is_correct": false,
         "order_index": 0
       },
       {
         "option_key": "FALSE",
-        "option_text": "Sai",
-        "is_correct": true,
+        "option_text": "Làm việc một mình",
+        "is_correct": false,
         "order_index": 1
       }
     ]
   },
   {
-    "content": "Độ phức tạp thời gian của thuật toán Binary Search là gì?",
+    "content": "Hãy xếp hạng các giá trị sau theo mức độ quan trọng đối với bạn: Thu nhập cao, Công việc sáng tạo, Thời gian linh hoạt, An toàn công việc, Cơ hội thăng tiến.",
     "question_type": "SHORT_ANSWER",
     "difficulty_level": "MEDIUM",
-    "category_id": "6a2fdf84-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
-    "points": 2,
-    "explanation": "Binary Search có độ phức tạp O(log n) vì mỗi lần lặp giảm không gian tìm kiếm đi một nửa.",
-    "tags": "thuật toán,binary search,độ phức tạp",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "points": 4,
+    "explanation": "Giúp xác định hệ giá trị nghề nghiệp của học sinh.",
+    "tags": "giá trị nghề nghiệp,ưu tiên cá nhân",
     "metadata": {
-      "subject": "Cấu trúc dữ liệu và Giải thuật",
-      "topic": "Độ phức tạp thuật toán",
-      "expected_keywords": ["O(log n)", "logarit", "log n"],
-      "max_length": 100
+      "category": "II. Khai thác sở thích",
+      "purpose": "Xác định giá trị nghề nghiệp"
     },
     "is_active": true,
     "options": []
   },
   {
-    "content": "Giải thích khái niệm Polymorphism (đa hình) trong lập trình hướng đối tượng và cho ví dụ minh họa bằng Java hoặc C#.",
-    "question_type": "ESSAY",
-    "difficulty_level": "HARD",
-    "category_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
-    "points": 5,
-    "explanation": "Polymorphism cho phép các đối tượng khác nhau có thể được xử lý thông qua cùng một interface. Có 2 loại: Compile-time (Overloading) và Runtime (Overriding).",
-    "tags": "oop,polymorphism,java,c#",
-    "metadata": {
-      "subject": "Lập trình hướng đối tượng",
-      "topic": "4 tính chất OOP",
-      "min_words": 100,
-      "grading_rubric": {
-        "definition": 2,
-        "example": 2,
-        "explanation": 1
-      }
-    },
-    "is_active": true,
-    "options": []
-  },
-  {
-    "content": "Những công nghệ nào sau đây thuộc về Frontend Development? (Chọn tất cả đáp án đúng)",
+    "content": "Nghề nghiệp nào sau đây bạn quan tâm nhất?",
     "question_type": "MULTIPLE_CHOICE",
     "difficulty_level": "EASY",
-    "category_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
     "points": 2,
-    "explanation": "Frontend Development bao gồm HTML, CSS, JavaScript và các framework như React, Vue, Angular.",
-    "tags": "frontend,web development",
+    "explanation": "Khám phá định hướng nghề nghiệp ban đầu của học sinh.",
+    "tags": "định hướng,nghề nghiệp",
     "metadata": {
-      "subject": "Phát triển Web",
-      "topic": "Frontend Technologies",
-      "allow_multiple_answers": true
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Khám phá nghề nghiệp"
     },
     "is_active": true,
     "options": [
       {
         "option_key": "A",
-        "option_text": "React.js",
-        "is_correct": true,
+        "option_text": "Lập trình viên",
+        "is_correct": false,
         "order_index": 0
       },
       {
         "option_key": "B",
-        "option_text": "Node.js",
+        "option_text": "Bác sĩ",
         "is_correct": false,
         "order_index": 1
       },
       {
         "option_key": "C",
-        "option_text": "HTML/CSS",
-        "is_correct": true,
+        "option_text": "Giáo viên",
+        "is_correct": false,
         "order_index": 2
       },
       {
         "option_key": "D",
-        "option_text": "MongoDB",
+        "option_text": "Kinh doanh",
         "is_correct": false,
         "order_index": 3
       },
       {
         "option_key": "E",
-        "option_text": "Vue.js",
-        "is_correct": true,
+        "option_text": "Thiết kế sáng tạo",
+        "is_correct": false,
         "order_index": 4
       }
     ]
   },
   {
-    "content": "Giao thức HTTP hoạt động ở tầng nào trong mô hình OSI?",
-    "question_type": "MULTIPLE_CHOICE",
-    "difficulty_level": "MEDIUM",
-    "category_id": "6122d512-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
-    "points": 1,
-    "explanation": "HTTP hoạt động ở tầng Application (tầng 7) trong mô hình OSI.",
-    "tags": "mạng,http,osi model",
-    "metadata": {
-      "subject": "Mạng máy tính",
-      "topic": "Mô hình OSI"
-    },
-    "is_active": true,
-    "options": [
-      {
-        "option_key": "A",
-        "option_text": "Tầng Transport (Layer 4)",
-        "is_correct": false,
-        "order_index": 0
-      },
-      {
-        "option_key": "B",
-        "option_text": "Tầng Network (Layer 3)",
-        "is_correct": false,
-        "order_index": 1
-      },
-      {
-        "option_key": "C",
-        "option_text": "Tầng Application (Layer 7)",
-        "is_correct": true,
-        "order_index": 2
-      },
-      {
-        "option_key": "D",
-        "option_text": "Tầng Session (Layer 5)",
-        "is_correct": false,
-        "order_index": 3
-      }
-    ]
-  },
-  {
-    "content": "Lệnh Git nào được sử dụng để hoàn tác (revert) commit cuối cùng nhưng vẫn giữ lại các thay đổi trong working directory?",
-    "question_type": "MULTIPLE_CHOICE",
-    "difficulty_level": "MEDIUM",
-    "category_id": "77302c0a-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
-    "points": 2,
-    "explanation": "git reset --soft HEAD~1 sẽ hoàn tác commit nhưng giữ lại các thay đổi đã staged.",
-    "tags": "git,version control,reset",
-    "metadata": {
-      "subject": "Version Control",
-      "topic": "Git Commands"
-    },
-    "is_active": true,
-    "options": [
-      {
-        "option_key": "A",
-        "option_text": "git reset --hard HEAD~1",
-        "is_correct": false,
-        "order_index": 0
-      },
-      {
-        "option_key": "B",
-        "option_text": "git reset --soft HEAD~1",
-        "is_correct": true,
-        "order_index": 1
-      },
-      {
-        "option_key": "C",
-        "option_text": "git revert HEAD",
-        "is_correct": false,
-        "order_index": 2
-      },
-      {
-        "option_key": "D",
-        "option_text": "git checkout HEAD~1",
-        "is_correct": false,
-        "order_index": 3
-      }
-    ]
-  },
-  {
-    "content": "Singleton Pattern đảm bảo điều gì?",
-    "question_type": "MULTIPLE_CHOICE",
-    "difficulty_level": "MEDIUM",
-    "category_id": "70199eb7-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
-    "points": 2,
-    "explanation": "Singleton Pattern đảm bảo một class chỉ có duy nhất một instance và cung cấp một điểm truy cập global đến instance đó.",
-    "tags": "design pattern,singleton,oop",
-    "metadata": {
-      "subject": "Software Design",
-      "topic": "Design Patterns"
-    },
-    "is_active": true,
-    "options": [
-      {
-        "option_key": "A",
-        "option_text": "Một class có thể có nhiều instance",
-        "is_correct": false,
-        "order_index": 0
-      },
-      {
-        "option_key": "B",
-        "option_text": "Một class chỉ có duy nhất một instance",
-        "is_correct": true,
-        "order_index": 1
-      },
-      {
-        "option_key": "C",
-        "option_text": "Các instance được tạo theo thứ tự",
-        "is_correct": false,
-        "order_index": 2
-      },
-      {
-        "option_key": "D",
-        "option_text": "Instance được tự động hủy sau khi sử dụng",
-        "is_correct": false,
-        "order_index": 3
-      }
-    ]
-  },
-  {
-    "content": "RESTful API sử dụng HTTP method nào để cập nhật một phần tài nguyên?",
-    "question_type": "MULTIPLE_CHOICE",
+    "content": "Bạn có kế hoạch cụ thể cho nghề nghiệp tương lai chưa?",
+    "question_type": "TRUE_FALSE",
     "difficulty_level": "EASY",
-    "category_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
     "points": 1,
-    "explanation": "PATCH được sử dụng để cập nhật một phần tài nguyên, trong khi PUT được dùng để cập nhật toàn bộ tài nguyên.",
-    "tags": "api,rest,http methods",
+    "explanation": "Đánh giá mức độ chuẩn bị định hướng nghề nghiệp.",
+    "tags": "kế hoạch,nghề nghiệp",
     "metadata": {
-      "subject": "Web API",
-      "topic": "RESTful API"
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Đánh giá sự chuẩn bị"
     },
     "is_active": true,
     "options": [
       {
-        "option_key": "A",
-        "option_text": "GET",
+        "option_key": "TRUE",
+        "option_text": "Có",
         "is_correct": false,
         "order_index": 0
       },
       {
-        "option_key": "B",
-        "option_text": "POST",
+        "option_key": "FALSE",
+        "option_text": "Chưa",
         "is_correct": false,
         "order_index": 1
-      },
-      {
-        "option_key": "C",
-        "option_text": "PUT",
-        "is_correct": false,
-        "order_index": 2
-      },
-      {
-        "option_key": "D",
-        "option_text": "PATCH",
-        "is_correct": true,
-        "order_index": 3
       }
     ]
   },
   {
-    "content": "Kỹ thuật mã hóa nào được coi là an toàn hơn cho việc lưu trữ mật khẩu?",
-    "question_type": "MULTIPLE_CHOICE",
-    "difficulty_level": "HARD",
-    "category_id": "7c797219-cf32-11f0-afc5-2626c197d041",
-    "career_criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
-    "points": 3,
-    "explanation": "Bcrypt là một hàm băm mật khẩu được thiết kế đặc biệt với salt và cost factor, an toàn hơn MD5 hoặc SHA-1 đã bị coi là lỗi thời.",
-    "tags": "security,password,encryption,bcrypt",
+    "content": "Hãy mô tả công việc lý tưởng trong mơ ước của bạn và lý do tại sao?",
+    "question_type": "ESSAY",
+    "difficulty_level": "MEDIUM",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "points": 6,
+    "explanation": "Giúp học sinh hình dung và định hình mục tiêu nghề nghiệp.",
+    "tags": "công việc lý tưởng,mục tiêu nghề nghiệp",
     "metadata": {
-      "subject": "Application Security",
-      "topic": "Password Hashing"
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Định hình mục tiêu"
     },
     "is_active": true,
-    "options": [
-      {
-        "option_key": "A",
-        "option_text": "MD5",
-        "is_correct": false,
-        "order_index": 0
-      },
-      {
-        "option_key": "B",
-        "option_text": "SHA-1",
-        "is_correct": false,
-        "order_index": 1
-      },
-      {
-        "option_key": "C",
-        "option_text": "Bcrypt",
-        "is_correct": true,
-        "order_index": 2
-      },
-      {
-        "option_key": "D",
-        "option_text": "Base64",
-        "is_correct": false,
-        "order_index": 3
-      }
-    ]
+    "options": []
+  },
+  {
+    "content": "Bạn đã tham gia những hoạt động trải nghiệm nào liên quan đến nghề nghiệp bạn quan tâm?",
+    "question_type": "SHORT_ANSWER",
+    "difficulty_level": "HARD",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 5,
+    "explanation": "Đánh giá kinh nghiệm thực tế và nỗ lực tìm hiểu nghề nghiệp.",
+    "tags": "trải nghiệm,hoạt động nghề nghiệp",
+    "metadata": {
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Đánh giá kinh nghiệm thực tế"
+    },
+    "is_active": true,
+    "options": []
   }
 ]

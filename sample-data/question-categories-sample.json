@@ -1,119 +1,38 @@
 {
   "note": "Copy trực tiếp các object bên dưới để call API. KHÔNG cần wrapper 'data'",
   
-  "parent_categories": [
+  "categories": [
     {
-      "name": "Lập trình",
-      "description": "Danh mục tổng quát về các câu hỏi lập trình máy tính",
-      "parent_id": null,
-      "order_index": 1,
-      "is_active": true
+      "name": "I. Câu hỏi tự luận cá nhân (Khám phá nhận thức & giá trị)",
+      "description": "Các câu hỏi giúp học sinh tự luận, khám phá và nhận thức về bản thân, giá trị cá nhân",
+      "order_index": 1
     },
     {
-      "name": "Cơ sở dữ liệu",
-      "description": "SQL, NoSQL, Database Design",
-      "parent_id": null,
-      "order_index": 2,
-      "is_active": true
+      "name": "II. Khai thác sở thích – giá trị cá nhân (Tự đánh giá)",
+      "description": "Câu hỏi tự đánh giá về sở thích, năng lực và giá trị bản thân",
+      "order_index": 2
     },
     {
-      "name": "Mạng máy tính",
-      "description": "Network fundamentals, protocols, security",
-      "parent_id": null,
-      "order_index": 3,
-      "is_active": true
-    },
-    {
-      "name": "Thuật toán & Cấu trúc dữ liệu",
-      "description": "Sorting, Searching, Trees, Graphs, Dynamic Programming",
-      "parent_id": null,
-      "order_index": 4,
-      "is_active": true
-    },
-    {
-      "name": "Kiến trúc phần mềm",
-      "description": "Design Patterns, Microservices, Clean Architecture",
-      "parent_id": null,
-      "order_index": 5,
-      "is_active": true
-    },
-    {
-      "name": "DevOps & Cloud",
-      "description": "CI/CD, Docker, Kubernetes, AWS, Azure, GCP",
-      "parent_id": null,
-      "order_index": 6,
-      "is_active": true
-    },
-    {
-      "name": "An ninh bảo mật",
-      "description": "Application Security, Network Security, Cryptography",
-      "parent_id": null,
-      "order_index": 7,
-      "is_active": true
-    }
-  ],
-
-  "child_categories": [
-    {
-      "comment": "Con của 'Lập trình' - ID: 494aa72f-cf32-11f0-afc5-2626c197d041",
-      "name": "Lập trình Web",
-      "description": "Frontend, Backend, Full-stack Development",
-      "parent_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-      "order_index": 1,
-      "is_active": true
-    },
-    {
-      "comment": "Con của 'Lập trình' - ID: 494aa72f-cf32-11f0-afc5-2626c197d041",
-      "name": "Lập trình Mobile",
-      "description": "Android, iOS, React Native, Flutter",
-      "parent_id": "494aa72f-cf32-11f0-afc5-2626c197d041",
-      "order_index": 2,
-      "is_active": true
-    },
-    {
-      "comment": "Con của 'Cơ sở dữ liệu' - ID: 56d87ee2-cf32-11f0-afc5-2626c197d041",
-      "name": "SQL",
-      "description": "MySQL, PostgreSQL, SQL Server, Oracle",
-      "parent_id": "56d87ee2-cf32-11f0-afc5-2626c197d041",
-      "order_index": 1,
-      "is_active": true
-    },
-    {
-      "comment": "Con của 'Cơ sở dữ liệu' - ID: 56d87ee2-cf32-11f0-afc5-2626c197d041",
-      "name": "NoSQL",
-      "description": "MongoDB, Redis, Cassandra, DynamoDB",
-      "parent_id": "56d87ee2-cf32-11f0-afc5-2626c197d041",
-      "order_index": 2,
-      "is_active": true
-    },
-    {
-      "comment": "Con của 'Kiến trúc phần mềm' - ID: 70199eb7-cf32-11f0-afc5-2626c197d041",
-      "name": "Design Patterns",
-      "description": "Creational, Structural, Behavioral Patterns",
-      "parent_id": "70199eb7-cf32-11f0-afc5-2626c197d041",
-      "order_index": 1,
-      "is_active": true
+      "name": "III. Câu hỏi định hướng nghề nghiệp và trải nghiệm cá nhân (Định hình tương lai)",
+      "description": "Câu hỏi về định hướng nghề nghiệp, kế hoạch tương lai và trải nghiệm cá nhân",
+      "order_index": 3
     }
   ],
   
   "instructions": {
-    "step_1": "✅ Đã tạo xong 7 danh mục cha",
-    "step_2": "✅ Đã có parent_id từ response",
-    "step_3": "Copy object từ 'child_categories' bên dưới, XÓA field 'comment', paste vào Swagger",
-    "step_4": "Tạo các danh mục con",
-    "parent_ids_mapping": {
-      "Lập trình": "494aa72f-cf32-11f0-afc5-2626c197d041",
-      "Cơ sở dữ liệu": "56d87ee2-cf32-11f0-afc5-2626c197d041",
-      "Mạng máy tính": "6122d512-cf32-11f0-afc5-2626c197d041",
-      "Thuật toán & Cấu trúc dữ liệu": "6a2fdf84-cf32-11f0-afc5-2626c197d041",
-      "Kiến trúc phần mềm": "70199eb7-cf32-11f0-afc5-2626c197d041",
-      "DevOps & Cloud": "77302c0a-cf32-11f0-afc5-2626c197d041",
-      "An ninh bảo mật": "7c797219-cf32-11f0-afc5-2626c197d041"
+    "schema_fields": {
+      "name": "Tên danh mục (VarChar 255) - BẮT BUỘC",
+      "description": "Mô tả chi tiết (Text) - OPTIONAL",
+      "order_index": "Thứ tự hiển thị trong đề thi (Int) - OPTIONAL",
+      "created_by": "TỰ ĐỘNG lấy từ user đang đăng nhập (req.userSession.sub) - KHÔNG cần truyền"
     },
-    "auto_fields": {
-      "created_by": "TỰ ĐỘNG lấy từ user đang đăng nhập (req.user.id) - KHÔNG cần truyền lên"
+    "api_endpoint": "POST /api/v1/question-manage/question-categories",
+    "method": "POST",
+    "example_payload": {
+      "name": "I. Câu hỏi tự luận cá nhân (Khám phá nhận thức & giá trị)",
+      "description": "Các câu hỏi giúp học sinh tự luận, khám phá và nhận thức về bản thân, giá trị cá nhân",
+      "order_index": 1
     },
-    "api_endpoint": "POST /api/v2/schools/question-categories",
-    "example": "Copy object này vào Swagger (xóa dòng comment nếu có): { \"name\": \"Lập trình\", \"description\": \"Danh mục tổng quát về các câu hỏi lập trình máy tính\", \"parent_id\": null, \"order_index\": 1, \"is_active\": true }"
+    "note": "Schema KHÔNG có parent_id (không phân cấp), KHÔNG có is_active. Chỉ có: name, description, order_index"
   }
 }

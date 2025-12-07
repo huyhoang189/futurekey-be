@@ -1,0 +1,129 @@
+[
+  {
+    "config_name": "Bài kiểm tra tổng hợp - Khám phá bản thân",
+    "description": "Bài thi tổng hợp đánh giá toàn diện khả năng tự nhận thức, sở thích và định hướng nghề nghiệp của học sinh. Đây là bản ghi DUY NHẤT cho exam type COMPREHENSIVE.",
+    "exam_type_scope": "COMPREHENSIVE",
+    "time_limit_minutes": 45,
+    "total_points": 10,
+    "pass_score": 5,
+    "distributions": [
+      {
+        "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 3,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 1
+      },
+      {
+        "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 3,
+        "easy_count": 2,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 4,
+        "easy_count": 2,
+        "medium_count": 1,
+        "hard_count": 1
+      }
+    ]
+  },
+  {
+    "config_name": "Bài kiểm tra theo tiêu chí - Phát triển cá nhân",
+    "description": "Đánh giá học sinh theo tiêu chí Phát triển cá nhân của nghề nghiệp",
+    "exam_type_scope": "CRITERIA_SPECIFIC",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "time_limit_minutes": 30,
+    "total_points": 6,
+    "pass_score": 4,
+    "distributions": [
+      {
+        "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 0,
+        "hard_count": 1
+      }
+    ]
+  },
+  {
+    "config_name": "Bài kiểm tra theo tiêu chí - Giá trị sống",
+    "description": "Đánh giá học sinh theo tiêu chí Giá trị sống của nghề nghiệp",
+    "exam_type_scope": "CRITERIA_SPECIFIC",
+    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
+    "time_limit_minutes": 25,
+    "total_points": 6,
+    "pass_score": 4,
+    "distributions": [
+      {
+        "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 2,
+        "medium_count": 0,
+        "hard_count": 0
+      },
+      {
+        "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 0
+      }
+    ]
+  },
+  {
+    "config_name": "Bài kiểm tra theo tiêu chí - Định hướng nghề nghiệp",
+    "description": "Đánh giá học sinh theo tiêu chí Định hướng nghề nghiệp",
+    "exam_type_scope": "CRITERIA_SPECIFIC",
+    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "time_limit_minutes": 30,
+    "total_points": 6,
+    "pass_score": 4,
+    "distributions": [
+      {
+        "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 1,
+        "easy_count": 0,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 2,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 0
+      },
+      {
+        "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+        "quantity": 3,
+        "easy_count": 1,
+        "medium_count": 1,
+        "hard_count": 1
+      }
+    ]
+  }
+]

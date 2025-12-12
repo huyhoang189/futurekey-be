@@ -1,0 +1,118 @@
+{
+  "description": "Sample data for submitCareerEvaluation API",
+  "endpoint": "POST /api/v2/students/career-evaluations",
+  "note": "Có thể truyền student_id hoặc bỏ qua (sẽ tự lấy từ user đăng nhập)",
+  
+  "students": [
+    "422bc9e1-cdb7-11f0-afc5-2626c197d041",
+    "41a8e70e-cdb7-11f0-afc5-2626c197d041",
+    "41252cf2-cdb7-11f0-afc5-2626c197d041",
+    "409bff73-cdb7-11f0-afc5-2626c197d041",
+    "40090d53-cdb7-11f0-afc5-2626c197d041"
+  ],
+  
+  "samples": [
+    {
+      "title": "Student 1 - Với student_id",
+      "body": {
+        "student_id": "422bc9e1-cdb7-11f0-afc5-2626c197d041",
+        "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+        "career_id": "100ae3c0-c307-11f0-afc5-2626c197d041",
+        "scores": [
+          {
+            "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+            "score": 8
+          },
+          {
+            "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+            "score": 7
+          },
+          {
+            "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+            "score": 9
+          }
+        ]
+      }
+    },
+    {
+      "title": "Student 3 - Điểm thấp",
+      "body": {
+        "student_id": "41252cf2-cdb7-11f0-afc5-2626c197d041",
+        "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+        "career_id": "100ae3c0-c307-11f0-afc5-2626c197d041",
+        "scores": [
+          {
+            "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+            "score": 4
+          },
+          {
+            "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+            "score": 3
+          },
+          {
+            "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+            "score": 5
+          }
+        ]
+      }
+    },
+    {
+      "title": "Student 4 - Điểm cao",
+      "body": {
+        "student_id": "409bff73-cdb7-11f0-afc5-2626c197d041",
+        "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+        "career_id": "100ae3c0-c307-11f0-afc5-2626c197d041",
+        "scores": [
+          {
+            "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+            "score": 10
+          },
+          {
+            "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+            "score": 9
+          },
+          {
+            "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+            "score": 10
+          }
+        ]
+      }
+    },
+    {
+      "title": "Student 5 - Điểm trung bình",
+      "body": {
+        "student_id": "40090d53-cdb7-11f0-afc5-2626c197d041",
+        "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
+        "career_id": "100ae3c0-c307-11f0-afc5-2626c197d041",
+        "scores": [
+          {
+            "criteria_id": "09352b7e-c88e-11f0-afc5-2626c197d041",
+            "score": 6
+          },
+          {
+            "criteria_id": "136a34be-c88e-11f0-afc5-2626c197d041",
+            "score": 7
+          },
+          {
+            "criteria_id": "1eb661d4-c88e-11f0-afc5-2626c197d041",
+            "score": 6
+          }
+        ]
+      }
+    }
+  ],
+
+  "notes": [
+    "✅ Đã cập nhật criteria_id thực từ database",
+    "class_id: 2f238ea5-cd51-11f0-afc5-2626c197d041",
+    "career_id: 100ae3c0-c307-11f0-afc5-2626c197d041",
+    "criteria_id: 09352b7e-c88e-11f0-afc5-2626c197d041, 136a34be-c88e-11f0-afc5-2626c197d041, 1eb661d4-c88e-11f0-afc5-2626c197d041",
+    "",
+    "Luồng hoạt động:",
+    "1. Nếu truyền student_id → dùng student_id đó",
+    "2. Nếu không truyền student_id → lấy từ user_id trong token (tìm trong bảng auth_impl_user_student)",
+    "3. API sẽ validate tất cả criteria phải được đánh giá",
+    "4. Tính điểm trọng số dựa trên class_criteria_weights",
+    "5. So sánh với ngưỡng trong career_evaluation_thresholds để ra kết quả"
+  ]
+}

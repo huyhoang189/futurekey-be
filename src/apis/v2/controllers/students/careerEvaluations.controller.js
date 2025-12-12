@@ -6,8 +6,8 @@ const careerEvaluationsService = require("../../services/schools/careerEvaluatio
  */
 const submitCareerEvaluation = async (req, res) => {
   try {
-    const { class_id, career_id, scores } = req.body;
-    const studentId = req.user?.id;
+    const { student_id, class_id, career_id, scores } = req.body;
+    const userId = req.userSession?.sub; // user_id từ JWT
 
     if (!class_id || !career_id || !scores || !Array.isArray(scores)) {
       return res.status(StatusCodes.BAD_REQUEST).json({
@@ -17,10 +17,11 @@ const submitCareerEvaluation = async (req, res) => {
     }
 
     const result = await careerEvaluationsService.submitCareerEvaluation(
-      studentId,
       class_id,
       career_id,
-      scores
+      scores,
+      student_id,
+      userId
     );
 
     return res.status(StatusCodes.CREATED).json({
@@ -41,12 +42,14 @@ const submitCareerEvaluation = async (req, res) => {
  */
 const getMyEvaluationResults = async (req, res) => {
   try {
-    const studentId = req.user?.id;
-    const { career_id, class_id } = req.query;
+    const userId = req.userSession?.sub;
+    const { career_id, class_id, student_id } = req.query;
 
-    const result = await careerEvaluationsService.getMyEvaluationResults(studentId, {
+    const result = await careerEvaluationsService.getMyEvaluationResults({
       career_id,
       class_id,
+      student_id,
+      userId,
     });
 
     return res.status(StatusCodes.OK).json({

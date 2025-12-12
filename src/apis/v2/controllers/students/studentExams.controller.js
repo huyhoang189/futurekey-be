@@ -1,4 +1,22 @@
 const studentExamsService = require("../../services/students/studentExams.service");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+
+/**
+ * Helper function để lấy student_id từ user_id
+ */
+const getStudentIdFromUserId = async (userId) => {
+  const student = await prisma.auth_impl_user_student.findFirst({
+    where: { user_id: userId },
+    select: { id: true },
+  });
+
+  if (!student) {
+    throw new Error("Student not found for this user");
+  }
+
+  return student.id;
+};
 
 /**
  * @swagger
@@ -36,7 +54,8 @@ const studentExamsService = require("../../services/students/studentExams.servic
 const startExam = async (req, res) => {
   try {
     const { exam_type, career_criteria_id } = req.body;
-    const student_id = req.userSession.sub;
+    const userId = req.userSession.sub;
+    const student_id = await getStudentIdFromUserId(userId);
 
     const result = await studentExamsService.startExam({
       exam_type,
@@ -61,7 +80,8 @@ const startExam = async (req, res) => {
  */
 const getMyAttempts = async (req, res) => {
   try {
-    const student_id = req.userSession.sub;
+    const userId = req.userSession.sub;
+    const student_id = await getStudentIdFromUserId(userId);
     const { exam_type, career_criteria_id, page, limit } = req.query;
 
     const result = await studentExamsService.getStudentExamAttempts({
@@ -90,7 +110,8 @@ const getMyAttempts = async (req, res) => {
 const getAttemptDetails = async (req, res) => {
   try {
     const { attemptId } = req.params;
-    const student_id = req.userSession.sub;
+    const userId = req.userSession.sub;
+    const student_id = await getStudentIdFromUserId(userId);
 
     const result = await studentExamsService.getAttemptDetails(attemptId, student_id);
 
@@ -145,7 +166,8 @@ const submitExam = async (req, res) => {
   try {
     const { attemptId } = req.params;
     const { answers } = req.body;
-    const student_id = req.userSession.sub;
+    const userId = req.userSession.sub;
+    const student_id = await getStudentIdFromUserId(userId);
 
     const result = await studentExamsService.submitExam({
       attempt_id: attemptId,

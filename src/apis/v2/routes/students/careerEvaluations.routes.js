@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const careerEvaluationsController = require("../../controllers/students/careerEvaluations.controller");
+const checkAuth = require("../../../../middlewares/authentication/checkAuth");
 
 /**
  * @swagger
@@ -39,6 +40,7 @@ const careerEvaluationsController = require("../../controllers/students/careerEv
  *       **Lưu ý:**
  *       - Mỗi học sinh chỉ nộp 1 lần cho mỗi (class_id, career_id)
  *       - Nếu nộp lại sẽ ghi đè (upsert)
+ *       - student_id: Optional - nếu không truyền sẽ tự lấy từ user đăng nhập
  *     tags: [V2 - Students - Career Evaluations]
  *     requestBody:
  *       required: true
@@ -51,6 +53,10 @@ const careerEvaluationsController = require("../../controllers/students/careerEv
  *               - career_id
  *               - scores
  *             properties:
+ *               student_id:
+ *                 type: string
+ *                 description: ID của học sinh (Optional - nếu không truyền sẽ lấy từ user đăng nhập)
+ *                 example: "422bc9e1-cdb7-11f0-afc5-2626c197d041"
  *               class_id:
  *                 type: string
  *                 description: ID của lớp học
@@ -84,10 +90,11 @@ const careerEvaluationsController = require("../../controllers/students/careerEv
  *                 example: "Tôi thích lập trình web và muốn trở thành fullstack developer"
  *           examples:
  *             example1:
- *               summary: Đánh giá nghề Software Engineer
+ *               summary: Đánh giá với student_id
  *               value:
+ *                 student_id: "422bc9e1-cdb7-11f0-afc5-2626c197d041"
  *                 class_id: "2f238ea5-cd51-11f0-afc5-2626c197d041"
- *                 career_id: "career-123-abc"
+ *                 career_id: "100ae3c0-c307-11f0-afc5-2626c197d041"
  *                 scores:
  *                   - criteria_id: "09352b7e-c88e-11f0-afc5-2626c197d041"
  *                     score: 8
@@ -95,25 +102,19 @@ const careerEvaluationsController = require("../../controllers/students/careerEv
  *                     score: 7
  *                   - criteria_id: "1eb661d4-c88e-11f0-afc5-2626c197d041"
  *                     score: 9
- *                   - criteria_id: "criteria-4"
- *                     score: 6
  *                 notes: "Tôi rất đam mê công nghệ"
  *             example2:
- *               summary: Đánh giá nghề Data Analyst
+ *               summary: Không truyền student_id (lấy từ user đăng nhập)
  *               value:
  *                 class_id: "2f238ea5-cd51-11f0-afc5-2626c197d041"
- *                 career_id: "career-456-def"
+ *                 career_id: "100ae3c0-c307-11f0-afc5-2626c197d041"
  *                 scores:
- *                   - criteria_id: "criteria-1"
+ *                   - criteria_id: "09352b7e-c88e-11f0-afc5-2626c197d041"
  *                     score: 7.5
- *                   - criteria_id: "criteria-2"
+ *                   - criteria_id: "136a34be-c88e-11f0-afc5-2626c197d041"
  *                     score: 8.5
- *                   - criteria_id: "criteria-3"
+ *                   - criteria_id: "1eb661d4-c88e-11f0-afc5-2626c197d041"
  *                     score: 6
- *                   - criteria_id: "criteria-4"
- *                     score: 9
- *                   - criteria_id: "criteria-5"
- *                     score: 7
  *     responses:
  *       201:
  *         description: Nộp bài đánh giá thành công
@@ -147,7 +148,7 @@ const careerEvaluationsController = require("../../controllers/students/careerEv
  *       500:
  *         description: Lỗi server
  */
-router.post("/submit", careerEvaluationsController.submitCareerEvaluation);
+router.post("/submit", checkAuth, careerEvaluationsController.submitCareerEvaluation);
 
 /**
  * @swagger
@@ -261,6 +262,6 @@ router.post("/submit", careerEvaluationsController.submitCareerEvaluation);
  *       500:
  *         description: Lỗi server
  */
-router.get("/results", careerEvaluationsController.getMyEvaluationResults);
+router.get("/results", checkAuth, careerEvaluationsController.getMyEvaluationResults);
 
 module.exports = router;

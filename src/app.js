@@ -42,6 +42,7 @@ const swaggerOptions = {
         name: "API v2",
       },
     ],
+    persistAuthorization: true, // Giữ token khi reload trang
   },
 };
 

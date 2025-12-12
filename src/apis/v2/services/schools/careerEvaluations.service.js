@@ -10,7 +10,27 @@ const prisma = new PrismaClient();
 /**
  * Học sinh nộp bài đánh giá nghề nghiệp
  */
-const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
+const submitCareerEvaluation = async (classId, careerId, scores, studentId = null, userId = null) => {
+  let finalStudentId = studentId;
+  
+  // Nếu không truyền studentId, tìm từ userId
+  if (!finalStudentId && userId) {
+    const student = await prisma.auth_impl_user_student.findFirst({
+      where: { user_id: userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found for this user");
+    }
+
+    finalStudentId = student.id;
+  }
+  
+  if (!finalStudentId) {
+    throw new Error("student_id or valid userId is required");
+  }
+
   // Validate: Tất cả tiêu chí phải được đánh giá
   const requiredCriteria = await prisma.class_criteria_config.findMany({
     where: {
@@ -18,11 +38,11 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
       career_id: careerId,
     },
     select: {
-      career_criteria_id: true,
+      criteria_id: true,
     },
   });
 
-  const requiredIds = requiredCriteria.map((c) => c.career_criteria_id);
+  const requiredIds = requiredCriteria.map((c) => c.criteria_id);
   const submittedIds = scores.map((s) => s.criteria_id);
 
   const missingIds = requiredIds.filter((id) => !submittedIds.includes(id));
@@ -92,7 +112,7 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
   const result = await prisma.student_career_evaluations.upsert({
     where: {
       student_id_career_id_class_id: {
-        student_id: studentId,
+        student_id: finalStudentId,
         career_id: careerId,
         class_id: classId,
       },
@@ -107,7 +127,7 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
       updated_at: new Date(),
     },
     create: {
-      student_id: studentId,
+      student_id: finalStudentId,
       class_id: classId,
       career_id: careerId,
       raw_scores: scores,
@@ -133,11 +153,31 @@ const submitCareerEvaluation = async (studentId, classId, careerId, scores) => {
 /**
  * Xem kết quả đánh giá của học sinh
  */
-const getMyEvaluationResults = async (studentId, filters = {}) => {
-  const { career_id, class_id } = filters;
+const getMyEvaluationResults = async (filters = {}) => {
+  const { career_id, class_id, student_id, userId } = filters;
+  
+  let finalStudentId = student_id;
+  
+  // Nếu không truyền studentId, tìm từ userId
+  if (!finalStudentId && userId) {
+    const student = await prisma.auth_impl_user_student.findFirst({
+      where: { user_id: userId },
+      select: { id: true },
+    });
+
+    if (!student) {
+      throw new Error("Student not found for this user");
+    }
+
+    finalStudentId = student.id;
+  }
+  
+  if (!finalStudentId) {
+    throw new Error("student_id or valid userId is required");
+  }
 
   const where = {
-    student_id: studentId,
+    student_id: finalStudentId,
     ...(career_id && { career_id }),
     ...(class_id && { class_id }),
   };

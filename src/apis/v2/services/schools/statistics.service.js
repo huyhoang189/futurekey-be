@@ -1083,6 +1083,611 @@ const getClassOverallCompletion = async (class_id) => {
   };
 };
 
+/**
+ * Thống kê tổng quan theo trường
+ * Trả về số lượng học sinh, giáo viên, lớp, nghề, phân bổ theo khối và giới tính
+ */
+const getSchoolOverviewStatistics = async (school_id) => {
+  // 1. Lấy thông tin trường
+  const schoolInfo = await prisma.schools.findUnique({
+    where: { id: school_id },
+    select: { id: true, name: true, address: true },
+  });
+
+  // 2. Lấy tất cả học sinh trong trường
+  const students = await prisma.auth_impl_user_student.findMany({
+    where: { school_id },
+    select: {
+      id: true,
+      class_id: true,
+      sex: true,
+    },
+  });
+
+  const totalStudents = students.length;
+
+  // 3. Đếm số giáo viên trong trường (từ bảng auth_impl_user_school)
+  // Lấy tất cả user_id của học sinh để loại trừ
+  const studentUserIds = students.map(s => s.user_id).filter(Boolean);
+  
+  const totalTeachers = await prisma.auth_impl_user_school.count({
+    where: { 
+      school_id,
+      user_id: {
+        notIn: studentUserIds.length > 0 ? studentUserIds : undefined
+      }
+    },
+  });
+
+  // 4. Phân bổ giới tính
+  const genderDistribution = {
+    male: students.filter(s => s.sex === 'MALE').length,
+    female: students.filter(s => s.sex === 'FEMALE').length,
+    other: students.filter(s => !s.sex || (s.sex !== 'MALE' && s.sex !== 'FEMALE')).length,
+  };
+
+  // 5. Đếm số lớp thuộc trường
+  const totalClasses = await prisma.classes.count({
+    where: { school_id },
+  });
+
+  // 6. Lấy thông tin các lớp để biết grade_level
+  const classIds = [...new Set(students.map(s => s.class_id).filter(Boolean))];
+  
+  const classes = await prisma.classes.findMany({
+    where: { id: { in: classIds } },
+    select: {
+      id: true,
+      name: true,
+      grade_level: true,
+    },
+  });
+
+  const classMap = {};
+  classes.forEach(cls => {
+    classMap[cls.id] = cls;
+  });
+
+  // 7. Đếm số nghề được cấp phép cho trường (từ bảng license)
+  const now = new Date();
+  const licensedCareers = await prisma.school_career_licenses.findMany({
+    where: {
+      school_id,
+      status: 'ACTIVE',
+      OR: [
+        { expiry_date: null },
+        { expiry_date: { gte: now } }
+      ]
+    },
+    select: { career_id: true },
+    distinct: ['career_id'],
+  });
+
+  const totalCareers = licensedCareers.length;
+
+  // 8. Phân bổ theo khối (grade_level)
+  const gradeDistribution = {};
+  students.forEach(student => {
+    if (student.class_id) {
+      const classInfo = classMap[student.class_id];
+      if (classInfo && classInfo.grade_level) {
+        const grade = classInfo.grade_level;
+        if (!gradeDistribution[grade]) {
+          gradeDistribution[grade] = {
+            grade_level: grade,
+            total_students: 0,
+            male: 0,
+            female: 0,
+            other: 0,
+          };
+        }
+        gradeDistribution[grade].total_students++;
+        
+        if (student.sex === 'MALE') {
+          gradeDistribution[grade].male++;
+        } else if (student.sex === 'FEMALE') {
+          gradeDistribution[grade].female++;
+        } else {
+          gradeDistribution[grade].other++;
+        }
+      }
+    }
+  });
+
+  // Convert to array và sort theo grade_level
+  const gradeDistributionArray = Object.values(gradeDistribution).sort((a, b) => {
+    return a.grade_level - b.grade_level;
+  });
+
+  return {
+    school_id,
+    school_name: schoolInfo?.name || null,
+    school_address: schoolInfo?.address || null,
+    total_students: totalStudents,
+    total_teachers: totalTeachers,
+    total_classes: totalClasses,
+    total_careers: totalCareers,
+    gender_distribution: {
+      male: genderDistribution.male,
+      female: genderDistribution.female,
+      other: genderDistribution.other,
+      male_percentage: totalStudents > 0 ? parseFloat(((genderDistribution.male / totalStudents) * 100).toFixed(2)) : 0,
+      female_percentage: totalStudents > 0 ? parseFloat(((genderDistribution.female / totalStudents) * 100).toFixed(2)) : 0,
+      other_percentage: totalStudents > 0 ? parseFloat(((genderDistribution.other / totalStudents) * 100).toFixed(2)) : 0,
+    },
+    grade_distribution: gradeDistributionArray,
+  };
+};
+
+/**
+ * Lấy danh sách nghề mà trường đang được cấp phép
+ * Chỉ lấy các license có status = ACTIVE và chưa hết hạn
+ */
+const getSchoolLicensedCareers = async (school_id) => {
+  const now = new Date();
+
+  // 1. Lấy tất cả license đang active và chưa hết hạn
+  const licenses = await prisma.school_career_licenses.findMany({
+    where: {
+      school_id,
+      status: 'ACTIVE',
+      OR: [
+        { expiry_date: null },
+        { expiry_date: { gte: now } }
+      ]
+    },
+    select: {
+      id: true,
+      career_id: true,
+      start_date: true,
+      expiry_date: true,
+      created_at: true,
+    },
+  });
+
+  // 2. Lấy career_ids
+  const careerIds = [...new Set(licenses.map(l => l.career_id))];
+
+  if (careerIds.length === 0) {
+    return {
+      school_id,
+      total_licensed_careers: 0,
+      careers: [],
+    };
+  }
+
+  // 3. Lấy thông tin chi tiết các nghề
+  const careers = await prisma.career.findMany({
+    where: {
+      id: { in: careerIds },
+    },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      description: true,
+      tags: true,
+      is_active: true,
+    },
+  });
+
+  // 4. Map career info với license info
+  const careerMap = {};
+  careers.forEach(career => {
+    careerMap[career.id] = career;
+  });
+
+  // 5. Kết hợp thông tin
+  const licensedCareers = licenses.map(license => {
+    const career = careerMap[license.career_id];
+    return {
+      license_id: license.id,
+      career_id: license.career_id,
+      career_code: career?.code || null,
+      career_name: career?.name || null,
+      career_description: career?.description || null,
+      career_tags: career?.tags || null,
+      is_career_active: career?.is_active || false,
+      start_date: license.start_date,
+      expiry_date: license.expiry_date,
+      licensed_at: license.created_at,
+    };
+  });
+
+  // 6. Sort theo tên nghề
+  licensedCareers.sort((a, b) => {
+    const nameA = a.career_name || '';
+    const nameB = b.career_name || '';
+    return nameA.localeCompare(nameB);
+  });
+
+  return {
+    school_id,
+    total_licensed_careers: licensedCareers.length,
+    careers: licensedCareers,
+  };
+};
+
+/**
+ * Lấy danh sách nghề đang được sử dụng trong trường
+ * Dựa vào số lượng học sinh tham gia và số lượng đánh giá
+ */
+const getSchoolCareersInUse = async (school_id, sort_by = 'students_count', order = 'desc') => {
+  // 1. Lấy tất cả lớp của trường
+  const classes = await prisma.classes.findMany({
+    where: { school_id },
+    select: { id: true },
+  });
+
+  const classIds = classes.map(c => c.id);
+
+  if (classIds.length === 0) {
+    return {
+      school_id,
+      total_careers_in_use: 0,
+      careers: [],
+    };
+  }
+
+  // 2. Lấy các nghề được giao cho các lớp
+  const assignedCareers = await prisma.class_criteria_config.findMany({
+    where: { 
+      class_id: { in: classIds },
+    },
+    select: { career_id: true },
+    distinct: ['career_id'],
+  });
+
+  const careerIds = [...new Set(assignedCareers.map(c => c.career_id))];
+
+  if (careerIds.length === 0) {
+    return {
+      school_id,
+      total_careers_in_use: 0,
+      careers: [],
+    };
+  }
+
+  // 3. Lấy thông tin chi tiết các nghề
+  const careers = await prisma.career.findMany({
+    where: { id: { in: careerIds } },
+    select: {
+      id: true,
+      code: true,
+      name: true,
+      description: true,
+      tags: true,
+    },
+  });
+
+  const careerMap = {};
+  careers.forEach(career => {
+    careerMap[career.id] = career;
+  });
+
+  // 4. Lấy tất cả học sinh của trường
+  const students = await prisma.auth_impl_user_student.findMany({
+    where: { school_id },
+    select: { id: true },
+  });
+
+  const studentIds = students.map(s => s.id);
+
+  // 5. Lấy tiến độ học tập (để đếm học sinh tham gia)
+  const progresses = await prisma.student_learn_progress.findMany({
+    where: {
+      student_id: { in: studentIds },
+      career_id: { in: careerIds },
+    },
+    select: {
+      student_id: true,
+      career_id: true,
+    },
+  });
+
+  // 6. Lấy đánh giá nghề nghiệp
+  const evaluations = await prisma.student_career_evaluations.findMany({
+    where: {
+      student_id: { in: studentIds },
+      career_id: { in: careerIds },
+    },
+    select: {
+      student_id: true,
+      career_id: true,
+      percentage: true,
+      evaluation_result: true,
+    },
+  });
+
+  // 7. Thống kê cho từng nghề
+  const careerStats = careerIds.map(careerId => {
+    const careerInfo = careerMap[careerId] || {};
+
+    // Đếm số học sinh tham gia (unique student_id trong progresses)
+    const studentsInCareer = [...new Set(
+      progresses.filter(p => p.career_id === careerId).map(p => p.student_id)
+    )];
+    const studentsCount = studentsInCareer.length;
+
+    // Đếm số đánh giá
+    const careerEvaluations = evaluations.filter(e => e.career_id === careerId);
+    const evaluationsCount = careerEvaluations.length;
+
+    // Tính điểm trung bình
+    let averageScore = 0;
+    if (evaluationsCount > 0) {
+      const totalScore = careerEvaluations.reduce((sum, e) => sum + (e.percentage || 0), 0);
+      averageScore = totalScore / evaluationsCount;
+    }
+
+    // Phân loại đánh giá
+    const evaluationDistribution = {
+      very_suitable: careerEvaluations.filter(e => e.evaluation_result === 'VERY_SUITABLE').length,
+      suitable: careerEvaluations.filter(e => e.evaluation_result === 'SUITABLE').length,
+      not_suitable: careerEvaluations.filter(e => e.evaluation_result === 'NOT_SUITABLE').length,
+    };
+
+    return {
+      career_id: careerId,
+      career_code: careerInfo.code,
+      career_name: careerInfo.name,
+      career_description: careerInfo.description,
+      career_tags: careerInfo.tags,
+      students_count: studentsCount,
+      evaluations_count: evaluationsCount,
+      average_score: parseFloat(averageScore.toFixed(2)),
+      evaluation_distribution: evaluationDistribution,
+    };
+  });
+
+  // 8. Sắp xếp theo tiêu chí
+  careerStats.sort((a, b) => {
+    let compareValue = 0;
+    
+    if (sort_by === 'students_count') {
+      compareValue = b.students_count - a.students_count;
+    } else if (sort_by === 'evaluations_count') {
+      compareValue = b.evaluations_count - a.evaluations_count;
+    } else if (sort_by === 'average_score') {
+      compareValue = b.average_score - a.average_score;
+    }
+
+    // Đảo ngược nếu order = 'asc'
+    return order === 'asc' ? -compareValue : compareValue;
+  });
+
+  return {
+    school_id,
+    total_careers_in_use: careerStats.length,
+    sort_by,
+    order,
+    careers: careerStats,
+  };
+};
+
+/**
+ * Thống kê % trung bình hoàn thành học tập nghề của các khối lớp trong trường
+ * Nhóm theo grade_level để hiển thị bar chart
+ */
+const getSchoolGradeCompletion = async (school_id) => {
+  // 1. Lấy tất cả lớp của trường
+  const classes = await prisma.classes.findMany({
+    where: { school_id },
+    select: {
+      id: true,
+      name: true,
+      grade_level: true,
+    },
+  });
+
+  if (classes.length === 0) {
+    return {
+      school_id,
+      total_classes: 0,
+      grade_statistics: [],
+    };
+  }
+
+  // Nhóm lớp theo grade_level
+  const gradeGroups = {};
+  classes.forEach(cls => {
+    const grade = cls.grade_level;
+    if (grade) {
+      if (!gradeGroups[grade]) {
+        gradeGroups[grade] = [];
+      }
+      gradeGroups[grade].push(cls);
+    }
+  });
+
+  const classIds = classes.map(c => c.id);
+
+  // 2. Lấy tất cả học sinh của các lớp
+  const students = await prisma.auth_impl_user_student.findMany({
+    where: { class_id: { in: classIds } },
+    select: {
+      id: true,
+      class_id: true,
+    },
+  });
+
+  // Tạo map student theo class
+  const studentsByClass = {};
+  students.forEach(student => {
+    if (!studentsByClass[student.class_id]) {
+      studentsByClass[student.class_id] = [];
+    }
+    studentsByClass[student.class_id].push(student.id);
+  });
+
+  // 3. Lấy cấu hình nghề tiêu chí cho các lớp
+  const assignedCareers = await prisma.class_criteria_config.findMany({
+    where: { class_id: { in: classIds } },
+    select: {
+      class_id: true,
+      career_id: true,
+      criteria_id: true,
+    },
+  });
+
+  // Nhóm theo class
+  const assignedByClass = {};
+  assignedCareers.forEach(ac => {
+    if (!assignedByClass[ac.class_id]) {
+      assignedByClass[ac.class_id] = [];
+    }
+    assignedByClass[ac.class_id].push(ac);
+  });
+
+  // 4. Lấy tiến độ học tập
+  const studentIds = students.map(s => s.id);
+  const progresses = await prisma.student_learn_progress.findMany({
+    where: {
+      student_id: { in: studentIds },
+    },
+    select: {
+      student_id: true,
+      career_id: true,
+      criteria_id: true,
+      progress_percent: true,
+      status: true,
+    },
+  });
+
+  // Tạo map progress
+  const progressMap = {};
+  progresses.forEach(p => {
+    const key = `${p.student_id}_${p.criteria_id}`;
+    progressMap[key] = p;
+  });
+
+  // 5. Tính toán cho từng lớp
+  const classCompletionData = {};
+
+  classes.forEach(cls => {
+    const classStudents = studentsByClass[cls.id] || [];
+    const classAssignments = assignedByClass[cls.id] || [];
+
+    if (classStudents.length === 0 || classAssignments.length === 0) {
+      classCompletionData[cls.id] = {
+        class_id: cls.id,
+        class_name: cls.name,
+        grade_level: cls.grade_level,
+        total_students: 0,
+        total_criteria_assigned: 0,
+        average_completion_percentage: 0,
+      };
+      return;
+    }
+
+    const totalCriteriaAssigned = classAssignments.length;
+    const totalPossible = classStudents.length * totalCriteriaAssigned;
+
+    let totalProgressSum = 0;
+    let totalCriteriaCompleted = 0;
+
+    // Duyệt qua từng học sinh và từng tiêu chí
+    classStudents.forEach(studentId => {
+      classAssignments.forEach(assignment => {
+        const key = `${studentId}_${assignment.criteria_id}`;
+        const prog = progressMap[key];
+
+        const progressPercent = prog?.progress_percent || 0;
+        totalProgressSum += progressPercent;
+
+        if (prog && (prog.status === 'COMPLETED' || progressPercent === 100)) {
+          totalCriteriaCompleted++;
+        }
+      });
+    });
+
+    // Tính % hoàn thành trung bình của lớp
+    const averageCompletion = totalPossible > 0 ? (totalProgressSum / totalPossible) : 0;
+
+    classCompletionData[cls.id] = {
+      class_id: cls.id,
+      class_name: cls.name,
+      grade_level: cls.grade_level,
+      total_students: classStudents.length,
+      total_criteria_assigned: totalCriteriaAssigned,
+      average_completion_percentage: parseFloat(averageCompletion.toFixed(2)),
+      total_criteria_completed: totalCriteriaCompleted,
+      total_possible: totalPossible,
+    };
+  });
+
+  // 6. Nhóm và tính trung bình theo khối
+  const gradeStatistics = Object.keys(gradeGroups).map(gradeLevel => {
+    const gradeClasses = gradeGroups[gradeLevel];
+    const gradeClassIds = gradeClasses.map(c => c.id);
+
+    // Lấy dữ liệu completion của các lớp trong khối
+    const gradeClassData = gradeClassIds
+      .map(classId => classCompletionData[classId])
+      .filter(Boolean);
+
+    // Tính trung bình của khối
+    const totalClasses = gradeClassData.length;
+    const totalStudents = gradeClassData.reduce((sum, c) => sum + c.total_students, 0);
+    const totalPossibleGrade = gradeClassData.reduce((sum, c) => sum + c.total_possible, 0);
+    const totalCompletedGrade = gradeClassData.reduce((sum, c) => sum + c.total_criteria_completed, 0);
+
+    // Tính % trung bình của khối (weighted average theo số học sinh)
+    let gradeAverageCompletion = 0;
+    if (totalPossibleGrade > 0) {
+      const totalProgressSumGrade = gradeClassData.reduce(
+        (sum, c) => sum + (c.average_completion_percentage * c.total_possible),
+        0
+      );
+      gradeAverageCompletion = totalProgressSumGrade / totalPossibleGrade;
+    }
+
+    return {
+      grade_level: parseInt(gradeLevel),
+      total_classes: totalClasses,
+      total_students: totalStudents,
+      average_completion_percentage: parseFloat(gradeAverageCompletion.toFixed(2)),
+      completion_rate: totalPossibleGrade > 0 ? parseFloat((totalCompletedGrade / totalPossibleGrade).toFixed(4)) : 0,
+      classes_detail: gradeClassData.sort((a, b) => b.average_completion_percentage - a.average_completion_percentage),
+    };
+  });
+
+  // Sort theo grade_level
+  gradeStatistics.sort((a, b) => a.grade_level - b.grade_level);
+
+  // 7. Tính overall của toàn trường
+  const totalStudentsSchool = gradeStatistics.reduce((sum, g) => sum + g.total_students, 0);
+  const totalPossibleSchool = gradeStatistics.reduce(
+    (sum, g) => sum + g.classes_detail.reduce((s, c) => s + c.total_possible, 0),
+    0
+  );
+  const totalCompletedSchool = gradeStatistics.reduce(
+    (sum, g) => sum + g.classes_detail.reduce((s, c) => s + c.total_criteria_completed, 0),
+    0
+  );
+
+  let schoolAverageCompletion = 0;
+  if (totalPossibleSchool > 0) {
+    const totalProgressSumSchool = gradeStatistics.reduce(
+      (sum, g) => sum + g.classes_detail.reduce(
+        (s, c) => s + (c.average_completion_percentage * c.total_possible),
+        0
+      ),
+      0
+    );
+    schoolAverageCompletion = totalProgressSumSchool / totalPossibleSchool;
+  }
+
+  return {
+    school_id,
+    total_classes: classes.length,
+    total_students: totalStudentsSchool,
+    overall_average_completion: parseFloat(schoolAverageCompletion.toFixed(2)),
+    overall_completion_rate: totalPossibleSchool > 0 ? parseFloat((totalCompletedSchool / totalPossibleSchool).toFixed(4)) : 0,
+    grade_statistics: gradeStatistics,
+  };
+};
+
 module.exports = {
   getStudentCareerStatistics,
   getStudentCareerEvaluations,
@@ -1091,4 +1696,8 @@ module.exports = {
   getClassCareerEvaluations,
   getClassTopStudents,
   getClassOverallCompletion,
+  getSchoolOverviewStatistics,
+  getSchoolLicensedCareers,
+  getSchoolCareersInUse,
+  getSchoolGradeCompletion,
 };

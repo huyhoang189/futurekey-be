@@ -936,4 +936,480 @@ router.get("/classes/:id/top-students", checkAuth, statisticsController.getClass
  */
 router.get("/classes/:id/overall-completion", checkAuth, statisticsController.getClassOverallCompletion);
 
+/**
+ * @swagger
+ * /api/v2/schools/statistics/schools/{id}/overview:
+ *   get:
+ *     summary: Thống kê tổng quan theo trường
+ *     description: |
+ *       Lấy thông tin tổng quan về học sinh trong trường:
+ *       - Tổng số học sinh và số lớp
+ *       - Phân bổ theo giới tính (số lượng và %)
+ *       - Phân bổ theo khối lớp (grade level)
+ *       - Chi tiết giới tính trong từng khối
+ *       
+ *       **Use case:**
+ *       - Dashboard tổng quan toàn trường
+ *       - Báo cáo thống kê cho ban giám hiệu
+ *       - Phân tích cơ cấu học sinh
+ *       - Lập kế hoạch tuyển sinh
+ *     tags: [V2 - Schools - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của trường học
+ *         example: "school-uuid-123"
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 message:
+ *                   type: string
+ *                   example: Get school overview statistics successfully
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     school_id:
+ *                       type: string
+ *                       example: "school-uuid-123"
+ *                     school_name:
+ *                       type: string
+ *                       example: "Trường THPT Nguyễn Huệ"
+ *                     school_address:
+ *                       type: string
+ *                       example: "123 Đường ABC, Quận 1, TP.HCM"
+ *                     total_students:
+ *                       type: integer
+ *                       example: 1200
+ *                       description: Tổng số học sinh toàn trường
+ *                     total_classes:
+ *                       type: integer
+ *                       example: 40
+ *                       description: Tổng số lớp
+ *                     gender_distribution:
+ *                       type: object
+ *                       description: Phân bổ giới tính toàn trường
+ *                       properties:
+ *                         male:
+ *                           type: integer
+ *                           example: 580
+ *                         female:
+ *                           type: integer
+ *                           example: 610
+ *                         other:
+ *                           type: integer
+ *                           example: 10
+ *                         male_percentage:
+ *                           type: number
+ *                           example: 48.33
+ *                         female_percentage:
+ *                           type: number
+ *                           example: 50.83
+ *                         other_percentage:
+ *                           type: number
+ *                           example: 0.84
+ *                     grade_distribution:
+ *                       type: array
+ *                       description: Phân bổ theo khối lớp (sắp xếp theo grade_level tăng dần)
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           grade_level:
+ *                             type: integer
+ *                             example: 10
+ *                             description: Khối lớp (10, 11, 12)
+ *                           total_students:
+ *                             type: integer
+ *                             example: 400
+ *                             description: Tổng số học sinh khối này
+ *                           male:
+ *                             type: integer
+ *                             example: 195
+ *                           female:
+ *                             type: integer
+ *                             example: 200
+ *                           other:
+ *                             type: integer
+ *                             example: 5
+ *       400:
+ *         description: School ID không hợp lệ
+ *       404:
+ *         description: Trường học không tồn tại
+ */
+router.get("/schools/:id/overview", checkAuth, statisticsController.getSchoolOverviewStatistics);
+
+/**
+ * @swagger
+ * /api/v2/schools/statistics/schools/{id}/licensed-careers:
+ *   get:
+ *     summary: Lấy danh sách nghề mà trường đang được cấp phép
+ *     tags: [V2 - Schools - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID
+ *     responses:
+ *       200:
+ *         description: Danh sách nghề được cấp phép thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     school_id:
+ *                       type: string
+ *                       example: "school-uuid"
+ *                     total_licensed_careers:
+ *                       type: integer
+ *                       example: 15
+ *                     careers:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           license_id:
+ *                             type: string
+ *                             example: "license-uuid"
+ *                           career_id:
+ *                             type: string
+ *                             example: "career-uuid"
+ *                           career_code:
+ *                             type: string
+ *                             example: "IT01"
+ *                           career_name:
+ *                             type: string
+ *                             example: "Lập trình viên"
+ *                           career_description:
+ *                             type: string
+ *                             example: "Nghề lập trình phần mềm"
+ *                           career_tags:
+ *                             type: string
+ *                             example: "IT,Programming,Software"
+ *                           is_career_active:
+ *                             type: boolean
+ *                             example: true
+ *                           start_date:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2024-01-01T00:00:00Z"
+ *                           expiry_date:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2025-12-31T23:59:59Z"
+ *                           licensed_at:
+ *                             type: string
+ *                             format: date-time
+ *                             example: "2024-01-01T00:00:00Z"
+ *       400:
+ *         description: Missing school_id
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  '/schools/:id/licensed-careers',
+  checkAuth,
+  statisticsController.getSchoolLicensedCareers
+);
+
+/**
+ * @swagger
+ * /api/v2/schools/statistics/schools/{id}/careers-in-use:
+ *   get:
+ *     summary: Lấy danh sách nghề đang được sử dụng trong trường
+ *     description: |
+ *       Thống kê các nghề đang được sử dụng dựa trên:
+ *       - Số lượng học sinh tham gia (có tiến độ học tập)
+ *       - Số lượng đánh giá của học sinh
+ *       - Điểm đánh giá trung bình
+ *       - Phân loại kết quả đánh giá
+ *       
+ *       **Hỗ trợ sắp xếp theo:**
+ *       - students_count: Số học sinh tham gia (mặc định)
+ *       - evaluations_count: Số lượng đánh giá
+ *       - average_score: Điểm trung bình
+ *       
+ *       **Use case:**
+ *       - Xem nghề nào được học sinh quan tâm nhất
+ *       - Phân tích hiệu quả sử dụng nghề đã cấp phép
+ *       - Lập kế hoạch đào tạo dựa trên mức độ sử dụng
+ *     tags: [V2 - Schools - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID
+ *         example: "school-uuid-123"
+ *       - in: query
+ *         name: sort_by
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [students_count, evaluations_count, average_score]
+ *           default: students_count
+ *         description: Tiêu chí sắp xếp
+ *         example: "students_count"
+ *       - in: query
+ *         name: order
+ *         required: false
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: desc
+ *         description: Thứ tự sắp xếp (asc = tăng dần, desc = giảm dần)
+ *         example: "desc"
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     school_id:
+ *                       type: string
+ *                       example: "school-uuid-123"
+ *                     total_careers_in_use:
+ *                       type: integer
+ *                       example: 12
+ *                       description: Tổng số nghề đang được sử dụng
+ *                     sort_by:
+ *                       type: string
+ *                       example: "students_count"
+ *                       description: Tiêu chí sắp xếp đã áp dụng
+ *                     order:
+ *                       type: string
+ *                       example: "desc"
+ *                       description: Thứ tự sắp xếp đã áp dụng
+ *                     careers:
+ *                       type: array
+ *                       description: Danh sách nghề (đã sắp xếp)
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           career_id:
+ *                             type: string
+ *                             example: "career-uuid-456"
+ *                           career_code:
+ *                             type: string
+ *                             example: "IT001"
+ *                           career_name:
+ *                             type: string
+ *                             example: "Lập trình viên"
+ *                           career_description:
+ *                             type: string
+ *                             example: "Phát triển phần mềm"
+ *                           career_tags:
+ *                             type: string
+ *                             example: "IT,Programming,Software"
+ *                           students_count:
+ *                             type: integer
+ *                             example: 450
+ *                             description: Số học sinh đã tham gia học nghề này
+ *                           evaluations_count:
+ *                             type: integer
+ *                             example: 380
+ *                             description: Số lượng đánh giá của học sinh
+ *                           average_score:
+ *                             type: number
+ *                             example: 78.5
+ *                             description: Điểm đánh giá trung bình (%)
+ *                           evaluation_distribution:
+ *                             type: object
+ *                             description: Phân loại kết quả đánh giá
+ *                             properties:
+ *                               very_suitable:
+ *                                 type: integer
+ *                                 example: 150
+ *                                 description: Số học sinh đánh giá rất phù hợp
+ *                               suitable:
+ *                                 type: integer
+ *                                 example: 200
+ *                                 description: Số học sinh đánh giá phù hợp
+ *                               not_suitable:
+ *                                 type: integer
+ *                                 example: 30
+ *                                 description: Số học sinh đánh giá không phù hợp
+ *       400:
+ *         description: Missing school_id hoặc tham số không hợp lệ
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  '/schools/:id/careers-in-use',
+  checkAuth,
+  statisticsController.getSchoolCareersInUse
+);
+
+/**
+ * @swagger
+ * /api/v2/schools/statistics/schools/{id}/grade-completion:
+ *   get:
+ *     summary: Thống kê % trung bình hoàn thành học tập nghề theo khối lớp
+ *     description: |
+ *       Tính toán và nhóm thống kê hoàn thành theo khối (grade_level) để hiển thị bar chart:
+ *       
+ *       **Logic tính toán:**
+ *       1. Tính % hoàn thành trung bình của mỗi học sinh
+ *       2. Từ đó tính % trung bình của lớp với 1 nghề
+ *       3. Tính % trung bình của toàn lớp (tất cả nghề)
+ *       4. Nhóm các lớp theo khối (10, 11, 12)
+ *       5. Tính % trung bình của từng khối (weighted average theo số học sinh)
+ *       
+ *       **Dữ liệu trả về:**
+ *       - Thống kê tổng thể của trường
+ *       - Thống kê theo từng khối (10, 11, 12)
+ *       - Chi tiết từng lớp trong khối (nếu cần)
+ *       
+ *       **Use case:**
+ *       - Hiển thị bar chart so sánh % hoàn thành giữa các khối
+ *       - Báo cáo tiến độ học tập theo khối
+ *       - Phân tích hiệu quả đào tạo theo khối lớp
+ *     tags: [V2 - Schools - Statistics]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: School ID
+ *         example: "school-uuid-123"
+ *     responses:
+ *       200:
+ *         description: Thành công
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     school_id:
+ *                       type: string
+ *                       example: "school-uuid-123"
+ *                     total_classes:
+ *                       type: integer
+ *                       example: 36
+ *                       description: Tổng số lớp trong trường
+ *                     total_students:
+ *                       type: integer
+ *                       example: 1080
+ *                       description: Tổng số học sinh trong trường
+ *                     overall_average_completion:
+ *                       type: number
+ *                       example: 68.5
+ *                       description: "% hoàn thành trung bình của toàn trường"
+ *                     overall_completion_rate:
+ *                       type: number
+ *                       example: 0.6234
+ *                       description: Tỉ lệ hoàn thành tổng thể (0-1)
+ *                     grade_statistics:
+ *                       type: array
+ *                       description: Thống kê theo từng khối (sắp xếp theo grade_level)
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           grade_level:
+ *                             type: integer
+ *                             example: 10
+ *                             description: Khối lớp (10, 11, 12)
+ *                           total_classes:
+ *                             type: integer
+ *                             example: 12
+ *                             description: Số lớp trong khối này
+ *                           total_students:
+ *                             type: integer
+ *                             example: 360
+ *                             description: Tổng số học sinh trong khối
+ *                           average_completion_percentage:
+ *                             type: number
+ *                             example: 72.3
+ *                             description: "% hoàn thành trung bình của khối (weighted average)"
+ *                           completion_rate:
+ *                             type: number
+ *                             example: 0.6543
+ *                             description: Tỉ lệ hoàn thành của khối (0-1)
+ *                           classes_detail:
+ *                             type: array
+ *                             description: Chi tiết từng lớp trong khối (sắp xếp theo % hoàn thành giảm dần)
+ *                             items:
+ *                               type: object
+ *                               properties:
+ *                                 class_id:
+ *                                   type: string
+ *                                   example: "class-uuid-456"
+ *                                 class_name:
+ *                                   type: string
+ *                                   example: "10A1"
+ *                                 grade_level:
+ *                                   type: integer
+ *                                   example: 10
+ *                                 total_students:
+ *                                   type: integer
+ *                                   example: 30
+ *                                 total_criteria_assigned:
+ *                                   type: integer
+ *                                   example: 40
+ *                                   description: Tổng số tiêu chí được giao cho lớp
+ *                                 average_completion_percentage:
+ *                                   type: number
+ *                                   example: 75.5
+ *                                   description: "% hoàn thành trung bình của lớp"
+ *                                 total_criteria_completed:
+ *                                   type: integer
+ *                                   example: 906
+ *                                   description: Tổng số tiêu chí đã hoàn thành (tất cả học sinh)
+ *                                 total_possible:
+ *                                   type: integer
+ *                                   example: 1200
+ *                                   description: Tổng số tiêu chí có thể hoàn thành (students × criteria)
+ *       400:
+ *         description: Missing school_id
+ *       500:
+ *         description: Server error
+ */
+router.get(
+  '/schools/:id/grade-completion',
+  checkAuth,
+  statisticsController.getSchoolGradeCompletion
+);
+
 module.exports = router;

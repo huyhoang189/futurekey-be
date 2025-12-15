@@ -1,5 +1,6 @@
 const { StatusCodes } = require("http-status-codes");
 const statisticsService = require("../../services/schools/statistics.service");
+const asyncHandler = require("../../../../middlewares/handler/asyncHandler");
 
 /**
  * Thống kê nghề nghiệp của học sinh
@@ -221,6 +222,109 @@ const getClassOverallCompletion = async (req, res) => {
   }
 };
 
+/**
+ * Thống kê tổng quan theo trường
+ * GET /api/v2/schools/statistics/schools/:id/overview
+ */
+const getSchoolOverviewStatistics = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "School ID is required",
+      });
+    }
+
+    const overview = await statisticsService.getSchoolOverviewStatistics(id);
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Get school overview statistics successfully",
+      data: overview,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+const getSchoolLicensedCareers = asyncHandler(async (req, res) => {
+  const school_id = req.params.id;
+
+  if (!school_id) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: 'school_id is required',
+    });
+  }
+
+  const result = await statisticsService.getSchoolLicensedCareers(school_id);
+
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: result,
+  });
+});
+
+const getSchoolCareersInUse = asyncHandler(async (req, res) => {
+  const school_id = req.params.id;
+  const { sort_by = 'students_count', order = 'desc' } = req.query;
+
+  if (!school_id) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: 'school_id is required',
+    });
+  }
+
+  // Validate sort_by
+  const validSortBy = ['students_count', 'evaluations_count', 'average_score'];
+  if (!validSortBy.includes(sort_by)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: `sort_by must be one of: ${validSortBy.join(', ')}`,
+    });
+  }
+
+  // Validate order
+  const validOrder = ['asc', 'desc'];
+  if (!validOrder.includes(order)) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: 'order must be either "asc" or "desc"',
+    });
+  }
+
+  const result = await statisticsService.getSchoolCareersInUse(school_id, sort_by, order);
+
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: result,
+  });
+});
+
+const getSchoolGradeCompletion = asyncHandler(async (req, res) => {
+  const school_id = req.params.id;
+
+  if (!school_id) {
+    return res.status(StatusCodes.BAD_REQUEST).json({
+      success: false,
+      message: 'school_id is required',
+    });
+  }
+
+  const result = await statisticsService.getSchoolGradeCompletion(school_id);
+
+  return res.status(StatusCodes.OK).json({
+    success: true,
+    data: result,
+  });
+});
+
 module.exports = {
   getStudentCareerStatistics,
   getStudentCareerEvaluations,
@@ -229,4 +333,8 @@ module.exports = {
   getClassCareerEvaluations,
   getClassTopStudents,
   getClassOverallCompletion,
+  getSchoolOverviewStatistics,
+  getSchoolLicensedCareers,
+  getSchoolCareersInUse,
+  getSchoolGradeCompletion,
 };

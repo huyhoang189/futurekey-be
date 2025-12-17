@@ -64,7 +64,7 @@ const getAllQuestions = async (req, res) => {
 const getQuestionById = async (req, res) => {
   try {
     const { id } = req.params;
-    const question = await questionsService.getQuestionById(parseInt(id));
+    const question = await questionsService.getQuestionById(id);
 
     return res.status(200).json({
       success: true,

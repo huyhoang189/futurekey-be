@@ -273,13 +273,10 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
  *                 example: true
  *               options:
  *                 type: array
- *                 description: Mảng các đáp án (cho MULTIPLE_CHOICE, TRUE_FALSE)
+ *                 description: Mảng các đáp án (cho MULTIPLE_CHOICE, TRUE_FALSE). FE sẽ tự sinh ABCD theo order_index.
  *                 items:
  *                   type: object
  *                   properties:
- *                     option_key:
- *                       type: string
- *                       example: A
  *                     option_text:
  *                       type: string
  *                       example: 62.8 cm
@@ -289,13 +286,14 @@ router.get("/:id", checkAuth, questionsController.getQuestionById);
  *                     order_index:
  *                       type: integer
  *                       example: 1
+ *                       description: Thứ tự hiển thị (0=A, 1=B, 2=C, 3=D)
  *                 example:
  *                   - option_text: "62.8 cm"
  *                     is_correct: true
- *                     order_index: 1
+ *                     order_index: 0
  *                   - option_text: "31.4 cm"
  *                     is_correct: false
- *                     order_index: 2
+ *                     order_index: 1
  *                   - option_text: "314 cm"
  *                     is_correct: false
  *                     order_index: 3

@@ -410,7 +410,6 @@ model student_answers {
 model question_options {
   id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
   question_id String    @db.VarChar(36)
-  option_key  String    @db.VarChar(10)
   option_text String    @db.Text
   is_correct  Boolean   @default(false)
   order_index Int?

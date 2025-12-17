@@ -24,9 +24,18 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *           type: string
  *           example: ques-123-abc
  *         answer_data:
- *           type: object
- *           description: Dữ liệu câu trả lời (định dạng phụ thuộc vào loại câu hỏi)
- *           example: {"selected": ["A", "C"]}
+ *           description: |
+ *             Dữ liệu câu trả lời - Format phụ thuộc loại câu hỏi:
+ *             - MULTIPLE_CHOICE/TRUE_FALSE (1 đáp án): "opt-uuid-123" (String)
+ *             - MULTIPLE_CHOICE (nhiều đáp án): ["opt-uuid-1", "opt-uuid-2"] (Array)
+ *             - ESSAY/SHORT_ANSWER: "Văn bản câu trả lời..." (String)
+ *           oneOf:
+ *             - type: string
+ *               example: opt-789-abc-def
+ *             - type: array
+ *               items:
+ *                 type: string
+ *               example: ["opt-111-aaa", "opt-222-bbb"]
  *         max_score:
  *           type: number
  *           example: 10
@@ -241,19 +250,26 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *                             example: 1
  *                           options:
  *                             type: array
- *                             description: Đáp án đã shuffle
+ *                             description: |
+ *                               Đáp án đã shuffle. FE sẽ tự động sinh ABCD dựa trên order_index:
+ *                               - order_index: 0 → Hiển thị "A"
+ *                               - order_index: 1 → Hiển thị "B"
+ *                               - order_index: 2 → Hiển thị "C"
+ *                               - order_index: 3 → Hiển thị "D"
  *                             items:
  *                               type: object
  *                               properties:
  *                                 id:
  *                                   type: string
  *                                   example: opt-789-ghi
+ *                                   description: UUID của option - GỬI ID NÀY KHI SUBMIT
  *                                 option_text:
  *                                   type: string
  *                                   example: Làm việc độc lập
  *                                 order_index:
  *                                   type: integer
- *                                   example: 1
+ *                                   example: 0
+ *                                   description: Thứ tự hiển thị (0=A, 1=B, 2=C, 3=D)
  *                     config:
  *                       type: object
  *                       properties:
@@ -280,41 +296,22 @@ router.post("/start", checkAuth, studentExamsController.startExam);
  * @swagger
  * /api/v2/students/student-exams/attempts/{attemptId}/answers:
  *   post:
- *     summary: Lưu câu trả lời - Auto-save mỗi khi học sinh chọn đáp án
+ *     summary: "DEPRECATED - API này không còn được sử dụng"
  *     description: |
- *       Upsert (create hoặc update) câu trả lời của học sinh.
+ *       ⚠️ **API ĐÃ DEPRECATED - KHÔNG SỬ DỤNG**
  *       
- *       **Cách hoạt động:**
- *       - Lần đầu trả lời → CREATE mới (student_answers)
- *       - Thay đổi đáp án → UPDATE answer_data
- *       - Unique constraint: (attempt_id, question_id) → Mỗi câu chỉ 1 answer
+ *       Hiện tại không cần lưu câu trả lời trong khi làm bài.
+ *       Chỉ gửi tất cả câu trả lời 1 lần khi nộp bài qua endpoint:
+ *       **POST /api/v2/students/student-exams/attempts/{attemptId}/submit**
  *       
- *       **Validations:**
- *       - Attempt không tồn tại → Lỗi "Attempt not found"
- *       - Attempt.status ≠ IN_PROGRESS → Lỗi "Cannot save answer. Exam is not in progress"
+ *       Nếu cần auto-save trong khi làm bài, FE nên sử dụng:
+ *       - LocalStorage/SessionStorage
+ *       - IndexedDB
  *       
- *       **answer_data format theo question_type:**
- *       
- *       1. **TRUE_FALSE**: `{ "value": true }` hoặc `{ "value": false }`
- *       
- *       2. **MULTIPLE_CHOICE**: 
- *          - 1 đáp án: `{ "selected": ["A"] }`
- *          - Nhiều đáp án: `{ "selected": ["A", "C", "D"] }`
- *       
- *       3. **SHORT_ANSWER**: `{ "text": "25 cm²" }`
- *       
- *       4. **ESSAY**: `{ "text": "Bài luận dài..." }`
- *       
- *       **Use case:**
- *       - Frontend call API này MỔI KHI học sinh:
- *         + Chọn/bỏ chọn checkbox
- *         + Nhập text (debounce 500ms)
- *         + Chuyển sang câu khác
- *       - Mục đích: Không mất dữ liệu khi reload trang/mất mạng
- *       
- *       **Lưu ý:**
- *       - KHÔNG chấm điểm ở đây (chỉ lưu answer_data)
- *       - Chấm điểm khi nộp bài (POST submit)
+ *       Lý do deprecated:
+ *       - Giảm số lượng request không cần thiết
+ *       - Snapshot approach đảm bảo không mất dữ liệu
+ *       - Chấm điểm chỉ diễn ra 1 lần khi submit
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []
@@ -326,58 +323,15 @@ router.post("/start", checkAuth, studentExamsController.startExam);
  *           type: string
  *         description: ID của attempt
  *     requestBody:
- *       required: true
+ *       required: false
  *       content:
  *         application/json:
  *           schema:
  *             type: object
- *             required:
- *               - question_id
- *               - answer_data
- *             properties:
- *               question_id:
- *                 type: string
- *                 example: ques-456-def
- *               answer_data:
- *                 type: object
- *                 description: Định dạng dữ liệu phụ thuộc vào loại câu hỏi
- *                 oneOf:
- *                   - description: TRUE_FALSE
- *                     example: {"value": true}
- *                   - description: MULTIPLE_CHOICE
- *                     example: {"selected": ["A", "C"]}
- *                   - description: SHORT_ANSWER
- *                     example: {"text": "25 cm²"}
- *                   - description: ESSAY
- *                     example: {"text": "Diện tích hình vuông được tính bằng công thức S = a², với a là cạnh hình vuông..."}
- *           examples:
- *             trueFalse:
- *               summary: Câu hỏi đúng/sai
- *               value:
- *                 question_id: "ques-123-abc"
- *                 answer_data:
- *                   value: true
- *             multipleChoice:
- *               summary: Câu hỏi trắc nghiệm nhiều đáp án
- *               value:
- *                 question_id: "ques-456-def"
- *                 answer_data:
- *                   selected: ["A", "C"]
- *             shortAnswer:
- *               summary: Câu hỏi trả lời ngắn
- *               value:
- *                 question_id: "ques-789-ghi"
- *                 answer_data:
- *                   text: "25 cm²"
- *             essay:
- *               summary: Câu hỏi tự luận
- *               value:
- *                 question_id: "ques-101-jkl"
- *                 answer_data:
- *                   text: "Diện tích hình vuông được tính bằng công thức S = a²..."
+ *             description: API này không còn hoạt động
  *     responses:
- *       200:
- *         description: Lưu câu trả lời thành công
+ *       400:
+ *         description: API deprecated
  *         content:
  *           application/json:
  *             schema:
@@ -385,11 +339,10 @@ router.post("/start", checkAuth, studentExamsController.startExam);
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
- *                 data:
- *                   $ref: '#/components/schemas/StudentAnswer'
- *       400:
- *         description: Attempt đã nộp hoặc hết thời gian
+ *                   example: false
+ *                 message:
+ *                   type: string
+ *                   example: This API is deprecated. Submit all answers at once using /submit endpoint
  */
 router.post("/attempts/:attemptId/answers", checkAuth, studentExamsController.saveAnswer);
 
@@ -397,48 +350,63 @@ router.post("/attempts/:attemptId/answers", checkAuth, studentExamsController.sa
  * @swagger
  * /api/v2/students/student-exams/attempts/{attemptId}/submit:
  *   post:
- *     summary: Nộp bài thi - Tự động chấm điểm trắc nghiệm
+ *     summary: Nộp bài thi - Gửi tất cả câu trả lời và tự động chấm điểm
  *     description: |
  *       Kết thúc bài thi và trigger auto-grading cho câu trắc nghiệm.
  *       
+ *       **Format answer_data MỚI (sau khi bỏ option_key):**
+ *       
+ *       1. **MULTIPLE_CHOICE / TRUE_FALSE (1 đáp án)**:
+ *          ```json
+ *          {
+ *            "question_id": "ques-123",
+ *            "answer_data": "opt-789-abc-def"  // ← UUID của option
+ *          }
+ *          ```
+ *       
+ *       2. **MULTIPLE_CHOICE (nhiều đáp án đúng)**:
+ *          ```json
+ *          {
+ *            "question_id": "ques-456",
+ *            "answer_data": ["opt-111-aaa", "opt-222-bbb", "opt-333-ccc"]
+ *          }
+ *          ```
+ *       
+ *       3. **ESSAY / SHORT_ANSWER**:
+ *          ```json
+ *          {
+ *            "question_id": "ques-789",
+ *            "answer_data": "Văn bản câu trả lời của học sinh..."
+ *          }
+ *          ```
+ *       
  *       **Quy trình tự động:**
- *       1. **Update attempt**:
+ *       1. **Validate**: Kiểm tra attempt.status = IN_PROGRESS
+ *       
+ *       2. **Auto-grading MULTIPLE_CHOICE/TRUE_FALSE**:
+ *          - Lấy correct_option_ids từ snapshot (Array)
+ *          - So sánh với answer_data (normalize thành array)
+ *          - Kiểm tra: `sorted(student_answers) == sorted(correct_option_ids)`
+ *          - is_correct = true/false
+ *          - score = max_score (nếu đúng 100%) hoặc 0
+ *       
+ *       3. **Skip ESSAY/SHORT_ANSWER**: Chấm thủ công sau
+ *       
+ *       4. **Update attempt**:
  *          - submit_time = now
  *          - duration_seconds = (submit_time - start_time) / 1000
+ *          - total_score = Σ(score của các câu đã chấm)
  *          - status = SUBMITTED
+ *          - is_auto_graded = true
  *       
- *       2. **Auto-grading** (chạy tự động):
- *          - Chấm câu MULTIPLE_CHOICE:
- *            + Lấy correct_answer từ snapshot (KHÔNG query DB)
- *            + So sánh với student answer
- *            + is_correct = true/false
- *            + score = max_score (nếu đúng) hoặc 0
- *          
- *          - Chấm câu TRUE_FALSE:
- *            + Lấy correct_answer từ snapshot
- *            + So sánh với student answer.value
- *          
- *          - Bỏ qua câu ESSAY và SHORT_ANSWER (chấm thủ công sau)
- *       
- *       3. **Tính tổng điểm**:
- *          - total_score = Σ(score của các câu trắc nghiệm)
- *          - Update attempt.total_score, is_auto_graded = true
- *          - status = GRADED (nếu không có tự luận) hoặc giữ SUBMITTED
- *       
- *       **Validations:**
- *       - Attempt không tồn tại → Lỗi "Attempt not found"
- *       - status ≠ IN_PROGRESS → Lỗi "Exam is not in progress" (không nộp lại)
- *       
- *       **Response:**
- *       - message: "Exam submitted successfully"
- *       - duration_seconds: Thời gian làm bài (giây)
- *       - auto_graded: true nếu chấm xong, false nếu có tự luận chờ giáo viên
+ *       5. **Save student_answers**: Lưu tất cả câu trả lời vào DB
  *       
  *       **Lưu ý quan trọng:**
- *       - Auto-grading dùng SNAPSHOT, KHÔNG query database
- *         → Nếu admin sửa câu hỏi sau khi học sinh start, không ảnh hưởng kết quả
- *       - Câu tự luận (ESSAY/SHORT_ANSWER) đợi giáo viên chấm thủ công
- *       - Học sinh CHỈ nộp được 1 lần (không edit sau khi nộp)
+ *       - ❌ KHÔNG GỬI "A", "B", "C", "D" - GỬI UUID của option
+ *       - FE tự sinh ABCD dựa trên order_index khi hiển thị
+ *       - Nhiều đáp án: GỬI ARRAY ["uuid1", "uuid2"]
+ *       - Thiếu/thừa 1 đáp án → SAI hoàn toàn (0 điểm)
+ *       - Auto-grading dùng SNAPSHOT → Admin sửa DB không ảnh hưởng
  *     tags: [V2 - Students - Exams]
  *     security:
  *       - bearerAuth: []

@@ -113,7 +113,6 @@ const createQuestion = async (questionData) => {
       await tx.question_options.createMany({
         data: options.map((opt, idx) => ({
           question_id: question.id,
-          option_key: opt.option_key,
           option_text: opt.option_text,
           is_correct: opt.is_correct || false,
           order_index: opt.order_index ?? idx,
@@ -138,7 +137,7 @@ const createQuestion = async (questionData) => {
 };
 
 const updateQuestion = async (id, updateData) => {
-  const { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active } = updateData;
+  const { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active, options } = updateData;
 
   const existing = await prisma.questions.findUnique({ where: { id } });
   if (!existing) throw new Error("Question not found");
@@ -153,23 +152,52 @@ const updateQuestion = async (id, updateData) => {
     if (!criteria) throw new Error("Career criteria not found");
   }
 
-  const question = await prisma.questions.update({
-    where: { id },
-    data: {
-      ...(content !== undefined && { content }),
-      ...(question_type !== undefined && { question_type }),
-      ...(difficulty_level !== undefined && { difficulty_level }),
-      ...(category_id !== undefined && { category_id }),
-      ...(career_criteria_id !== undefined && { career_criteria_id }),
-      ...(points !== undefined && { points }),
-      ...(explanation !== undefined && { explanation }),
-      ...(tags !== undefined && { tags }),
-      ...(metadata !== undefined && { metadata }),
-      ...(is_active !== undefined && { is_active }),
-    },
+  const result = await prisma.$transaction(async (tx) => {
+    // Update question
+    const question = await tx.questions.update({
+      where: { id },
+      data: {
+        ...(content !== undefined && { content }),
+        ...(question_type !== undefined && { question_type }),
+        ...(difficulty_level !== undefined && { difficulty_level }),
+        ...(category_id !== undefined && { category_id }),
+        ...(career_criteria_id !== undefined && { career_criteria_id }),
+        ...(points !== undefined && { points }),
+        ...(explanation !== undefined && { explanation }),
+        ...(tags !== undefined && { tags }),
+        ...(metadata !== undefined && { metadata }),
+        ...(is_active !== undefined && { is_active }),
+      },
+    });
+
+    // Update options nếu có truyền vào
+    if (options !== undefined) {
+      // Xóa options cũ
+      await tx.question_options.deleteMany({ where: { question_id: id } });
+
+      // Tạo options mới
+      if (options.length > 0) {
+        await tx.question_options.createMany({
+          data: options.map((opt, idx) => ({
+            question_id: id,
+            option_text: opt.option_text,
+            is_correct: opt.is_correct || false,
+            order_index: opt.order_index ?? idx,
+          })),
+        });
+      }
+    }
+
+    // Lấy lại question kèm options
+    const questionOptions = await tx.question_options.findMany({
+      where: { question_id: id },
+      orderBy: { order_index: 'asc' },
+    });
+
+    return { ...question, options: questionOptions };
   });
 
-  return question;
+  return result;
 };
 
 const deleteQuestion = async (id) => {
@@ -195,7 +223,6 @@ const updateQuestionOptions = async (questionId, options) => {
       await tx.question_options.createMany({
         data: options.map((opt, idx) => ({
           question_id: questionId,
-          option_key: opt.option_key,
           option_text: opt.option_text,
           is_correct: opt.is_correct || false,
           order_index: opt.order_index ?? idx,

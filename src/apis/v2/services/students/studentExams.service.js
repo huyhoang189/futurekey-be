@@ -82,13 +82,11 @@ const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
     const enriched = await enrichQuestionsWithOptions(questionsForCategory);
 
     enriched.forEach(q => {
-      // Lấy correct_answer từ metadata hoặc tính toán từ options
-      let correct_answer = null;
+      // Lấy TẤT CẢ correct_option_ids từ options (hỗ trợ nhiều đáp án đúng)
+      let correct_option_ids = [];
       if (q.question_type === 'MULTIPLE_CHOICE' || q.question_type === 'TRUE_FALSE') {
-        const correctOption = q.options?.find(opt => opt.is_correct);
-        correct_answer = correctOption ? correctOption.option_key : null;
-      } else if (q.metadata?.correct_answer !== undefined) {
-        correct_answer = q.metadata.correct_answer;
+        const correctOptions = q.options?.filter(opt => opt.is_correct) || [];
+        correct_option_ids = correctOptions.map(opt => opt.id);
       }
 
       allQuestions.push({
@@ -99,8 +97,8 @@ const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
         question_type: q.question_type,
         difficulty_level: q.difficulty_level,
         points: parseFloat(config.total_points) / (distributions.reduce((sum, d) => sum + d.quantity, 0)),
-        options: q.options || [],
-        correct_answer,
+        options: q.options || [], // FE sẽ dùng order_index để hiển thị ABCD
+        correct_option_ids, // Array các ID đáp án đúng (hỗ trợ nhiều đáp án)
         explanation: q.explanation,
       });
     });
@@ -297,11 +295,42 @@ const submitExam = async ({ attempt_id, answers, student_id }) => {
 
 /**
  * Check answer correctness
+ * @param {Object} question - Question object from snapshot
+ * @param {String|Array|Object} answer_data - Có thể là:
+ *   - String: "opt-id" (1 đáp án)
+ *   - Array: ["opt-id-1", "opt-id-2"] (nhiều đáp án)
+ *   - Object: { option_id: "opt-id" } (backward compatible)
  */
 const checkAnswer = (question, answer_data) => {
   if (question.question_type === 'MULTIPLE_CHOICE' || question.question_type === 'TRUE_FALSE') {
-    // correct_answer đã được lưu trong snapshot_data
-    return answer_data === question.correct_answer;
+    const correctIds = question.correct_option_ids || [];
+    
+    // Normalize answer_data thành array
+    let studentAnswers = [];
+    
+    if (Array.isArray(answer_data)) {
+      // FE gửi array: ["opt-1", "opt-2"]
+      studentAnswers = answer_data;
+    } else if (typeof answer_data === 'string') {
+      // FE gửi string: "opt-1"
+      studentAnswers = [answer_data];
+    } else if (typeof answer_data === 'object' && answer_data !== null) {
+      // FE gửi object: { option_id: "opt-1" } hoặc { selected: ["opt-1", "opt-2"] }
+      if (answer_data.selected && Array.isArray(answer_data.selected)) {
+        studentAnswers = answer_data.selected;
+      } else {
+        const optId = answer_data.option_id || answer_data.value;
+        studentAnswers = optId ? [optId] : [];
+      }
+    }
+    
+    // So sánh 2 arrays (phải giống hệt, không thừa thiếu)
+    if (correctIds.length !== studentAnswers.length) return false;
+    
+    const sortedCorrect = [...correctIds].sort();
+    const sortedStudent = [...studentAnswers].sort();
+    
+    return sortedCorrect.every((id, idx) => id === sortedStudent[idx]);
   }
   // SHORT_ANSWER, ESSAY cần chấm thủ công
   return false;

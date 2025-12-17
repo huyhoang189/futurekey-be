@@ -12,12 +12,12 @@ const getAllQuestions = async (req, res) => {
     const {
       page = 1,
       limit = 10,
-      search = '',
+      search = "",
       category_id,
       career_criteria_id,
       question_type,
       difficulty_level,
-      is_active
+      is_active,
     } = req.query;
 
     const filters = {};
@@ -25,14 +25,14 @@ const getAllQuestions = async (req, res) => {
     if (career_criteria_id) filters.career_criteria_id = career_criteria_id;
     if (question_type) filters.question_type = question_type;
     if (difficulty_level) filters.difficulty_level = difficulty_level;
-    if (is_active !== undefined) filters.is_active = is_active === 'true';
+    if (is_active !== undefined) filters.is_active = is_active === "true";
 
     const paging = {
       skip: (parseInt(page) - 1) * parseInt(limit),
       limit: parseInt(limit),
     };
 
-    const orderBy = { created_at: 'desc' };
+    const orderBy = { created_at: "desc" };
 
     const result = await questionsService.getAllQuestions({
       filters,
@@ -44,7 +44,10 @@ const getAllQuestions = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: result.data,
-      meta: result.meta,
+      meta: {
+        ...result.meta,
+        page,
+      },
     });
   } catch (error) {
     return res.status(500).json({
@@ -101,7 +104,7 @@ const createQuestion = async (req, res) => {
       metadata,
       is_active,
     } = req.body;
-    
+
     const created_by = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
     const question = await questionsService.createQuestion({
@@ -155,7 +158,7 @@ const updateQuestion = async (req, res) => {
       is_active,
     } = req.body;
 
-    const question = await questionsService.updateQuestion(parseInt(id), {
+    const question = await questionsService.updateQuestion(id, {
       category_id,
       career_criteria_id,
       question_type,

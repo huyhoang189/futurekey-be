@@ -166,6 +166,9 @@ router.get(
  */
 router.get("/criteria/:id", usersController.getCareerCriteriaById);
 
+
+
+
 /**
  * @swagger
  * components:

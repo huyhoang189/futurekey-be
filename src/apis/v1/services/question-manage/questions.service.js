@@ -4,7 +4,12 @@ const prisma = new PrismaClient();
 /**
  * Lấy danh sách câu hỏi
  */
-const getAllQuestions = async ({ filters = {}, paging = {}, orderBy = {}, search = '' }) => {
+const getAllQuestions = async ({
+  filters = {},
+  paging = {},
+  orderBy = {},
+  search = "",
+}) => {
   const { skip = 0, limit = 10 } = paging;
 
   if (search) {
@@ -27,33 +32,51 @@ const getAllQuestions = async ({ filters = {}, paging = {}, orderBy = {}, search
   });
 
   if (data.length > 0) {
-    const categoryIds = [...new Set(data.map(q => q.category_id).filter(Boolean))];
-    const criteriaIds = [...new Set(data.map(q => q.career_criteria_id).filter(Boolean))];
-    const creatorIds = [...new Set(data.map(q => q.created_by).filter(Boolean))];
+    const categoryIds = [
+      ...new Set(data.map((q) => q.category_id).filter(Boolean)),
+    ];
+    const criteriaIds = [
+      ...new Set(data.map((q) => q.career_criteria_id).filter(Boolean)),
+    ];
+    const creatorIds = [
+      ...new Set(data.map((q) => q.created_by).filter(Boolean)),
+    ];
 
     const [categories, criteria, creators] = await Promise.all([
-      categoryIds.length > 0 ? prisma.question_categories.findMany({
-        where: { id: { in: categoryIds } },
-        select: { id: true, name: true },
-      }) : [],
-      criteriaIds.length > 0 ? prisma.career_criteria.findMany({
-        where: { id: { in: criteriaIds } },
-        select: { id: true, name: true },
-      }) : [],
-      creatorIds.length > 0 ? prisma.auth_base_user.findMany({
-        where: { id: { in: creatorIds } },
-        select: { id: true, full_name: true },
-      }) : [],
+      categoryIds.length > 0
+        ? prisma.question_categories.findMany({
+            where: { id: { in: categoryIds } },
+            select: { id: true, name: true },
+          })
+        : [],
+      criteriaIds.length > 0
+        ? prisma.career_criteria.findMany({
+            where: { id: { in: criteriaIds } },
+            select: { id: true, name: true },
+          })
+        : [],
+      creatorIds.length > 0
+        ? prisma.auth_base_user.findMany({
+            where: { id: { in: creatorIds } },
+            select: { id: true, full_name: true },
+          })
+        : [],
     ]);
 
-    const categoryMap = Object.fromEntries(categories.map(c => [c.id, c]));
-    const criteriaMap = Object.fromEntries(criteria.map(c => [c.id, c]));
-    const creatorsMap = Object.fromEntries(creators.map(c => [c.id, c]));
+    const categoryMap = Object.fromEntries(categories.map((c) => [c.id, c]));
+    const criteriaMap = Object.fromEntries(criteria.map((c) => [c.id, c]));
+    const creatorsMap = Object.fromEntries(creators.map((c) => [c.id, c]));
 
-    data.forEach(question => {
-      question.category = question.category_id ? categoryMap[question.category_id] || null : null;
-      question.career_criteria = question.career_criteria_id ? criteriaMap[question.career_criteria_id] || null : null;
-      question.creator = question.created_by ? creatorsMap[question.created_by] || null : null;
+    data.forEach((question) => {
+      question.category = question.category_id
+        ? categoryMap[question.category_id] || null
+        : null;
+      question.career_criteria = question.career_criteria_id
+        ? criteriaMap[question.career_criteria_id] || null
+        : null;
+      question.creator = question.created_by
+        ? creatorsMap[question.created_by] || null
+        : null;
     });
   }
 
@@ -65,21 +88,28 @@ const getQuestionById = async (id) => {
   if (!question) throw new Error("Question not found");
 
   const [category, criteria, creator, options] = await Promise.all([
-    question.category_id ? prisma.question_categories.findUnique({
-      where: { id: question.category_id },
-      select: { id: true, name: true },
-    }) : null,
-    question.career_criteria_id ? prisma.career_criteria.findUnique({
-      where: { id: question.career_criteria_id },
-      select: { id: true, name: true },
-    }) : null,
-    question.created_by ? prisma.auth_base_user.findUnique({
-      where: { id: question.created_by },
-      select: { id: true, full_name: true },
-    }) : null,
+    question.category_id
+      ? prisma.question_categories.findUnique({
+          where: { id: question.category_id },
+          select: { id: true, name: true },
+        })
+      : null,
+    question.career_criteria_id
+      ? prisma.career_criteria.findUnique({
+          where: { id: question.career_criteria_id },
+          select: { id: true, name: true, career_id: true },
+        })
+      : null,
+
+    question.created_by
+      ? prisma.auth_base_user.findUnique({
+          where: { id: question.created_by },
+          select: { id: true, full_name: true },
+        })
+      : null,
     prisma.question_options.findMany({
       where: { question_id: id },
-      orderBy: { order_index: 'asc' },
+      orderBy: { order_index: "asc" },
     }),
   ]);
 
@@ -92,21 +122,50 @@ const getQuestionById = async (id) => {
 };
 
 const createQuestion = async (questionData) => {
-  const { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active, created_by, options } = questionData;
+  const {
+    content,
+    question_type,
+    difficulty_level,
+    category_id,
+    career_criteria_id,
+    points,
+    explanation,
+    tags,
+    metadata,
+    is_active,
+    created_by,
+    options,
+  } = questionData;
 
   if (category_id) {
-    const category = await prisma.question_categories.findUnique({ where: { id: category_id } });
+    const category = await prisma.question_categories.findUnique({
+      where: { id: category_id },
+    });
     if (!category) throw new Error("Question category not found");
   }
 
   if (career_criteria_id) {
-    const criteria = await prisma.career_criteria.findUnique({ where: { id: career_criteria_id } });
+    const criteria = await prisma.career_criteria.findUnique({
+      where: { id: career_criteria_id },
+    });
     if (!criteria) throw new Error("Career criteria not found");
   }
 
   const result = await prisma.$transaction(async (tx) => {
     const question = await tx.questions.create({
-      data: { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active, created_by },
+      data: {
+        content,
+        question_type,
+        difficulty_level,
+        category_id,
+        career_criteria_id,
+        points,
+        explanation,
+        tags,
+        metadata,
+        is_active,
+        created_by,
+      },
     });
 
     if (options && options.length > 0) {
@@ -128,7 +187,7 @@ const createQuestion = async (questionData) => {
 
     const questionOptions = await tx.question_options.findMany({
       where: { question_id: question.id },
-      orderBy: { order_index: 'asc' },
+      orderBy: { order_index: "asc" },
     });
 
     return { ...questionWithOptions, options: questionOptions };
@@ -138,18 +197,33 @@ const createQuestion = async (questionData) => {
 };
 
 const updateQuestion = async (id, updateData) => {
-  const { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active } = updateData;
+  const {
+    content,
+    question_type,
+    difficulty_level,
+    category_id,
+    career_criteria_id,
+    points,
+    explanation,
+    tags,
+    metadata,
+    is_active,
+  } = updateData;
 
   const existing = await prisma.questions.findUnique({ where: { id } });
   if (!existing) throw new Error("Question not found");
 
   if (category_id !== undefined && category_id !== null) {
-    const category = await prisma.question_categories.findUnique({ where: { id: category_id } });
+    const category = await prisma.question_categories.findUnique({
+      where: { id: category_id },
+    });
     if (!category) throw new Error("Question category not found");
   }
 
   if (career_criteria_id !== undefined && career_criteria_id !== null) {
-    const criteria = await prisma.career_criteria.findUnique({ where: { id: career_criteria_id } });
+    const criteria = await prisma.career_criteria.findUnique({
+      where: { id: career_criteria_id },
+    });
     if (!criteria) throw new Error("Career criteria not found");
   }
 
@@ -173,8 +247,11 @@ const updateQuestion = async (id, updateData) => {
 };
 
 const deleteQuestion = async (id) => {
-  const examQuestion = await prisma.exam_questions.findFirst({ where: { question_id: id } });
-  if (examQuestion) throw new Error("Cannot delete question. It is being used in exams");
+  const examQuestion = await prisma.exam_questions.findFirst({
+    where: { question_id: id },
+  });
+  if (examQuestion)
+    throw new Error("Cannot delete question. It is being used in exams");
 
   await prisma.$transaction(async (tx) => {
     await tx.question_options.deleteMany({ where: { question_id: id } });
@@ -185,11 +262,15 @@ const deleteQuestion = async (id) => {
 };
 
 const updateQuestionOptions = async (questionId, options) => {
-  const question = await prisma.questions.findUnique({ where: { id: questionId } });
+  const question = await prisma.questions.findUnique({
+    where: { id: questionId },
+  });
   if (!question) throw new Error("Question not found");
 
   await prisma.$transaction(async (tx) => {
-    await tx.question_options.deleteMany({ where: { question_id: questionId } });
+    await tx.question_options.deleteMany({
+      where: { question_id: questionId },
+    });
 
     if (options && options.length > 0) {
       await tx.question_options.createMany({

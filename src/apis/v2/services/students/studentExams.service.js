@@ -5,9 +5,10 @@ const prisma = new PrismaClient();
  * START EXAM - Tạo đề thi cá nhân cho học sinh
  * @param {string} exam_type - 'COMPREHENSIVE' | 'CRITERIA_SPECIFIC'
  * @param {string} career_criteria_id - ID tiêu chí nghề (bắt buộc nếu CRITERIA_SPECIFIC)
+ * @param {string} career_id - ID nghề (bắt buộc nếu COMPREHENSIVE)
  * @param {string} student_id - ID học sinh
  */
-const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
+const startExam = async ({ exam_type, career_criteria_id, career_id, student_id }) => {
   // Validation
   if (!exam_type || !['COMPREHENSIVE', 'CRITERIA_SPECIFIC'].includes(exam_type)) {
     throw new Error("exam_type must be 'COMPREHENSIVE' or 'CRITERIA_SPECIFIC'");
@@ -15,6 +16,40 @@ const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
 
   if (exam_type === 'CRITERIA_SPECIFIC' && !career_criteria_id) {
     throw new Error("career_criteria_id is required for CRITERIA_SPECIFIC exam");
+  }
+
+  if (exam_type === 'COMPREHENSIVE' && !career_id) {
+    throw new Error("career_id is required for COMPREHENSIVE exam");
+  }
+
+  // Lấy danh sách criteria_ids cho COMPREHENSIVE exam
+  let allowedCriteriaIds = null;
+  
+  if (exam_type === 'COMPREHENSIVE') {
+    // Tìm lớp của học sinh
+    const student = await prisma.auth_impl_user_student.findUnique({
+      where: { id: student_id },
+      select: { class_id: true },
+    });
+
+    if (!student || !student.class_id) {
+      throw new Error("Student's class not found");
+    }
+
+    // Tìm các tiêu chí mà lớp được học trong nghề này
+    const classCriteria = await prisma.class_criteria_config.findMany({
+      where: {
+        class_id: student.class_id,
+        career_id: career_id,
+      },
+      select: { criteria_id: true },
+    });
+
+    if (classCriteria.length === 0) {
+      throw new Error(`No criteria configured for this class and career`);
+    }
+
+    allowedCriteriaIds = classCriteria.map(cc => cc.criteria_id);
   }
 
   // Tìm exam config theo exam_type và career_criteria_id
@@ -75,7 +110,8 @@ const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
     const questionsForCategory = await randomizeQuestionsForDistribution(
       dist,
       exam_type,
-      career_criteria_id
+      career_criteria_id,
+      allowedCriteriaIds  // Truyền thêm danh sách criteria_ids cho COMPREHENSIVE
     );
 
     // Enrich with options
@@ -152,7 +188,7 @@ const startExam = async ({ exam_type, career_criteria_id, student_id }) => {
 /**
  * Random câu hỏi cho 1 distribution (1 category)
  */
-const randomizeQuestionsForDistribution = async (distribution, exam_type, career_criteria_id) => {
+const randomizeQuestionsForDistribution = async (distribution, exam_type, career_criteria_id, allowedCriteriaIds = null) => {
   const { category_id, quantity, easy_count, medium_count, hard_count } = distribution;
 
   const filter = {
@@ -163,6 +199,10 @@ const randomizeQuestionsForDistribution = async (distribution, exam_type, career
   // Nếu CRITERIA_SPECIFIC, chỉ lấy câu hỏi có career_criteria_id khớp
   if (exam_type === 'CRITERIA_SPECIFIC') {
     filter.career_criteria_id = career_criteria_id;
+  }
+  // Nếu COMPREHENSIVE và có danh sách criteria của lớp, chỉ lấy câu hỏi thuộc các criteria đó
+  else if (exam_type === 'COMPREHENSIVE' && allowedCriteriaIds && allowedCriteriaIds.length > 0) {
+    filter.career_criteria_id = { in: allowedCriteriaIds };
   }
 
   const selected = [];

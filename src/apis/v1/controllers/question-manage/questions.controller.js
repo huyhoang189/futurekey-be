@@ -193,7 +193,7 @@ const updateQuestion = async (req, res) => {
 const deleteQuestion = async (req, res) => {
   try {
     const { id } = req.params;
-    const result = await questionsService.deleteQuestion(parseInt(id));
+    const result = await questionsService.deleteQuestion(id);
 
     return res.status(200).json({
       success: true,

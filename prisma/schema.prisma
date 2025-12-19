@@ -282,22 +282,22 @@ model career_categories {
 }
 
 model questions {
-  id                  String              @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  category_id         String?             @db.VarChar(36)
-  career_criteria_id  String?             @db.VarChar(36)
-  question_type       question_type?
-  difficulty_level    question_difficulty?
-  content             String              @db.Text
-  explanation         String?             @db.Text
-  points              Decimal?            @default(1) @db.Decimal(5, 2)
-  time_limit          Int?
-  metadata            Json?
-  tags                String?             @db.VarChar(500)
-  usage_count         Int?                @default(0)
-  created_by          String?             @db.VarChar(36)
-  is_active           Boolean?            @default(true)
-  created_at          DateTime?           @default(now()) @db.Timestamp(0)
-  updated_at          DateTime?           @default(now()) @db.Timestamp(0)
+  id                 String               @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  career_criteria_id String?              @db.VarChar(36)
+  question_type      question_type?
+  difficulty_level   question_difficulty?
+  content            String               @db.Text
+  explanation        String?              @db.Text
+  points             Decimal?             @default(1.00) @db.Decimal(5, 2)
+  time_limit         Int?
+  metadata           Json?
+  tags               String?              @db.VarChar(500)
+  usage_count        Int?                 @default(0)
+  created_by         String?              @db.VarChar(36)
+  is_active          Boolean?             @default(true)
+  created_at         DateTime?            @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?            @default(now()) @db.Timestamp(0)
+  category_id        String?              @db.VarChar(36)
 
   @@index([category_id], map: "idx_category_id")
   @@index([career_criteria_id], map: "idx_career_criteria_id")
@@ -309,14 +309,13 @@ model questions {
 }
 
 model question_categories {
-  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  name        String    @db.VarChar(255)
-  description String?   @db.Text
-  order_index Int?
-  created_by  String?   @db.VarChar(36)
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  updated_at  DateTime? @default(now()) @db.Timestamp(0)
-
+  id                        String                      @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  name                      String                      @db.VarChar(255)
+  description               String?                     @db.Text
+  order_index               Int?
+  created_by                String?                     @db.VarChar(36)
+  created_at                DateTime?                   @default(now()) @db.Timestamp(0)
+  updated_at                DateTime?                   @default(now()) @db.Timestamp(0)
   exam_config_distributions exam_config_distributions[]
 
   @@index([name], map: "idx_category_name")
@@ -325,15 +324,15 @@ model question_categories {
 model exam_configs {
   id                 String          @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
   config_name        String          @db.VarChar(255)
-  description        String?         @db.Text
   exam_type_scope    exam_type_scope @default(COMPREHENSIVE)
-  career_criteria_id String?         @db.VarChar(36)
   time_limit_minutes Int?
-  total_points       Decimal?        @db.Decimal(6, 2)
-  pass_score         Decimal?        @db.Decimal(6, 2)
   created_by         String?         @db.VarChar(36)
   created_at         DateTime?       @default(now()) @db.Timestamp(0)
   updated_at         DateTime?       @default(now()) @db.Timestamp(0)
+  description        String?         @db.Text
+  pass_score         Decimal?        @db.Decimal(6, 2)
+  total_points       Decimal?        @db.Decimal(6, 2)
+  career_criteria_id String?         @db.VarChar(36)
 
   @@index([config_name], map: "idx_config_name")
   @@index([exam_type_scope], map: "idx_exam_type_scope")
@@ -342,42 +341,41 @@ model exam_configs {
 }
 
 model exam_config_distributions {
-  id           String              @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  config_id    String              @db.VarChar(36)
-  category_id  String              @db.VarChar(36)
-  quantity     Int
-  easy_count   Int?                @default(0)
-  medium_count Int?                @default(0)
-  hard_count   Int?                @default(0)
-  order_index  Int?
-  created_at   DateTime?           @default(now()) @db.Timestamp(0)
-  updated_at   DateTime?           @default(now()) @db.Timestamp(0)
-
+  id                  String              @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  config_id           String              @db.VarChar(36)
+  category_id         String              @db.VarChar(36)
+  quantity            Int
+  easy_count          Int?                @default(0)
+  medium_count        Int?                @default(0)
+  hard_count          Int?                @default(0)
+  order_index         Int?
+  created_at          DateTime?           @default(now()) @db.Timestamp(0)
+  updated_at          DateTime?           @default(now()) @db.Timestamp(0)
   question_categories question_categories @relation(fields: [category_id], references: [id])
 
+  @@unique([config_id, category_id], map: "uk_config_category")
   @@index([config_id], map: "idx_config_id")
   @@index([category_id], map: "idx_category_id")
-  @@unique([config_id, category_id], map: "uk_config_category")
 }
 
 model student_exam_attempts {
-  id                   String                       @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  student_id           String                       @db.VarChar(36)
-  exam_config_id       String                       @db.VarChar(36)
-  exam_type            exam_type_scope              @default(COMPREHENSIVE)
-  career_criteria_id   String?                      @db.VarChar(36)
-  snapshot_data        Json?
-  start_time           DateTime?                    @db.DateTime(0)
-  submit_time          DateTime?                    @db.DateTime(0)
-  duration_seconds     Int?
-  total_score          Decimal?                     @default(0) @db.Decimal(6, 2)
-  max_score            Decimal?                     @db.Decimal(6, 2)
-  status               student_exam_attempt_status? @default(IN_PROGRESS)
-  is_auto_graded       Boolean?                     @default(false)
-  graded_by            String?                      @db.VarChar(36)
-  graded_at            DateTime?                    @db.DateTime(0)
-  created_at           DateTime?                    @default(now()) @db.Timestamp(0)
-  updated_at           DateTime?                    @default(now()) @db.Timestamp(0)
+  id                 String                       @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id         String                       @db.VarChar(36)
+  snapshot_data      Json?
+  start_time         DateTime?                    @db.DateTime(0)
+  submit_time        DateTime?                    @db.DateTime(0)
+  duration_seconds   Int?
+  total_score        Decimal?                     @default(0.00) @db.Decimal(6, 2)
+  max_score          Decimal?                     @db.Decimal(6, 2)
+  status             student_exam_attempt_status? @default(IN_PROGRESS)
+  is_auto_graded     Boolean?                     @default(false)
+  graded_by          String?                      @db.VarChar(36)
+  graded_at          DateTime?                    @db.DateTime(0)
+  created_at         DateTime?                    @default(now()) @db.Timestamp(0)
+  updated_at         DateTime?                    @default(now()) @db.Timestamp(0)
+  career_criteria_id String?                      @db.VarChar(36)
+  exam_config_id     String                       @db.VarChar(36)
+  exam_type          exam_type_scope              @default(COMPREHENSIVE)
 
   @@index([student_id], map: "idx_student_id")
   @@index([exam_config_id], map: "idx_exam_config_id")
@@ -393,7 +391,7 @@ model student_answers {
   question_id String    @db.VarChar(36)
   answer_data Json?
   is_correct  Boolean?
-  score       Decimal?  @default(0) @db.Decimal(5, 2)
+  score       Decimal?  @default(0.00) @db.Decimal(5, 2)
   max_score   Decimal?  @db.Decimal(5, 2)
   feedback    String?   @db.Text
   graded_by   String?   @db.VarChar(36)
@@ -418,7 +416,7 @@ model question_options {
 
   @@index([question_id], map: "idx_question_id")
   @@index([question_id, order_index], map: "idx_question_order")
-  }
+}
 
 model student_learn_progress {
   id                   String                         @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
@@ -430,7 +428,59 @@ model student_learn_progress {
   status               student_learn_progress_status? @default(WATCHING)
   created_at           DateTime?                      @default(now()) @db.Timestamp(0)
   updated_at           DateTime?                      @default(now()) @db.Timestamp(0)
+}
 
+model class_criteria_weights {
+  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  class_id    String    @db.VarChar(36)
+  career_id   String    @db.VarChar(36)
+  criteria_id String    @db.VarChar(36)
+  weight      Int
+  created_by  String?   @db.VarChar(36)
+  created_at  DateTime? @default(now()) @db.Timestamp(0)
+  updated_at  DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([class_id, career_id, criteria_id], map: "unique_class_career_criteria")
+  @@index([class_id, career_id], map: "idx_class_career")
+  @@index([criteria_id], map: "idx_criteria")
+}
+
+model career_evaluation_thresholds {
+  id                String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  class_id          String    @db.VarChar(36)
+  career_id         String    @db.VarChar(36)
+  max_score         Float
+  very_suitable_min Float
+  suitable_min      Float
+  created_by        String?   @db.VarChar(36)
+  created_at        DateTime? @default(now()) @db.Timestamp(0)
+  updated_at        DateTime? @default(now()) @db.Timestamp(0)
+
+  @@unique([class_id, career_id], map: "unique_class_career_threshold")
+  @@index([class_id], map: "idx_class")
+  @@index([career_id], map: "idx_career")
+}
+
+model student_career_evaluations {
+  id                String                  @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
+  student_id        String                  @db.VarChar(36)
+  class_id          String                  @db.VarChar(36)
+  career_id         String                  @db.VarChar(36)
+  raw_scores        Json
+  weighted_score    Float
+  max_score         Float
+  percentage        Float
+  evaluation_result evaluation_result_type? @default(NOT_SUITABLE)
+  notes             String?                 @db.Text
+  evaluated_at      DateTime?               @default(now()) @db.Timestamp(0)
+  created_at        DateTime?               @default(now()) @db.Timestamp(0)
+  updated_at        DateTime?               @default(now()) @db.Timestamp(0)
+
+  @@unique([student_id, career_id, class_id], map: "unique_student_career_class")
+  @@index([student_id], map: "idx_student")
+  @@index([career_id], map: "idx_career_eval")
+  @@index([class_id, career_id], map: "idx_class_career_eval")
+  @@index([evaluation_result], map: "idx_eval_result")
 }
 
 enum auth_impl_user_student_sex {
@@ -457,7 +507,6 @@ enum school_career_licenses_status {
   PENDING_ACTIVATION
 }
 
-
 enum question_type {
   MULTIPLE_CHOICE
   TRUE_FALSE
@@ -482,87 +531,12 @@ enum student_exam_attempt_status {
   GRADED
 }
 
-// ============================================
-// CAREER EVALUATION SYSTEM
-// ============================================
-
-// Cấu hình trọng số tiêu chí theo lớp
-model class_criteria_weights {
-  id          String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  class_id    String    @db.VarChar(36)
-  career_id   String    @db.VarChar(36)
-  criteria_id String    @db.VarChar(36)
-  weight      Int       // Trọng số (0-100%), VD: 20 = 20%
-  created_by  String?   @db.VarChar(36)
-  created_at  DateTime? @default(now()) @db.Timestamp(0)
-  updated_at  DateTime? @default(now()) @db.Timestamp(0)
-
-  @@unique([class_id, career_id, criteria_id], map: "unique_class_career_criteria")
-  @@index([class_id, career_id], map: "idx_class_career")
-  @@index([criteria_id], map: "idx_criteria")
-}
-
-// Ngưỡng đánh giá nghề nghiệp theo lớp
-model career_evaluation_thresholds {
-  id                  String    @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  class_id            String    @db.VarChar(36)
-  career_id           String    @db.VarChar(36)
-  
-  // Điểm tối đa = Số tiêu chí × 10
-  // VD: 5 tiêu chí → max_score = 50, 10 tiêu chí → max_score = 100
-  max_score           Float     // Tự động tính hoặc cấu hình
-  
-  // Ngưỡng phân loại (giá trị tuyệt đối)
-  very_suitable_min   Float     // VD: >= 40/50 hoặc >= 80/100
-  suitable_min        Float     // VD: >= 30/50 hoặc >= 60/100
-  // < suitable_min = Không phù hợp
-  
-  created_by          String?   @db.VarChar(36)
-  created_at          DateTime? @default(now()) @db.Timestamp(0)
-  updated_at          DateTime? @default(now()) @db.Timestamp(0)
-
-  @@unique([class_id, career_id], map: "unique_class_career_threshold")
-  @@index([class_id], map: "idx_class")
-  @@index([career_id], map: "idx_career")
-}
-
-// Kết quả đánh giá nghề nghiệp của học sinh
-model student_career_evaluations {
-  id                String                   @id @default(dbgenerated("(uuid())")) @db.VarChar(36)
-  student_id        String                   @db.VarChar(36)
-  class_id          String                   @db.VarChar(36)
-  career_id         String                   @db.VarChar(36)
-  
-  // Điểm thô học sinh tự đánh giá
-  // Format: [{ criteria_id: "TC1", score: 8 }, { criteria_id: "TC2", score: 6 }, ...]
-  raw_scores        Json                     
-  
-  // Kết quả tính toán
-  weighted_score    Float                    // Điểm sau khi áp dụng trọng số
-  max_score         Float                    // Điểm tối đa (số tiêu chí × 10)
-  percentage        Float                    // % = (weighted_score / max_score) × 100
-  
-  // Kết quả đánh giá
-  evaluation_result evaluation_result_type?  @default(NOT_SUITABLE)
-  
-  // Metadata
-  notes             String?                  @db.Text
-  evaluated_at      DateTime?                @default(now()) @db.Timestamp(0)
-  created_at        DateTime?                @default(now()) @db.Timestamp(0)
-  updated_at        DateTime?                @default(now()) @db.Timestamp(0)
-
-  @@unique([student_id, career_id, class_id], map: "unique_student_career_class")
-  @@index([student_id], map: "idx_student")
-  @@index([career_id], map: "idx_career_eval")
-  @@index([class_id, career_id], map: "idx_class_career_eval")
-  @@index([evaluation_result], map: "idx_eval_result")
-}
-
 enum evaluation_result_type {
-  VERY_SUITABLE    // Rất phù hợp
-  SUITABLE         // Phù hợp
-  NOT_SUITABLE     // Không phù hợp
+  VERY_SUITABLE
+  SUITABLE
+  NOT_SUITABLE
 }
+
 enum student_learn_progress_status {
   WATCHING
   PAUSED

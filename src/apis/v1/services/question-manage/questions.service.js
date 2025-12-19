@@ -196,9 +196,19 @@ const createQuestion = async (questionData) => {
 };
 
 const updateQuestion = async (id, updateData) => {
-
-  const { content, question_type, difficulty_level, category_id, career_criteria_id, points, explanation, tags, metadata, is_active, options } = updateData;
-
+  const {
+    content,
+    question_type,
+    difficulty_level,
+    category_id,
+    career_criteria_id,
+    points,
+    explanation,
+    tags,
+    metadata,
+    is_active,
+    options,
+  } = updateData;
 
   const existing = await prisma.questions.findUnique({ where: { id } });
   if (!existing) throw new Error("Question not found");
@@ -256,7 +266,7 @@ const updateQuestion = async (id, updateData) => {
     // Lấy lại question kèm options
     const questionOptions = await tx.question_options.findMany({
       where: { question_id: id },
-      orderBy: { order_index: 'asc' },
+      orderBy: { order_index: "asc" },
     });
 
     return { ...question, options: questionOptions };
@@ -266,11 +276,11 @@ const updateQuestion = async (id, updateData) => {
 };
 
 const deleteQuestion = async (id) => {
-  const examQuestion = await prisma.exam_questions.findFirst({
-    where: { question_id: id },
-  });
-  if (examQuestion)
-    throw new Error("Cannot delete question. It is being used in exams");
+  // const examQuestion = await prisma.exam_questions.findFirst({
+  //   where: { question_id: id },
+  // });
+  // if (examQuestion)
+  //   throw new Error("Cannot delete question. It is being used in exams");
 
   await prisma.$transaction(async (tx) => {
     await tx.question_options.deleteMany({ where: { question_id: id } });

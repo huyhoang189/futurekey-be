@@ -20,7 +20,7 @@ const getStudentIdFromUserId = async (userId) => {
 
 /**
  * @swagger
- * /api/v2/students/exams/start:
+ * /api/v2/students/student-exams/start:
  *   post:
  *     tags: [V2 - Students - Exams]
  *     summary: Bắt đầu làm bài thi
@@ -37,15 +37,11 @@ const getStudentIdFromUserId = async (userId) => {
  *             type: object
  *             required:
  *               - exam_type
- *               - exam_config_id
  *             properties:
  *               exam_type:
  *                 type: string
  *                 enum: [COMPREHENSIVE, CRITERIA_SPECIFIC]
  *                 example: COMPREHENSIVE
- *               exam_config_id:
- *                 type: string
- *                 example: config-123-abc
  *               career_criteria_id:
  *                 type: string
  *                 example: criteria-456-def
@@ -113,7 +109,10 @@ const getAttemptDetails = async (req, res) => {
     const userId = req.userSession.sub;
     const student_id = await getStudentIdFromUserId(userId);
 
-    const result = await studentExamsService.getAttemptDetails(attemptId, student_id);
+    const result = await studentExamsService.getAttemptDetails(
+      attemptId,
+      student_id
+    );
 
     return res.status(200).json({
       success: true,
@@ -133,13 +132,14 @@ const getAttemptDetails = async (req, res) => {
 const saveAnswer = async (req, res) => {
   return res.status(400).json({
     success: false,
-    message: "This API is deprecated. Submit all answers at once using /submit endpoint",
+    message:
+      "This API is deprecated. Submit all answers at once using /submit endpoint",
   });
 };
 
 /**
  * @swagger
- * /api/v2/students/exams/attempts/{attemptId}/submit:
+ * /api/v2/students/student-exams/attempts/{attemptId}/submit:
  *   post:
  *     tags: [V2 - Students - Exams]
  *     summary: Nộp bài thi
@@ -189,9 +189,9 @@ const submitExam = async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/student/exams/attempts/{attemptId}/results:
+ * /api/v2/students/student-exams/attempts/{attemptId}/results:
  *   get:
- *     tags: [Student Exams]
+ *     tags: [V2 - Students - Exams]
  *     summary: Xem kết quả bài thi
  */
 const getExamResults = async (req, res) => {
@@ -214,7 +214,7 @@ const getExamResults = async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/system-admin/exams/need-grading:
+ * /api/v2/students/student-exams/need-grading:
  *   get:
  *     tags: [Teacher Grading]
  *     summary: Lấy danh sách bài thi cần chấm
@@ -245,7 +245,7 @@ const getExamsNeedGrading = async (req, res) => {
 
 /**
  * @swagger
- * /api/v1/system-admin/exams/answers/{answerId}/grade:
+ * /api/v2/students/student-exams/answers/{answerId}/grade:
  *   post:
  *     tags: [Teacher Grading]
  *     summary: Chấm câu hỏi tự luận
@@ -256,7 +256,12 @@ const gradeEssayQuestion = async (req, res) => {
     const { score, feedback } = req.body;
     const gradedBy = req.userSession.sub; // JWT payload sử dụng 'sub' field
 
-    const result = await studentExamsService.gradeEssayQuestion(answerId, score, feedback, gradedBy);
+    const result = await studentExamsService.gradeEssayQuestion(
+      answerId,
+      score,
+      feedback,
+      gradedBy
+    );
 
     return res.status(200).json({
       success: true,

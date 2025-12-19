@@ -20,7 +20,7 @@
     "question_type": "SHORT_ANSWER",
     "difficulty_level": "EASY",
     "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
     "points": 3,
     "explanation": "Câu hỏi giúp xác định giá trị sống cốt lõi của học sinh.",
     "tags": "giá trị sống,ưu tiên cá nhân",
@@ -36,13 +36,29 @@
     "question_type": "ESSAY",
     "difficulty_level": "MEDIUM",
     "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "career_criteria_id": "9b21f00d-c88d-11f0-afc5-2626c197d041",
     "points": 7,
     "explanation": "Đánh giá khả năng phản tư và học hỏi từ kinh nghiệm cá nhân.",
     "tags": "tự luận,trải nghiệm,tư duy phản biện",
     "metadata": {
       "category": "I. Câu hỏi tự luận cá nhân",
       "purpose": "Phát triển tư duy phản tư"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Phân tích điểm mạnh và điểm yếu của bản thân trong các tình huống làm việc nhóm.",
+    "question_type": "ESSAY",
+    "difficulty_level": "HARD",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "a7b23bb7-c88d-11f0-afc5-2626c197d041",
+    "points": 8,
+    "explanation": "Đánh giá khả năng tự nhận thức sâu sắc về bản thân trong môi trường làm việc.",
+    "tags": "tự luận,nhận thức bản thân,làm việc nhóm",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Tự đánh giá chuyên sâu"
     },
     "is_active": true,
     "options": []
@@ -63,25 +79,21 @@
     "is_active": true,
     "options": [
       {
-        "option_key": "A",
         "option_text": "Làm việc với máy tính, công nghệ",
         "is_correct": false,
         "order_index": 0
       },
       {
-        "option_key": "B",
         "option_text": "Giao tiếp, làm việc với con người",
         "is_correct": false,
         "order_index": 1
       },
       {
-        "option_key": "C",
         "option_text": "Sáng tạo, nghệ thuật",
         "is_correct": false,
         "order_index": 2
       },
       {
-        "option_key": "D",
         "option_text": "Phân tích, nghiên cứu",
         "is_correct": false,
         "order_index": 3
@@ -93,7 +105,7 @@
     "question_type": "TRUE_FALSE",
     "difficulty_level": "EASY",
     "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
     "points": 1,
     "explanation": "Đánh giá phong cách làm việc cá nhân.",
     "tags": "sở thích,phong cách làm việc",
@@ -104,13 +116,11 @@
     "is_active": true,
     "options": [
       {
-        "option_key": "TRUE",
         "option_text": "Làm việc nhóm",
         "is_correct": false,
         "order_index": 0
       },
       {
-        "option_key": "FALSE",
         "option_text": "Làm việc một mình",
         "is_correct": false,
         "order_index": 1
@@ -122,13 +132,71 @@
     "question_type": "SHORT_ANSWER",
     "difficulty_level": "MEDIUM",
     "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "career_criteria_id": "9b21f00d-c88d-11f0-afc5-2626c197d041",
     "points": 4,
     "explanation": "Giúp xác định hệ giá trị nghề nghiệp của học sinh.",
     "tags": "giá trị nghề nghiệp,ưu tiên cá nhân",
     "metadata": {
       "category": "II. Khai thác sở thích",
       "purpose": "Xác định giá trị nghề nghiệp"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Trong các môn học sau đây, môn nào bạn cảm thấy hứng thú và học tốt nhất?",
+    "question_type": "MULTIPLE_CHOICE",
+    "difficulty_level": "MEDIUM",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "a7b23bb7-c88d-11f0-afc5-2626c197d041",
+    "points": 3,
+    "explanation": "Đánh giá năng lực học tập và sở thích học thuật.",
+    "tags": "sở thích học tập,năng lực",
+    "metadata": {
+      "category": "II. Khai thác sở thích",
+      "purpose": "Xác định năng lực học tập"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Toán - Lý - Hóa",
+        "is_correct": false,
+        "order_index": 0
+      },
+      {
+        "option_text": "Văn - Sử - Địa",
+        "is_correct": false,
+        "order_index": 1
+      },
+      {
+        "option_text": "Ngoại ngữ",
+        "is_correct": false,
+        "order_index": 2
+      },
+      {
+        "option_text": "Tin học - Công nghệ",
+        "is_correct": false,
+        "order_index": 3
+      },
+      {
+        "option_text": "Nghệ thuật - Thể dục",
+        "is_correct": false,
+        "order_index": 4
+      }
+    ]
+  },
+  {
+    "content": "Phân tích mối liên hệ giữa sở thích cá nhân và lựa chọn nghề nghiệp của bạn.",
+    "question_type": "ESSAY",
+    "difficulty_level": "HARD",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 7,
+    "explanation": "Đánh giá khả năng kết nối sở thích với định hướng nghề nghiệp.",
+    "tags": "sở thích,nghề nghiệp,phân tích",
+    "metadata": {
+      "category": "II. Khai thác sở thích",
+      "purpose": "Kết nối sở thích với nghề nghiệp"
     },
     "is_active": true,
     "options": []
@@ -149,31 +217,26 @@
     "is_active": true,
     "options": [
       {
-        "option_key": "A",
         "option_text": "Lập trình viên",
         "is_correct": false,
         "order_index": 0
       },
       {
-        "option_key": "B",
         "option_text": "Bác sĩ",
         "is_correct": false,
         "order_index": 1
       },
       {
-        "option_key": "C",
         "option_text": "Giáo viên",
         "is_correct": false,
         "order_index": 2
       },
       {
-        "option_key": "D",
         "option_text": "Kinh doanh",
         "is_correct": false,
         "order_index": 3
       },
       {
-        "option_key": "E",
         "option_text": "Thiết kế sáng tạo",
         "is_correct": false,
         "order_index": 4
@@ -185,7 +248,7 @@
     "question_type": "TRUE_FALSE",
     "difficulty_level": "EASY",
     "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "22f788d2-ce8f-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
     "points": 1,
     "explanation": "Đánh giá mức độ chuẩn bị định hướng nghề nghiệp.",
     "tags": "kế hoạch,nghề nghiệp",
@@ -196,13 +259,11 @@
     "is_active": true,
     "options": [
       {
-        "option_key": "TRUE",
         "option_text": "Có",
         "is_correct": false,
         "order_index": 0
       },
       {
-        "option_key": "FALSE",
         "option_text": "Chưa",
         "is_correct": false,
         "order_index": 1
@@ -214,7 +275,7 @@
     "question_type": "ESSAY",
     "difficulty_level": "MEDIUM",
     "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "70260ec2-c88d-11f0-afc5-2626c197d041",
+    "career_criteria_id": "9b21f00d-c88d-11f0-afc5-2626c197d041",
     "points": 6,
     "explanation": "Giúp học sinh hình dung và định hình mục tiêu nghề nghiệp.",
     "tags": "công việc lý tưởng,mục tiêu nghề nghiệp",
@@ -230,7 +291,7 @@
     "question_type": "SHORT_ANSWER",
     "difficulty_level": "HARD",
     "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
-    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "career_criteria_id": "a7b23bb7-c88d-11f0-afc5-2626c197d041",
     "points": 5,
     "explanation": "Đánh giá kinh nghiệm thực tế và nỗ lực tìm hiểu nghề nghiệp.",
     "tags": "trải nghiệm,hoạt động nghề nghiệp",
@@ -240,5 +301,228 @@
     },
     "is_active": true,
     "options": []
+  },
+  {
+    "content": "Bạn có sẵn sàng học thêm các kỹ năng mới để theo đuổi nghề nghiệp mong muốn không?",
+    "question_type": "TRUE_FALSE",
+    "difficulty_level": "EASY",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 1,
+    "explanation": "Đánh giá động lực học tập và phát triển nghề nghiệp.",
+    "tags": "động lực,học tập,phát triển",
+    "metadata": {
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Đánh giá động lực"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Có",
+        "is_correct": true,
+        "order_index": 0
+      },
+      {
+        "option_text": "Không",
+        "is_correct": false,
+        "order_index": 1
+      }
+    ]
+  },
+  {
+    "content": "Yếu tố nào quan trọng nhất khi bạn lựa chọn nghề nghiệp?",
+    "question_type": "MULTIPLE_CHOICE",
+    "difficulty_level": "MEDIUM",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
+    "points": 3,
+    "explanation": "Xác định tiêu chí ưu tiên trong lựa chọn nghề nghiệp.",
+    "tags": "lựa chọn nghề nghiệp,tiêu chí",
+    "metadata": {
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Xác định tiêu chí lựa chọn"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Mức lương và thu nhập",
+        "is_correct": false,
+        "order_index": 0
+      },
+      {
+        "option_text": "Đam mê và sở thích",
+        "is_correct": true,
+        "order_index": 1
+      },
+      {
+        "option_text": "Sự ổn định và bảo đảm",
+        "is_correct": false,
+        "order_index": 2
+      },
+      {
+        "option_text": "Cơ hội thăng tiến",
+        "is_correct": false,
+        "order_index": 3
+      },
+      {
+        "option_text": "Môi trường làm việc",
+        "is_correct": false,
+        "order_index": 4
+      }
+    ]
+  },
+  {
+    "content": "Phân tích ưu điểm và thách thức của nghề nghiệp bạn đang quan tâm, đồng thời đề xuất kế hoạch chuẩn bị trong 5 năm tới.",
+    "question_type": "ESSAY",
+    "difficulty_level": "HARD",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "9b21f00d-c88d-11f0-afc5-2626c197d041",
+    "points": 10,
+    "explanation": "Đánh giá khả năng tư duy chiến lược và lập kế hoạch nghề nghiệp dài hạn.",
+    "tags": "phân tích,kế hoạch nghề nghiệp,chiến lược",
+    "metadata": {
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Đánh giá tư duy chiến lược"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Bạn có tin rằng công nghệ sẽ thay thế con người trong hầu hết các nghề nghiệp?",
+    "question_type": "TRUE_FALSE",
+    "difficulty_level": "MEDIUM",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "4f704084-c29a-11f0-afc5-2626c197d041",
+    "points": 2,
+    "explanation": "Đánh giá nhận thức về xu hướng công nghệ và tương lai nghề nghiệp.",
+    "tags": "công nghệ,tương lai,nhận thức",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Đánh giá nhận thức xu hướng"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Đúng",
+        "is_correct": false,
+        "order_index": 0
+      },
+      {
+        "option_text": "Sai",
+        "is_correct": true,
+        "order_index": 1
+      }
+    ]
+  },
+  {
+    "content": "Kỹ năng mềm nào bạn cho là quan trọng nhất trong môi trường làm việc hiện đại?",
+    "question_type": "MULTIPLE_CHOICE",
+    "difficulty_level": "MEDIUM",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
+    "points": 3,
+    "explanation": "Đánh giá nhận thức về kỹ năng mềm cần thiết.",
+    "tags": "kỹ năng mềm,năng lực",
+    "metadata": {
+      "category": "II. Khai thác sở thích",
+      "purpose": "Nhận thức kỹ năng"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Giao tiếp hiệu quả",
+        "is_correct": true,
+        "order_index": 0
+      },
+      {
+        "option_text": "Tư duy phản biện",
+        "is_correct": true,
+        "order_index": 1
+      },
+      {
+        "option_text": "Làm việc nhóm",
+        "is_correct": false,
+        "order_index": 2
+      },
+      {
+        "option_text": "Quản lý thời gian",
+        "is_correct": false,
+        "order_index": 3
+      },
+      {
+        "option_text": "Giải quyết vấn đề",
+        "is_correct": true,
+        "order_index": 4
+      }
+    ]
+  },
+  {
+    "content": "Theo bạn, yếu tố nào ảnh hưởng lớn nhất đến sự thành công trong nghề nghiệp?",
+    "question_type": "SHORT_ANSWER",
+    "difficulty_level": "MEDIUM",
+    "category_id": "74ff2b3f-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "a7b23bb7-c88d-11f0-afc5-2626c197d041",
+    "points": 4,
+    "explanation": "Khám phá quan điểm về yếu tố thành công nghề nghiệp.",
+    "tags": "thành công,nghề nghiệp,quan điểm",
+    "metadata": {
+      "category": "III. Định hướng nghề nghiệp",
+      "purpose": "Khám phá quan điểm"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Bạn có thể mô tả một tình huống mà bạn đã thể hiện khả năng lãnh đạo hoặc sáng kiến không?",
+    "question_type": "ESSAY",
+    "difficulty_level": "HARD",
+    "category_id": "66b575e0-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "90e4d5f7-c88d-11f0-afc5-2626c197d041",
+    "points": 8,
+    "explanation": "Đánh giá kỹ năng lãnh đạo và chủ động.",
+    "tags": "lãnh đạo,sáng kiến,kỹ năng",
+    "metadata": {
+      "category": "I. Câu hỏi tự luận cá nhân",
+      "purpose": "Đánh giá kỹ năng lãnh đạo"
+    },
+    "is_active": true,
+    "options": []
+  },
+  {
+    "content": "Bạn thường học hỏi kỹ năng mới qua phương thức nào?",
+    "question_type": "MULTIPLE_CHOICE",
+    "difficulty_level": "EASY",
+    "category_id": "6dabacfd-d1b5-11f0-afc5-2626c197d041",
+    "career_criteria_id": "9b21f00d-c88d-11f0-afc5-2626c197d041",
+    "points": 2,
+    "explanation": "Xác định phương pháp học tập ưa thích.",
+    "tags": "học tập,phương pháp",
+    "metadata": {
+      "category": "II. Khai thác sở thích",
+      "purpose": "Xác định phong cách học tập"
+    },
+    "is_active": true,
+    "options": [
+      {
+        "option_text": "Học qua sách vở và tài liệu",
+        "is_correct": false,
+        "order_index": 0
+      },
+      {
+        "option_text": "Học qua video và khóa học online",
+        "is_correct": false,
+        "order_index": 1
+      },
+      {
+        "option_text": "Học qua thực hành trực tiếp",
+        "is_correct": true,
+        "order_index": 2
+      },
+      {
+        "option_text": "Học qua trao đổi với người khác",
+        "is_correct": false,
+        "order_index": 3
+      }
+    ]
   }
 ]

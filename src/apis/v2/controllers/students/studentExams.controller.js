@@ -45,17 +45,20 @@ const getStudentIdFromUserId = async (userId) => {
  *               career_criteria_id:
  *                 type: string
  *                 example: criteria-456-def
- *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC
- */
+ *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC               career_id:
+                 type: string
+                 example: career-789-xyz
+                 description: Bắt buộc nếu exam_type = COMPREHENSIVE (để lọc tiêu chí theo lớp học) */
 const startExam = async (req, res) => {
   try {
-    const { exam_type, career_criteria_id } = req.body;
+    const { exam_type, career_criteria_id, career_id } = req.body;
     const userId = req.userSession.sub;
     const student_id = await getStudentIdFromUserId(userId);
 
     const result = await studentExamsService.startExam({
       exam_type,
       career_criteria_id,
+      career_id,
       student_id,
     });
 

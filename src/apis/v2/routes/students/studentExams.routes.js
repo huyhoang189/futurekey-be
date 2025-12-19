@@ -177,12 +177,17 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *               career_criteria_id:
  *                 type: string
  *                 example: 4f704084-c29a-11f0-afc5-2626c197d041
- *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC, null nếu COMPREHENSIVE
+ *                 description: Bắt buộc nếu exam_type = CRITERIA_SPECIFIC
+ *               career_id:
+ *                 type: string
+ *                 example: 7a8b9c10-d11e-12f3-g456-78h90i123456
+ *                 description: Bắt buộc nếu exam_type = COMPREHENSIVE (để lọc câu hỏi theo tiêu chí của lớp)
  *           examples:
  *             comprehensive:
  *               summary: Bài thi tổng hợp
  *               value:
  *                 exam_type: COMPREHENSIVE
+ *                 career_id: 7a8b9c10-d11e-12f3-g456-78h90i123456
  *             criteriaSpecific:
  *               summary: Bài thi theo tiêu chí
  *               value:

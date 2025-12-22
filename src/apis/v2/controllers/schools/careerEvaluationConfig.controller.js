@@ -84,7 +84,8 @@ const configureEvaluationThresholds = async (req, res) => {
     ) {
       return res.status(StatusCodes.BAD_REQUEST).json({
         success: false,
-        message: "class_id, career_id, very_suitable_min, and suitable_min are required",
+        message:
+          "class_id, career_id, very_suitable_min, and suitable_min are required",
       });
     }
 
@@ -172,10 +173,96 @@ const getEvaluationStatistics = async (req, res) => {
   }
 };
 
+// Cập nhật đồng thời tiêu chí + trọng số + ngưỡng (replace-all)
+const updateCareerConfigAdvanced = async (req, res) => {
+  try {
+    const { class_id, career_id } = req.query;
+    const { config_list, thresholds } = req.body;
+    const createdBy = req.user?.id || req.schoolUser?.id;
+
+    if (!class_id || !career_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "class_id and career_id are required",
+      });
+    }
+
+    if (!Array.isArray(config_list) || config_list.length === 0) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "config_list must be a non-empty array",
+      });
+    }
+
+    if (
+      !thresholds ||
+      thresholds.very_suitable_min === undefined ||
+      thresholds.suitable_min === undefined
+    ) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message:
+          "thresholds.very_suitable_min and thresholds.suitable_min are required",
+      });
+    }
+
+    const result = await careerEvaluationsService.configureCareerConfigAdvanced(
+      class_id,
+      career_id,
+      config_list,
+      thresholds,
+      createdBy
+    );
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Configured criteria, weights, and thresholds successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
+// Lấy cấu hình tiêu chí + trọng số + ngưỡng
+const getCareerConfigAdvanced = async (req, res) => {
+  try {
+    const { class_id, career_id } = req.query;
+
+    if (!class_id || !career_id) {
+      return res.status(StatusCodes.BAD_REQUEST).json({
+        success: false,
+        message: "class_id and career_id are required",
+      });
+    }
+
+    const result = await careerEvaluationsService.getCareerConfigAdvanced(
+      class_id,
+      career_id
+    );
+
+    return res.status(StatusCodes.OK).json({
+      success: true,
+      message: "Get career config with weights and thresholds successfully",
+      data: result,
+    });
+  } catch (error) {
+    return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
+
 module.exports = {
   configureCriteriaWeights,
   getCriteriaWeights,
   configureEvaluationThresholds,
   getEvaluationThresholds,
   getEvaluationStatistics,
+  updateCareerConfigAdvanced,
+  getCareerConfigAdvanced,
 };

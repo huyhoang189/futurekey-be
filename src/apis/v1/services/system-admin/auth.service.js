@@ -454,6 +454,7 @@ const getUserExtendInfo = async (userId, groupId) => {
       });
 
       return {
+        school_id: schoolUser.school_id,
         school_name: school?.name || null,
         school_description: schoolUser.description || null,
       };
@@ -499,6 +500,7 @@ const getUserExtendInfo = async (userId, groupId) => {
       }
 
       return {
+        class_id: studentUser.class_id || null,
         class_name: className,
         school_name: schoolName,
         student_code: studentUser.student_code || null,

@@ -16,19 +16,19 @@ const careerEvaluationConfigController = require("../../controllers/schools/care
  *     summary: Cấu hình trọng số tiêu chí cho lớp và nghề nghiệp
  *     description: |
  *       Thiết lập trọng số (%) cho từng tiêu chí đánh giá nghề nghiệp.
- *       
+ *
  *       **Quy tắc:**
  *       - Tổng tất cả weight PHẢI = 100%
  *       - Mỗi tiêu chí có weight từ 0-100 (integer)
  *       - Tiêu chí quan trọng hơn → weight cao hơn
- *       
+ *
  *       **Ví dụ:** Nghề Software Engineer có 4 tiêu chí:
  *       - Tư duy logic: 30% (quan trọng nhất)
  *       - Kỹ năng lập trình: 30%
  *       - Làm việc nhóm: 25%
  *       - Tiếng Anh: 15%
  *       → Tổng = 100% ✓
- *       
+ *
  *       **Cách tính điểm có trọng số:**
  *       - Học sinh đánh giá mỗi tiêu chí: 0-10 điểm
  *       - Điểm trọng số = (điểm × weight) / 100
@@ -129,7 +129,10 @@ const careerEvaluationConfigController = require("../../controllers/schools/care
  *       500:
  *         description: Lỗi server
  */
-router.post("/weights", careerEvaluationConfigController.configureCriteriaWeights);
+router.post(
+  "/weights",
+  careerEvaluationConfigController.configureCriteriaWeights
+);
 
 /**
  * @swagger
@@ -138,12 +141,12 @@ router.post("/weights", careerEvaluationConfigController.configureCriteriaWeight
  *     summary: Lấy cấu hình trọng số tiêu chí đã thiết lập
  *     description: |
  *       Truy vấn danh sách trọng số đã cấu hình cho một nghề nghiệp trong lớp học.
- *       
+ *
  *       **Response bao gồm:**
  *       - Danh sách tất cả tiêu chí và trọng số tương ứng
  *       - Tổng trọng số (total_weight) → Kiểm tra = 100 hay chưa
  *       - Trạng thái hợp lệ (is_valid) → true nếu tổng = 100
- *       
+ *
  *       **Use case:**
  *       - Xem cấu hình hiện tại trước khi chỉnh sửa
  *       - Validate trọng số đã đúng chưa
@@ -203,15 +206,15 @@ router.get("/weights", careerEvaluationConfigController.getCriteriaWeights);
  *     summary: Cấu hình ngưỡng đánh giá nghề nghiệp
  *     description: |
  *       Thiết lập ngưỡng điểm để phân loại mức độ phù hợp của học sinh với nghề nghiệp.
- *       
+ *
  *       **Cách tính điểm:**
  *       - max_score = Số tiêu chí × 10 (VD: 5 tiêu chí → max_score = 50)
- *       
+ *
  *       **Phân loại:**
  *       - Điểm ≥ very_suitable_min → **Rất phù hợp**
  *       - suitable_min ≤ Điểm < very_suitable_min → **Phù hợp**
  *       - Điểm < suitable_min → **Không phù hợp**
- *       
+ *
  *       **Ví dụ:** Với max_score=50, very_suitable_min=40, suitable_min=30
  *       - Điểm 45/50 → Rất phù hợp (90%)
  *       - Điểm 35/50 → Phù hợp (70%)
@@ -294,7 +297,10 @@ router.get("/weights", careerEvaluationConfigController.getCriteriaWeights);
  *       500:
  *         description: Lỗi server
  */
-router.post("/thresholds", careerEvaluationConfigController.configureEvaluationThresholds);
+router.post(
+  "/thresholds",
+  careerEvaluationConfigController.configureEvaluationThresholds
+);
 
 /**
  * @swagger
@@ -303,12 +309,12 @@ router.post("/thresholds", careerEvaluationConfigController.configureEvaluationT
  *     summary: Lấy cấu hình ngưỡng đánh giá đã thiết lập
  *     description: |
  *       Truy vấn ngưỡng phân loại mức độ phù hợp đã cấu hình.
- *       
+ *
  *       **Response bao gồm:**
  *       - max_score: Điểm tối đa (số tiêu chí × 10)
  *       - very_suitable_min: Ngưỡng "Rất phù hợp"
  *       - suitable_min: Ngưỡng "Phù hợp"
- *       
+ *
  *       **Use case:**
  *       - Hiển thị ngưỡng hiện tại cho admin
  *       - Kiểm tra trước khi học sinh làm bài đánh giá
@@ -361,7 +367,10 @@ router.post("/thresholds", careerEvaluationConfigController.configureEvaluationT
  *       500:
  *         description: Lỗi server
  */
-router.get("/thresholds", careerEvaluationConfigController.getEvaluationThresholds);
+router.get(
+  "/thresholds",
+  careerEvaluationConfigController.getEvaluationThresholds
+);
 
 /**
  * @swagger
@@ -370,7 +379,7 @@ router.get("/thresholds", careerEvaluationConfigController.getEvaluationThreshol
  *     summary: Thống kê kết quả đánh giá nghề nghiệp của lớp
  *     description: |
  *       Phân tích tổng quan kết quả đánh giá của toàn bộ học sinh trong lớp.
- *       
+ *
  *       **Thống kê bao gồm:**
  *       - Tổng số học sinh đã đánh giá (total_evaluations)
  *       - Phân bổ theo mức độ phù hợp:
@@ -379,13 +388,13 @@ router.get("/thresholds", careerEvaluationConfigController.getEvaluationThreshol
  *         + Không phù hợp: Số lượng + %
  *       - Điểm trung bình của lớp (average_score)
  *       - Phần trăm trung bình (average_percentage)
- *       
+ *
  *       **Use case:**
  *       - Dashboard cho giáo viên/admin
  *       - Đánh giá chất lượng lớp học
  *       - Phát hiện xu hướng nghề nghiệp phù hợp
  *       - So sánh giữa các nghề nghiệp khác nhau
- *       
+ *
  *       **Ví dụ output:**
  *       - Lớp có 30 học sinh đánh giá nghề Software Engineer
  *       - Rất phù hợp: 12 học sinh (40%)
@@ -452,6 +461,121 @@ router.get("/thresholds", careerEvaluationConfigController.getEvaluationThreshol
  *       500:
  *         description: Lỗi server
  */
-router.get("/statistics", careerEvaluationConfigController.getEvaluationStatistics);
+router.get(
+  "/statistics",
+  careerEvaluationConfigController.getEvaluationStatistics
+);
+
+/**
+ * @swagger
+ * /api/v2/schools/career-evaluation-config/advanced:
+ *   put:
+ *     summary: Thay thế toàn bộ tiêu chí, trọng số và ngưỡng cho lớp/nghề
+ *     description: |
+ *       - Xóa toàn bộ cấu hình cũ rồi tạo mới class_criteria_config, class_criteria_weights, career_evaluation_thresholds trong một transaction.
+ *       - Tổng weight phải = 100, mọi criteria phải thuộc career và đang active.
+ *       - Nhận class_id, career_id qua query; payload chứa danh sách criteria + weight và thresholds.
+ *     tags: [V2 - Schools - Career Evaluation Config]
+ *     parameters:
+ *       - in: query
+ *         name: class_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID lớp
+ *       - in: query
+ *         name: career_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID nghề
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - config_list
+ *               - thresholds
+ *             properties:
+ *               config_list:
+ *                 type: array
+ *                 description: Danh sách tiêu chí và trọng số (tổng = 100)
+ *                 items:
+ *                   type: object
+ *                   required: [career_criteria_id, weight]
+ *                   properties:
+ *                     career_criteria_id:
+ *                       type: string
+ *                     weight:
+ *                       type: number
+ *               thresholds:
+ *                 type: object
+ *                 required: [very_suitable_min, suitable_min]
+ *                 properties:
+ *                   very_suitable_min:
+ *                     type: number
+ *                   suitable_min:
+ *                     type: number
+ *           examples:
+ *             sample:
+ *               summary: Cập nhật đầy đủ
+ *               value:
+ *                 config_list:
+ *                   - career_criteria_id: "c1"
+ *                     weight: 30
+ *                   - career_criteria_id: "c2"
+ *                     weight: 70
+ *                 thresholds:
+ *                   very_suitable_min: 40
+ *                   suitable_min: 30
+ *     responses:
+ *       200:
+ *         description: Cấu hình đã được thay thế
+ *       400:
+ *         description: Thiếu tham số, tổng weight không hợp lệ hoặc criteria không hợp lệ
+ *       500:
+ *         description: Lỗi server
+ */
+// Replace-all cấu hình tiêu chí + trọng số + ngưỡng (dùng query class_id, career_id)
+router.put(
+  "/advanced",
+  careerEvaluationConfigController.updateCareerConfigAdvanced
+);
+
+/**
+ * @swagger
+ * /api/v2/schools/career-evaluation-config/advanced:
+ *   get:
+ *     summary: Lấy cấu hình tiêu chí + trọng số + ngưỡng cho lớp/nghề
+ *     description: Trả về danh sách criteria kèm weight và thresholds hiện tại.
+ *     tags: [V2 - Schools - Career Evaluation Config]
+ *     parameters:
+ *       - in: query
+ *         name: class_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID lớp
+ *       - in: query
+ *         name: career_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID nghề
+ *     responses:
+ *       200:
+ *         description: Cấu hình hiện tại
+ *       400:
+ *         description: Thiếu tham số
+ *       500:
+ *         description: Lỗi server
+ */
+// Lấy cấu hình tiêu chí + trọng số + ngưỡng
+router.get(
+  "/advanced",
+  careerEvaluationConfigController.getCareerConfigAdvanced
+);
 
 module.exports = router;

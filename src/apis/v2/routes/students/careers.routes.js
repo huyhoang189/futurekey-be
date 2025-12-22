@@ -125,6 +125,42 @@ router.get(
 
 /**
  * @swagger
+ * /api/v2/students/careers/{career_id}:
+ *   get:
+ *     summary: Lấy thông tin nghề đã cấu hình theo ID cho học sinh
+ *     tags: [V2 - Student - Careers]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: career_id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: ID của nghề
+ *     responses:
+ *       200:
+ *         description: Thông tin nghề (đơn giản)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   $ref: '#/components/schemas/StudentCareer'
+ *       400:
+ *         description: Thiếu class_id hoặc career_id
+ *       404:
+ *         description: Nghề không tồn tại hoặc chưa được cấu hình cho lớp
+ */
+router.get("/:career_id", usersController.getConfiguredCareerById);
+
+/**
+ * @swagger
  * /api/v2/students/careers/criteria/{id}:
  *   get:
  *     summary: Lấy một tiêu chí nghề đã cấu hình theo ID
@@ -165,9 +201,6 @@ router.get(
  *                   type: string
  */
 router.get("/criteria/:id", usersController.getCareerCriteriaById);
-
-
-
 
 /**
  * @swagger

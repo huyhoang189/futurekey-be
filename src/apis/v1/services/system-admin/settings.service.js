@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 const { buildWhereClause } = require("../../../../utils/func");
 const { hashPassword } = require("../../../../utils/bcrypt");
 const { USER_STATUS, FR } = require("../../../../common");

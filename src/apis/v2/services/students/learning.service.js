@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Convert string value to float, return undefined if invalid

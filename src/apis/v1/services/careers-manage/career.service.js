@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 const { FR, OBJECT_TYPE, MINIO_BUCKETS } = require("../../../../common");
 const { buildWhereClause } = require("../../../../utils/func");
 const fileStorageService = require("../file-storage/file-storage.service");

@@ -1,6 +1,5 @@
 const studentExamsService = require("../../services/students/studentExams.service");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Helper function để lấy student_id từ user_id

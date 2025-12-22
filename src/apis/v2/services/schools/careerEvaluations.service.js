@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * ========================================
@@ -446,39 +445,48 @@ const configureCareerConfigAdvanced = async (
   if (very_suitable_min <= suitable_min) {
     throw new Error("very_suitable_min must be greater than suitable_min");
   }
-  if (very_suitable_min > maxScore || suitable_min > maxScore) {
-    throw new Error(`Thresholds must not exceed max_score: ${maxScore}`);
+  // Chỉ validate ngưỡng phải > 0 và < 100 (thang điểm phần trăm)
+  if (very_suitable_min <= 0 || suitable_min <= 0 || very_suitable_min > 100 || suitable_min > 100) {
+    throw new Error("Thresholds must be between 0 and 100");
   }
 
   const now = new Date();
 
   const saved = await prisma.$transaction(
     async (tx) => {
-      await tx.class_criteria_weights.deleteMany({
-        where: { class_id: classId, career_id: careerId },
-      });
-      await tx.class_criteria_config.deleteMany({
-        where: { class_id: classId, career_id: careerId },
-      });
+      // Xóa song song để tăng tốc
+      await Promise.all([
+        tx.class_criteria_weights.deleteMany({
+          where: { class_id: classId, career_id: careerId },
+        }),
+        tx.class_criteria_config.deleteMany({
+          where: { class_id: classId, career_id: careerId },
+        }),
+      ]);
 
-      await tx.class_criteria_config.createMany({
-        data: criteriaIds.map((id) => ({
-          class_id: classId,
-          career_id: careerId,
-          criteria_id: id,
-        })),
-      });
+      // Tạo mới song song
+      await Promise.all([
+        tx.class_criteria_config.createMany({
+          data: criteriaIds.map((id) => ({
+            class_id: classId,
+            career_id: careerId,
+            criteria_id: id,
+          })),
+          skipDuplicates: true,
+        }),
+        tx.class_criteria_weights.createMany({
+          data: configList.map((item) => ({
+            class_id: classId,
+            career_id: careerId,
+            criteria_id: item.career_criteria_id || item.criteria_id,
+            weight: Number(item.weight || 0),
+            created_by: createdBy,
+          })),
+          skipDuplicates: true,
+        }),
+      ]);
 
-      await tx.class_criteria_weights.createMany({
-        data: configList.map((item) => ({
-          class_id: classId,
-          career_id: careerId,
-          criteria_id: item.career_criteria_id || item.criteria_id,
-          weight: Number(item.weight || 0),
-          created_by: createdBy,
-        })),
-      });
-
+      // Upsert threshold
       const threshold = await tx.career_evaluation_thresholds.upsert({
         where: {
           class_id_career_id: { class_id: classId, career_id: careerId },
@@ -487,6 +495,7 @@ const configureCareerConfigAdvanced = async (
           max_score: maxScore,
           very_suitable_min,
           suitable_min,
+          updated_at: now,
         },
         create: {
           class_id: classId,
@@ -501,8 +510,9 @@ const configureCareerConfigAdvanced = async (
       return threshold;
     },
     {
-      maxWait: 5000, // Thời gian tối đa chờ để lấy được kết nối
-      timeout: 15000, // Thời gian tối đa để thực hiện xong toàn bộ transaction
+      maxWait: 10000, // Tăng thời gian chờ lấy kết nối lên 10s
+      timeout: 30000, // Tăng timeout transaction lên 30s
+      isolationLevel: "ReadCommitted", // Giảm lock contention
     }
   );
 

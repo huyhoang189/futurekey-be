@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Lấy thống kê tổng quan cho trường
@@ -52,11 +51,11 @@ const getStudentsByLevel = async (school_id) => {
 
   // Tạo map class_id -> grade_level
   const classGradeMap = {};
-  classes.forEach(cls => {
+  classes.forEach((cls) => {
     classGradeMap[cls.id] = cls.grade_level;
   });
 
-  const classIds = classes.map(cls => cls.id);
+  const classIds = classes.map((cls) => cls.id);
 
   // Lấy tất cả học sinh thuộc các lớp này
   const studentWhere = {
@@ -75,8 +74,8 @@ const getStudentsByLevel = async (school_id) => {
 
   // Thống kê theo grade_level
   const levelStats = {};
-  
-  students.forEach(student => {
+
+  students.forEach((student) => {
     const gradeLevel = classGradeMap[student.class_id];
     if (gradeLevel) {
       if (!levelStats[gradeLevel]) {
@@ -101,6 +100,3 @@ module.exports = {
   getSchoolOverview,
   getStudentsByLevel,
 };
-
-
-

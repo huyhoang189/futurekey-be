@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 const { buildWhereClause } = require("../../../../utils/func");
 const { FR } = require("../../../../common");
 
@@ -19,9 +18,8 @@ const getAllRoles = async ({
     const where = buildWhereClause(filters);
 
     // Nếu có select custom, đảm bảo có group_id để join
-    const selectWithGroupId = select && includeGroup
-      ? { ...select, group_id: true }
-      : select;
+    const selectWithGroupId =
+      select && includeGroup ? { ...select, group_id: true } : select;
 
     const [records, total] = await Promise.all([
       prisma.auth_role.findMany({
@@ -46,20 +44,23 @@ const getAllRoles = async ({
     }
 
     // Optimize: Lấy tất cả group_ids unique
-    const groupIds = [...new Set(records.map((r) => r.group_id).filter(Boolean))];
+    const groupIds = [
+      ...new Set(records.map((r) => r.group_id).filter(Boolean)),
+    ];
 
     // Query tất cả groups một lần
-    const groups = groupIds.length > 0
-      ? await prisma.auth_group.findMany({
-          where: { id: { in: groupIds } },
-          select: {
-            id: true,
-            name: true,
-            description: true,
-            type: true,
-          },
-        })
-      : [];
+    const groups =
+      groupIds.length > 0
+        ? await prisma.auth_group.findMany({
+            where: { id: { in: groupIds } },
+            select: {
+              id: true,
+              name: true,
+              description: true,
+              type: true,
+            },
+          })
+        : [];
 
     // Map groups thành object để lookup nhanh
     const groupMap = Object.fromEntries(groups.map((g) => [g.id, g]));
@@ -87,9 +88,8 @@ const getAllRoles = async ({
  */
 const getRoleById = async (id, select = null, includeGroup = true) => {
   try {
-    const selectWithGroupId = select && includeGroup
-      ? { ...select, group_id: true }
-      : select;
+    const selectWithGroupId =
+      select && includeGroup ? { ...select, group_id: true } : select;
 
     const role = await prisma.auth_role.findUnique({
       where: { id },

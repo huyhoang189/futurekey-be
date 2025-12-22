@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Lấy danh sách provinces với phân trang và tìm kiếm

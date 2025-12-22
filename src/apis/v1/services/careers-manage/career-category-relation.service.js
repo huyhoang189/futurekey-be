@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 const { FR } = require("../../../../common");
 
 const CURRENT_FR = FR.FR00011;

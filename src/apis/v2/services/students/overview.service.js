@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Get career learning overview statistics for a student

@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 class QuestionCategoriesService {
   /**
@@ -78,8 +77,12 @@ class QuestionCategoriesService {
       where: { id },
       data: {
         ...(data.name !== undefined && { name: data.name }),
-        ...(data.description !== undefined && { description: data.description }),
-        ...(data.order_index !== undefined && { order_index: data.order_index }),
+        ...(data.description !== undefined && {
+          description: data.description,
+        }),
+        ...(data.order_index !== undefined && {
+          order_index: data.order_index,
+        }),
       },
     });
 

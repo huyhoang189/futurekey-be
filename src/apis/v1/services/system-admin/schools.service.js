@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 /**
  * Lấy danh sách schools với phân trang và tìm kiếm
@@ -196,7 +195,9 @@ const deleteSchool = async (id) => {
   });
 
   if (usersInSchool) {
-    throw new Error("Cannot delete school. There are users associated with this school");
+    throw new Error(
+      "Cannot delete school. There are users associated with this school"
+    );
   }
 
   // Kiểm tra có student nào đang thuộc school này không
@@ -205,7 +206,9 @@ const deleteSchool = async (id) => {
   });
 
   if (studentsInSchool) {
-    throw new Error("Cannot delete school. There are students associated with this school");
+    throw new Error(
+      "Cannot delete school. There are students associated with this school"
+    );
   }
 
   // Kiểm tra có class nào đang thuộc school này không
@@ -214,7 +217,9 @@ const deleteSchool = async (id) => {
   });
 
   if (classesInSchool) {
-    throw new Error("Cannot delete school. There are classes associated with this school");
+    throw new Error(
+      "Cannot delete school. There are classes associated with this school"
+    );
   }
 
   await prisma.schools.delete({

@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 
 class ExamConfigsService {
   /**
@@ -116,12 +115,16 @@ class ExamConfigsService {
 
     // Validation: CRITERIA_SPECIFIC phải có career_criteria_id
     if (exam_type_scope === "CRITERIA_SPECIFIC" && !career_criteria_id) {
-      throw new Error("career_criteria_id is required for CRITERIA_SPECIFIC exam type");
+      throw new Error(
+        "career_criteria_id is required for CRITERIA_SPECIFIC exam type"
+      );
     }
 
     // Validation: COMPREHENSIVE không được có career_criteria_id
     if (exam_type_scope === "COMPREHENSIVE" && career_criteria_id) {
-      throw new Error("career_criteria_id should not be provided for COMPREHENSIVE exam type");
+      throw new Error(
+        "career_criteria_id should not be provided for COMPREHENSIVE exam type"
+      );
     }
 
     // Validation: Kiểm tra career_criteria_id tồn tại
@@ -141,7 +144,12 @@ class ExamConfigsService {
 
     // Validation: mỗi distribution phải khớp quantity
     for (const dist of distributions) {
-      const { quantity, easy_count = 0, medium_count = 0, hard_count = 0 } = dist;
+      const {
+        quantity,
+        easy_count = 0,
+        medium_count = 0,
+        hard_count = 0,
+      } = dist;
       const totalCount = easy_count + medium_count + hard_count;
       if (totalCount !== quantity) {
         throw new Error(
@@ -173,7 +181,8 @@ class ExamConfigsService {
         easy_count: dist.easy_count || 0,
         medium_count: dist.medium_count || 0,
         hard_count: dist.hard_count || 0,
-        order_index: dist.order_index !== undefined ? dist.order_index : index + 1,
+        order_index:
+          dist.order_index !== undefined ? dist.order_index : index + 1,
       }));
 
       await tx.exam_config_distributions.createMany({
@@ -211,15 +220,20 @@ class ExamConfigsService {
       throw new Error("Exam config not found");
     }
 
-    const { distributions, exam_type_scope, career_criteria_id, ...configData } = data;
+    const {
+      distributions,
+      exam_type_scope,
+      career_criteria_id,
+      ...configData
+    } = data;
 
     // Validation: Nếu update sang COMPREHENSIVE
     if (exam_type_scope === "COMPREHENSIVE") {
       // Kiểm tra xem đã có bản ghi COMPREHENSIVE nào khác chưa (ngoại trừ bản ghi hiện tại)
       const existingComprehensive = await prisma.exam_configs.findFirst({
-        where: { 
+        where: {
           exam_type_scope: "COMPREHENSIVE",
-          id: { not: id }
+          id: { not: id },
         },
       });
 
@@ -231,13 +245,21 @@ class ExamConfigsService {
 
       // COMPREHENSIVE không được có career_criteria_id
       if (career_criteria_id) {
-        throw new Error("career_criteria_id should not be provided for COMPREHENSIVE exam type");
+        throw new Error(
+          "career_criteria_id should not be provided for COMPREHENSIVE exam type"
+        );
       }
     }
 
     // Validation: CRITERIA_SPECIFIC phải có career_criteria_id
-    if (exam_type_scope === "CRITERIA_SPECIFIC" && career_criteria_id === undefined && !existingConfig.career_criteria_id) {
-      throw new Error("career_criteria_id is required for CRITERIA_SPECIFIC exam type");
+    if (
+      exam_type_scope === "CRITERIA_SPECIFIC" &&
+      career_criteria_id === undefined &&
+      !existingConfig.career_criteria_id
+    ) {
+      throw new Error(
+        "career_criteria_id is required for CRITERIA_SPECIFIC exam type"
+      );
     }
 
     // Validation: Kiểm tra career_criteria_id tồn tại
@@ -253,8 +275,10 @@ class ExamConfigsService {
     const result = await prisma.$transaction(async (tx) => {
       // Update config fields
       const updateData = { ...configData };
-      if (exam_type_scope !== undefined) updateData.exam_type_scope = exam_type_scope;
-      if (career_criteria_id !== undefined) updateData.career_criteria_id = career_criteria_id;
+      if (exam_type_scope !== undefined)
+        updateData.exam_type_scope = exam_type_scope;
+      if (career_criteria_id !== undefined)
+        updateData.career_criteria_id = career_criteria_id;
 
       const updated = await tx.exam_configs.update({
         where: { id },
@@ -270,7 +294,12 @@ class ExamConfigsService {
 
         // Validate new distributions
         for (const dist of distributions) {
-          const { quantity, easy_count = 0, medium_count = 0, hard_count = 0 } = dist;
+          const {
+            quantity,
+            easy_count = 0,
+            medium_count = 0,
+            hard_count = 0,
+          } = dist;
           const totalCount = easy_count + medium_count + hard_count;
           if (totalCount !== quantity) {
             throw new Error(
@@ -287,7 +316,8 @@ class ExamConfigsService {
           easy_count: dist.easy_count || 0,
           medium_count: dist.medium_count || 0,
           hard_count: dist.hard_count || 0,
-          order_index: dist.order_index !== undefined ? dist.order_index : index + 1,
+          order_index:
+            dist.order_index !== undefined ? dist.order_index : index + 1,
         }));
 
         await tx.exam_config_distributions.createMany({

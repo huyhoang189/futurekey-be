@@ -1,5 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const prisma = require("../../../../configs/prisma");
 const { v4: uuidv4 } = require("uuid");
 const { hashPassword, verifyPassword } = require("../../../../utils/bcrypt");
 const { encode } = require("../../../../utils/jwt");

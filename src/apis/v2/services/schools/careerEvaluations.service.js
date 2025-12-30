@@ -56,10 +56,10 @@ const submitCareerEvaluation = async (
     requiredIds.forEach((id) => scoreMap.set(id, 0));
   }
 
-  // Validate điểm nhập vào 0-10 và chỉ nhận criteria hợp lệ
-  const invalidScores = scores.filter((s) => s.score < 0 || s.score > 10);
+  // Validate điểm nhập vào 0-100 và chỉ nhận criteria hợp lệ
+  const invalidScores = scores.filter((s) => s.score < 0 || s.score > 100);
   if (invalidScores.length > 0)
-    throw new Error("All scores must be between 0 and 10");
+    throw new Error("All scores must be between 0 and 100");
 
   const unknownIds = scores.filter((s) => !requiredIds.includes(s.criteria_id));
   if (unknownIds.length > 0)
@@ -96,7 +96,7 @@ const submitCareerEvaluation = async (
 
   const criteriaCount = requiredIds.length;
   const finalScore = weightedSum * criteriaCount;
-  const maxScore = criteriaCount * 10;
+  const maxScore = criteriaCount * 100;
   const percentage = (finalScore / maxScore) * 100;
 
   // Ngưỡng đánh giá
@@ -340,7 +340,7 @@ const configureEvaluationThresholds = async (
     },
   });
 
-  const maxScore = criteriaCount * 10;
+  const maxScore = criteriaCount * 100;
 
   if (very_suitable_min > maxScore || suitable_min > maxScore) {
     throw new Error(`Thresholds must not exceed max_score: ${maxScore}`);
@@ -439,7 +439,7 @@ const configureCareerConfigAdvanced = async (
   }
 
   const criteriaCount = criteriaIds.length;
-  const maxScore = criteriaCount * 10;
+  const maxScore = criteriaCount * 100;
   const { very_suitable_min, suitable_min } = thresholds;
 
   if (very_suitable_min <= suitable_min) {

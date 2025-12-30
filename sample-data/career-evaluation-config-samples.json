@@ -12,9 +12,9 @@
       "example": "5 tiêu chí: [20, 20, 20, 20, 20] = 100"
     },
     "threshold_rules": {
-      "max_score": "Tự động tính = số tiêu chí × 10",
-      "very_suitable_min": "Ngưỡng tối thiểu cho 'Rất phù hợp' (VD: >= 40/50)",
-      "suitable_min": "Ngưỡng tối thiểu cho 'Phù hợp' (VD: >= 30/50)",
+      "max_score": "Tự động tính = số tiêu chí × 100",
+      "very_suitable_min": "Ngưỡng tối thiểu cho 'Rất phù hợp' (VD: >= 400/500)",
+      "suitable_min": "Ngưỡng tối thiểu cho 'Phù hợp' (VD: >= 300/500)",
       "not_suitable": "< suitable_min = Không phù hợp"
     }
   },
@@ -81,18 +81,18 @@
 
   "SAMPLE_3_configure_thresholds_4_criteria": {
     "api": "POST /api/v2/schools/career-evaluation-config/thresholds",
-    "description": "Cấu hình ngưỡng cho nghề có 4 tiêu chí (max_score = 40)",
+    "description": "Cấu hình ngưỡng cho nghề có 4 tiêu chí (max_score = 400)",
     "data": {
       "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
       "career_id": "CAREER_ID_SOFTWARE_ENGINEER",
-      "very_suitable_min": 32,
-      "suitable_min": 24
+      "very_suitable_min": 320,
+      "suitable_min": 240
     },
     "calculation": {
-      "max_score": "4 tiêu chí × 10 = 40 điểm",
-      "very_suitable": ">= 32/40 (80%)",
-      "suitable": ">= 24/40 (60%)",
-      "not_suitable": "< 24/40 (< 60%)"
+      "max_score": "4 tiêu chí × 100 = 400 điểm",
+      "very_suitable": ">= 320/400 (80%)",
+      "suitable": ">= 240/400 (60%)",
+      "not_suitable": "< 240/400 (< 60%)"
     }
   },
 
@@ -102,14 +102,14 @@
     "data": {
       "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
       "career_id": "CAREER_ID_DATA_ANALYST",
-      "very_suitable_min": 40,
-      "suitable_min": 30
+      "very_suitable_min": 400,
+      "suitable_min": 300
     },
     "calculation": {
-      "max_score": "5 tiêu chí × 10 = 50 điểm",
-      "very_suitable": ">= 40/50 (80%)",
-      "suitable": ">= 30/50 (60%)",
-      "not_suitable": "< 30/50 (< 60%)"
+      "max_score": "5 tiêu chí × 100 = 500 điểm",
+      "very_suitable": ">= 400/500 (80%)",
+      "suitable": ">= 300/500 (60%)",
+      "not_suitable": "< 300/500 (< 60%)"
     }
   },
 
@@ -119,14 +119,14 @@
     "data": {
       "class_id": "2f238ea5-cd51-11f0-afc5-2626c197d041",
       "career_id": "CAREER_ID_AI_ENGINEER",
-      "very_suitable_min": 45,
-      "suitable_min": 35
+      "very_suitable_min": 450,
+      "suitable_min": 350
     },
     "calculation": {
-      "max_score": "5 tiêu chí × 10 = 50 điểm",
-      "very_suitable": ">= 45/50 (90%)",
-      "suitable": ">= 35/50 (70%)",
-      "not_suitable": "< 35/50 (< 70%)"
+      "max_score": "5 tiêu chí × 100 = 500 điểm",
+      "very_suitable": ">= 450/500 (90%)",
+      "suitable": ">= 350/500 (70%)",
+      "not_suitable": "< 350/500 (< 70%)"
     }
   },
 
@@ -163,7 +163,7 @@
       "very_suitable_min > suitable_min",
       "suitable_min > 0",
       "very_suitable_min <= max_score",
-      "max_score = số tiêu chí × 10"
+      "max_score = số tiêu chí × 100"
     ]
   },
 

@@ -208,17 +208,17 @@ router.get("/weights", careerEvaluationConfigController.getCriteriaWeights);
  *       Thiết lập ngưỡng điểm để phân loại mức độ phù hợp của học sinh với nghề nghiệp.
  *
  *       **Cách tính điểm:**
- *       - max_score = Số tiêu chí × 10 (VD: 5 tiêu chí → max_score = 50)
+ *       - max_score = Số tiêu chí × 100 (VD: 5 tiêu chí → max_score = 500)
  *
  *       **Phân loại:**
  *       - Điểm ≥ very_suitable_min → **Rất phù hợp**
  *       - suitable_min ≤ Điểm < very_suitable_min → **Phù hợp**
  *       - Điểm < suitable_min → **Không phù hợp**
  *
- *       **Ví dụ:** Với max_score=50, very_suitable_min=40, suitable_min=30
- *       - Điểm 45/50 → Rất phù hợp (90%)
- *       - Điểm 35/50 → Phù hợp (70%)
- *       - Điểm 25/50 → Không phù hợp (50%)
+ *       **Ví dụ:** Với max_score=500, very_suitable_min=400, suitable_min=300
+ *       - Điểm 450/500 → Rất phù hợp (90%)
+ *       - Điểm 350/500 → Phù hợp (70%)
+ *       - Điểm 250/500 → Không phù hợp (50%)
  *     tags: [V2 - Schools - Career Evaluation Config]
  *     requestBody:
  *       required: true
@@ -311,7 +311,7 @@ router.post(
  *       Truy vấn ngưỡng phân loại mức độ phù hợp đã cấu hình.
  *
  *       **Response bao gồm:**
- *       - max_score: Điểm tối đa (số tiêu chí × 10)
+ *       - max_score: Điểm tối đa (số tiêu chí × 100)
  *       - very_suitable_min: Ngưỡng "Rất phù hợp"
  *       - suitable_min: Ngưỡng "Phù hợp"
  *

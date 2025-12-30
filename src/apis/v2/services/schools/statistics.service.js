@@ -1318,12 +1318,12 @@ const getSchoolLicensedCareers = async (school_id) => {
       expiry_date: true,
       created_at: true,
     },
+    orderBy: {
+      expiry_date: "desc",
+    },
   });
 
-  // 2. Lấy career_ids
-  const careerIds = [...new Set(licenses.map((l) => l.career_id))];
-
-  if (careerIds.length === 0) {
+  if (licenses.length === 0) {
     return {
       school_id,
       total_licensed_careers: 0,
@@ -1331,7 +1331,31 @@ const getSchoolLicensedCareers = async (school_id) => {
     };
   }
 
-  // 3. Lấy thông tin chi tiết các nghề
+  // 2. Lọc license theo expiry_date - Nếu có nhiều license cho cùng 1 nghề → chọn license có expiry_date muộn nhất
+  const careerLicenseMap = {};
+  licenses.forEach((license) => {
+    if (!careerLicenseMap[license.career_id]) {
+      careerLicenseMap[license.career_id] = license;
+    } else {
+      // So sánh expiry_date, giữ license có expiry_date muộn hơn
+      const existingExpiry = careerLicenseMap[license.career_id].expiry_date
+        ? new Date(careerLicenseMap[license.career_id].expiry_date)
+        : new Date(0); // Null expiry_date = license vĩnh viễn (ưu tiên thấp hơn)
+      const currentExpiry = license.expiry_date
+        ? new Date(license.expiry_date)
+        : new Date(0);
+      
+      if (currentExpiry > existingExpiry) {
+        careerLicenseMap[license.career_id] = license;
+      }
+    }
+  });
+
+  // 3. Lấy unique career_ids từ map
+  const uniqueLicenses = Object.values(careerLicenseMap);
+  const careerIds = uniqueLicenses.map((l) => l.career_id);
+
+  // 4. Lấy thông tin chi tiết các nghề
   const careers = await prisma.career.findMany({
     where: {
       id: { in: careerIds },
@@ -1346,14 +1370,14 @@ const getSchoolLicensedCareers = async (school_id) => {
     },
   });
 
-  // 4. Map career info với license info
+  // 5. Map career info
   const careerMap = {};
   careers.forEach((career) => {
     careerMap[career.id] = career;
   });
 
-  // 5. Kết hợp thông tin
-  const licensedCareers = licenses.map((license) => {
+  // 6. Kết hợp thông tin (chỉ lấy license có expiry_date muộn nhất)
+  const licensedCareers = uniqueLicenses.map((license) => {
     const career = careerMap[license.career_id];
     return {
       license_id: license.id,
@@ -1369,7 +1393,7 @@ const getSchoolLicensedCareers = async (school_id) => {
     };
   });
 
-  // 6. Sort theo tên nghề
+  // 7. Sort theo tên nghề
   licensedCareers.sort((a, b) => {
     const nameA = a.career_name || "";
     const nameB = b.career_name || "";

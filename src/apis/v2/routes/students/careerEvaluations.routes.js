@@ -19,23 +19,23 @@ const checkAuth = require("../../../../middlewares/authentication/checkAuth");
  *       Học sinh tự đánh giá mức độ phù hợp của bản thân với một nghề nghiệp.
  *       
  *       **Quy trình:**
- *       1. Học sinh chấm điểm cho từng tiêu chí (0-10 điểm)
+ *       1. Học sinh chấm điểm cho từng tiêu chí (0-100 điểm)
  *       2. Hệ thống tính điểm trọng số theo cấu hình của giáo viên
  *       3. Phân loại kết quả theo ngưỡng (Rất phù hợp/Phù hợp/Không phù hợp)
  *       4. Trả về kết quả chi tiết với breakdown từng tiêu chí
  *       
  *       **Công thức tính điểm:**
- *       - Điểm thô: Học sinh tự chấm (0-10)
+ *       - Điểm thô: Học sinh tự chấm (0-100)
  *       - Điểm trọng số = (điểm thô × weight) / 100
  *       - Tổng điểm = Σ(điểm trọng số)
  *       - Phần trăm = (tổng điểm / max_score) × 100
  *       
- *       **Ví dụ:** Nghề Software Engineer (4 tiêu chí, max=40)
- *       - Tư duy logic: 8/10 (weight 30%) → 2.4 điểm
- *       - Lập trình: 7/10 (weight 30%) → 2.1 điểm
- *       - Làm việc nhóm: 9/10 (weight 25%) → 2.25 điểm
- *       - Tiếng Anh: 6/10 (weight 15%) → 0.9 điểm
- *       → Tổng: 7.65/10 (76.5%) → Kết quả: Phù hợp
+ *       **Ví dụ:** Nghề Software Engineer (4 tiêu chí, max=400)
+ *       - Tư duy logic: 80/100 (weight 30%) → 24 điểm
+ *       - Lập trình: 70/100 (weight 30%) → 21 điểm
+ *       - Làm việc nhóm: 90/100 (weight 25%) → 22.5 điểm
+ *       - Tiếng Anh: 60/100 (weight 15%) → 9 điểm
+ *       → Tổng: 76.5/100 (76.5%) → Kết quả: Phù hợp
  *       
  *       **Lưu ý:**
  *       - Mỗi học sinh chỉ nộp 1 lần cho mỗi (class_id, career_id)

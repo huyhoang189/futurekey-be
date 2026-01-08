@@ -108,7 +108,7 @@ class ExamConfigsService {
 
       if (existingComprehensive) {
         throw new Error(
-          "Only one COMPREHENSIVE exam config is allowed. Please update the existing one or delete it first."
+          "Only one COMPREHENSIVE exam config is allowed"
         );
       }
     }
@@ -239,7 +239,7 @@ class ExamConfigsService {
 
       if (existingComprehensive) {
         throw new Error(
-          "Only one COMPREHENSIVE exam config is allowed. Another COMPREHENSIVE config already exists."
+          "Only one COMPREHENSIVE exam config is allowed"
         );
       }
 

@@ -34,11 +34,11 @@ const getFilesByObject = async (objectType, objectId) => {
 const getLatestFile = async (objectType, objectId) => {
   const files = await prisma.metadata.findMany({
     where: {
-      objectType,
-      objectId,
+      object_type: objectType,
+      object_id: objectId,
     },
     orderBy: {
-      createdAt: "desc",
+      created_at: "desc",
     },
     take: 1,
   });
@@ -55,9 +55,9 @@ const deleteMetadata = async (id) => {
 const checkFileExists = async (objectType, objectId, fileName) => {
   const existing = await prisma.metadata.findFirst({
     where: {
-      objectType,
-      objectId,
-      fileName,
+      object_type: objectType,
+      object_id: objectId,
+      file_name: fileName,
     },
   });
 
